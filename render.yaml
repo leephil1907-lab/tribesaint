@@ -34,3 +34,5 @@ services:
         sync: false
       - key: ALLOW_PREVIEW_CHECKOUT
         value: "true"
+      - key: NODE_ENV
+        value: production
