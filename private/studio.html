@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Store Admin — Tribe Culture</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#050505">
+<link rel="icon" href="/assets/favicon.png" type="image/png">
+<link rel="stylesheet" href="/assets/css/site.css">
+<style>
+  body{background:#050505}
+  .admin-shell{min-height:100vh}
+  .admin-mobile-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#070606;z-index:20}
+  @media(min-width:1000px){.admin-mobile-bar{display:none}}
+  .admin-side{display:none}
+  @media(min-width:1000px){.admin-side{display:grid}}
+  .admin-side.open{display:grid;position:fixed;inset:0;z-index:60;background:#070606;overflow-y:auto;grid-template-rows:auto 1fr auto}
+  .view{display:none}
+  .view.on{display:block}
+  .row-actions{display:flex;gap:5px;flex-wrap:wrap}
+  .row-actions button{font:400 8px/1 Oswald,sans-serif;letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--line);padding:6px 8px;color:var(--parch);transition:.18s}
+  .row-actions button:hover{background:var(--bone);color:#000}
+  .order-row{cursor:pointer}
+  .order-detail-row td{background:#080707}
+  .msg-item{border:1px solid var(--line);padding:12px;display:grid;gap:6px;background:#0b0a0a}
+  .msg-item.unread{border-left:2px solid var(--red)}
+  .msg-item .hd{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+  .msg-item .em{font:400 9px/1 Oswald,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+  .msg-item p{font-size:13px;color:var(--parch);white-space:pre-wrap}
+  .warn{border:1px solid var(--red);background:rgba(212,20,27,.08);color:#f0a5a3;padding:10px 12px;font-size:12.5px;margin-top:12px}
+  .warn code{font-family:ui-monospace,monospace}
+  .toast{display:none}
+  .login-wrap{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(70% 50% at 50% 0%,rgba(122,15,20,.35),transparent 70%)}
+  .login-card{width:min(400px,100%);border:1px solid var(--line);background:var(--ink-2);padding:26px;display:grid;gap:10px}
+  .login-card h1{font-size:26px}
+  .login-card p{color:var(--mute);font-size:12.5px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .toolbar input,.toolbar select{background:#0b0a0a;border:1px solid var(--line);color:var(--bone);padding:9px 10px;font-size:12px}
+  .toolbar input{min-width:180px}
+  @media(max-width:760px){
+    .admin-table th:nth-child(4),.admin-table td:nth-child(4){display:none}
+    .stock-row{grid-template-columns:1fr repeat(3,minmax(38px,1fr))}
+  }
+  .inv-frame-wrap{margin-top:12px;border:1px solid var(--line);background:#0a0908;padding:10px;overflow:auto}
+  #invFrame{width:100%;height:720px;border:0;background:#fff;display:block}
+  @media(max-width:900px){#invFrame{height:560px}}
+  .doc-chip{display:inline-flex;align-items:center;gap:6px;font:400 8px/1 Oswald,sans-serif;letter-spacing:.14em;text-transform:uppercase;
+            border:1px solid var(--line);padding:5px 7px;color:var(--parch);text-decoration:none}
+  .doc-chip:hover{background:var(--bone);color:#000}
+</style>
+</head>
+<body>
+
+<!-- ============ APP ============ -->
+<div class="admin-shell" id="appView">
+  <aside class="admin-side" id="adminSide">
+    <div style="display:grid;gap:14px">
+      <a class="brand" href="/"><img src="/assets/logo-red-sm.png" alt="" width="24" height="24"><span class="script" style="font-size:20px">Tribe Culture</span></a>
+      <p class="tiny" id="modeTag">—</p>
+      <nav class="admin-nav" aria-label="Admin sections">
+        <button type="button" data-view="overview" class="on">Overview</button>
+        <button type="button" data-view="orders">Orders <span class="n" id="navOrders">0</span></button>
+        <button type="button" data-view="invoices">Invoices</button>
+        <button type="button" data-view="products">Products</button>
+        <button type="button" data-view="customers">Customers <span class="n" id="navSignups">0</span></button>
+        <button type="button" data-view="messages">Messages <span class="n" id="navMessages">0</span></button>
+        <button type="button" data-view="settings">Settings</button>
+      </nav>
+    </div>
+    <div></div>
+    <div style="display:grid;gap:6px">
+      <button class="btn ghost sm block" type="button" id="refreshBtn"><span>Refresh</span></button>
+      <button class="btn ghost sm block" type="button" id="logoutBtn"><span>Sign out</span></button>
+      <a class="link" href="/" style="justify-self:center;margin-top:8px">View store →</a>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-mobile-bar">
+      <a class="brand" href="/"><img src="/assets/logo-red-sm.png" alt="" width="24" height="24"><span class="script" style="font-size:20px">Tribe Culture</span></a>
+      <div style="display:flex;gap:6px">
+        <button class="icon-btn" type="button" id="sideToggle" aria-label="Menu">
+          <svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true"><path d="M0 1h16M0 6h16M0 11h16" stroke="currentColor" stroke-width="1.3"/></svg>
+        </button>
+        <button class="icon-btn" type="button" id="refreshBtnM" aria-label="Refresh">
+          <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M14 8a6 6 0 1 1-1.8-4.3M14 2v4h-4" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <section class="view on" id="view-overview">
+      <div class="admin-head">
+        <div><p class="eyebrow red">Dashboard</p><h1 class="disp">Overview</h1></div>
+        <span class="tiny" id="lastSync"></span>
+      </div>
+      <div class="admin-cards" id="kpis"></div>
+      <div id="modeWarn"></div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Latest orders</h2><button class="link" type="button" data-goto="orders">All orders →</button></div>
+        <div class="panel-body flush" style="overflow-x:auto">
+          <table class="admin-table">
+            <thead><tr><th>Reference</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead>
+            <tbody id="latestOrders"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Stock snapshot</h2><button class="link" type="button" data-goto="products">Edit stock →</button></div>
+        <div class="panel-body" id="stockSnapshot"></div>
+      </div>
+    </section>
+
+    <!-- ORDERS -->
+    <section class="view" id="view-orders">
+      <div class="admin-head">
+        <div><p class="eyebrow red">Fulfilment</p><h1 class="disp">Orders</h1></div>
+        <div class="toolbar">
+          <input id="orderSearch" type="search" placeholder="Search reference, name, email…" aria-label="Search orders">
+          <select id="orderFilter" aria-label="Filter by status">
+            <option value="all">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="paid">Paid</option>
+            <option value="packed">Packed</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="mismatch">Mismatch</option>
+          </select>
+          <button class="btn ghost sm" type="button" id="exportOrders"><span>Export CSV</span></button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-body flush" style="overflow-x:auto">
+          <table class="admin-table">
+            <thead><tr><th>Reference</th><th>Customer</th><th>Total</th><th>Placed</th><th>Status</th><th></th></tr></thead>
+            <tbody id="ordersBody"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- INVOICES -->
+    <section class="view" id="view-invoices">
+      <div class="admin-head">
+        <div><p class="eyebrow red">Documents</p><h1 class="disp">Invoices &amp; Receipts</h1></div>
+        <span class="tiny" id="invNext"></span>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Build a document</h2><span class="tiny">Branded PDF, sent to the buyer and kept on file</span></div>
+        <div class="panel-body">
+          <div class="toolbar" style="margin-bottom:12px">
+            <select id="invOrder" aria-label="Choose an order" style="min-width:280px;max-width:100%"></select>
+            <select id="invType" aria-label="Document type">
+              <option value="invoice">Invoice</option>
+              <option value="receipt">Receipt</option>
+            </select>
+            <button class="btn sm" type="button" id="invOpen"><span>Preview</span></button>
+            <button class="btn sm" type="button" id="invPdf"><span>Download PDF</span></button>
+            <button class="btn sm red" type="button" id="invSend"><span>Email to customer</span></button>
+            <button class="btn sm ghost" type="button" id="invPrint"><span>Print</span></button>
+          </div>
+          <p class="form-note" id="invNote"></p>
+          <div class="inv-frame-wrap">
+            <iframe id="invFrame" title="Invoice preview" loading="lazy"></iframe>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2>Document log</h2><span class="tiny" id="invCount"></span></div>
+        <div class="panel-body flush" style="overflow-x:auto">
+          <table class="admin-table">
+            <thead><tr><th>Document</th><th>Order</th><th>Customer</th><th>Total</th><th>Sent</th><th></th></tr></thead>
+            <tbody id="invBody"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRODUCTS -->
+    <section class="view" id="view-products">
+      <div class="admin-head">
+        <div><p class="eyebrow red">Catalogue</p><h1 class="disp">Products &amp; Stock</h1></div>
+        <span class="tiny">Prices are live; the storefront reads them on load.</span>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Pieces</h2></div>
+        <div class="panel-body" style="overflow-x:auto">
+          <table class="admin-table">
+            <thead><tr><th>Piece</th><th>Price</th><th>Live</th><th>Total stock</th><th></th></tr></thead>
+            <tbody id="productsBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Stock by size</h2><span class="tiny">0 = sold out and hidden from the size picker</span></div>
+        <div class="panel-body">
+          <div id="stockBody"></div>
+          <button class="btn sm" type="button" id="saveStock" style="margin-top:12px"><span>Save stock</span></button>
+          <p class="form-note" id="stockNote"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CUSTOMERS -->
+    <section class="view" id="view-customers">
+      <div class="admin-head">
+        <div><p class="eyebrow red">Tribe list</p><h1 class="disp">Customers</h1></div>
+        <button class="btn ghost sm" type="button" id="exportSignups"><span>Export CSV</span></button>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Newsletter signups</h2><span class="tiny" id="signupCount"></span></div>
+        <div class="panel-body flush" style="overflow-x:auto">
+          <table class="admin-table">
+            <thead><tr><th>Email</th><th>Source</th><th>Joined</th></tr></thead>
+            <tbody id="signupsBody"><tr><td colspan="3" class="muted">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Buyers</h2><span class="tiny">Derived from orders</span></div>
+        <div class="panel-body flush" style="overflow-x:auto">
+          <table class="admin-table">
+            <thead><tr><th>Customer</th><th>Email</th><th>Orders</th><th>Spend</th></tr></thead>
+            <tbody id="buyersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- MESSAGES -->
+    <section class="view" id="view-messages">
+      <div class="admin-head">
+        <div><p class="eyebrow red">Support</p><h1 class="disp">Messages</h1></div>
+        <span class="tiny" id="unreadTag"></span>
+      </div>
+      <div class="stack" id="messagesBody"></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="view-settings">
+      <div class="admin-head">
+        <div><p class="eyebrow red">Configuration</p><h1 class="disp">Settings</h1></div>
+      </div>
+      <div class="grid-2">
+        <div class="panel" style="margin:0">
+          <div class="panel-head"><h2>Delivery &amp; store</h2></div>
+          <div class="panel-body">
+            <form class="form" id="settingsForm">
+              <div class="field">
+                <label for="setEmail">Store email (order alerts)</label>
+                <input id="setEmail" name="store_email" type="email" required>
+              </div>
+              <div class="field">
+                <label for="setFree">Free delivery over (₦)</label>
+                <input id="setFree" name="free_delivery_over" type="number" min="0" step="1000" required>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="shipNG">Nigeria rate (₦)</label>
+                  <input id="shipNG" type="number" min="0" step="100" required>
+                </div>
+                <div class="field">
+                  <label for="etaNG">Nigeria ETA</label>
+                  <input id="etaNG" type="text" maxlength="60">
+                </div>
+                <div class="field">
+                  <label for="shipINTL">International rate (₦)</label>
+                  <input id="shipINTL" type="number" min="0" step="100" required>
+                </div>
+                <div class="field">
+                  <label for="etaINTL">International ETA</label>
+                  <input id="etaINTL" type="text" maxlength="60">
+                </div>
+              </div>
+              <button class="btn" type="submit"><span>Save settings</span></button>
+              <p class="form-note" id="settingsNote"></p>
+            </form>
+          </div>
+        </div>
+
+        <div class="panel" style="margin:0">
+          <div class="panel-head"><h2>Payments &amp; environment</h2></div>
+          <div class="panel-body">
+            <div class="kv"><span>Paystack mode</span><span class="v" id="cfgMode">—</span></div>
+            <div class="kv"><span>Currency</span><span class="v" id="cfgCurrency">—</span></div>
+            <div class="kv"><span>Webhook URL</span><span class="v" id="cfgWebhook">—</span></div>
+            <div class="kv"><span>Data directory</span><span class="v">server-side (private)</span></div>
+            <p class="tiny" style="margin-top:12px">API keys are supplied as environment variables on Render — never stored in the repository. Webhook: paste the URL above into Paystack → Settings → API Keys &amp; Webhooks.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  /* auth lives in an HttpOnly cookie set by /studio/signin — never in JS */
+  let data = null;
+  let view = 'overview';
+  let booted = false;
+  let openOrder = null;
+
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const money = (n) => ((data && data.currency_symbol) || '₦') + Number(n || 0).toLocaleString('en-NG');
+  const when = (iso) => (iso ? new Date(iso).toLocaleString('en-NG') : '—');
+  const toast = (msg) => {
+    let el = $('#toast');
+    if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; document.body.appendChild(el); }
+    el.style.display = 'block';
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => { el.classList.remove('show'); setTimeout(() => { el.style.display = 'none'; }, 400); }, 2400);
+  };
+
+  async function api(path, options = {}) {
+    const res = await fetch('/api/admin' + path, {
+      ...options,
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
+    });
+    const json = await res.json().catch(() => ({}));
+    if (res.status === 401) { signOut(); throw new Error('Session expired'); }
+    if (!res.ok || json.ok === false) throw new Error(json.error || 'Request failed');
+    return json;
+  }
+
+  function signOut() {
+    location.href = '/studio/logout';
+  }
+
+  function showView(name) {
+    view = name;
+    try { history.replaceState(null, '', '#' + name); } catch (e) {}
+    $$('.view').forEach((v) => v.classList.toggle('on', v.id === 'view-' + name));
+    $$('.admin-nav button').forEach((b) => b.classList.toggle('on', b.dataset.view === name));
+    $('#adminSide').classList.remove('open');
+    window.scrollTo({ top: 0, behavior: 'instant' in document.documentElement.style ? 'instant' : 'auto' });
+  }
+
+  /* ---------------------------------------------------------------- render */
+  function renderOverview() {
+    const k = data.kpis;
+    $('#kpis').innerHTML = [
+      ['Orders', k.orders], ['Paid', k.paid], ['Pending', k.pending],
+      ['Revenue', money(k.revenue)], ['Items sold', k.items_sold],
+      ['Tribe list', k.signups], ['Messages', k.messages]
+    ].map(([label, value]) => `<div class="kpi"><b>${esc(value)}</b><span>${esc(label)}</span></div>`).join('');
+
+    $('#modeWarn').innerHTML = data.mode !== 'live'
+      ? `<div class="warn">Paystack is in <strong>${esc(data.mode)}</strong> mode${data.mode === 'preview' ? ' — orders are test orders and take no money' : ''}. Add <code>PAYSTACK_SECRET_KEY</code> and <code>PAYSTACK_PUBLIC_KEY</code> on Render to go live.</div>`
+      : '';
+
+    const recent = (data.orders || []).slice(0, 6);
+    $('#latestOrders').innerHTML = recent.length
+      ? recent.map((o) => `<tr class="order-row" data-ref="${esc(o.reference)}">
+          <td class="mono">${esc(o.reference)}</td>
+          <td>${esc(o.customer.name)}<br><span class="tiny">${esc(o.customer.email)}</span></td>
+          <td>${money(o.total)}</td>
+          <td><span class="status ${esc(o.status)}">${esc(o.status)}</span></td>
+        </tr>`).join('')
+      : '<tr><td colspan="4" class="muted">No orders yet. Place a test order from the storefront.</td></tr>';
+
+    $('#stockSnapshot').innerHTML = Object.values(data.products || {}).map((p) => {
+      const total = Object.values(p.stock || {}).reduce((a, n) => a + Number(n || 0), 0);
+      return `<div class="kv"><span>${esc(p.name)} · ${esc(p.variant)}</span><span class="v">${total} in stock · ${money(p.price)}</span></div>`;
+    }).join('');
+
+    $('#navOrders').textContent = (data.orders || []).length;
+    $('#navSignups').textContent = (data.signups || []).length;
+    $('#navMessages').textContent = (data.messages || []).filter((m) => !m.read).length || '';
+    $('#lastSync').textContent = 'Updated ' + new Date().toLocaleTimeString('en-NG');
+  }
+
+  function renderOrders() {
+    const q = ($('#orderSearch').value || '').toLowerCase().trim();
+    const f = $('#orderFilter').value;
+    let list = (data.orders || []).slice();
+    if (f !== 'all') list = list.filter((o) => o.status === f);
+    if (q) list = list.filter((o) => [o.reference, o.customer.name, o.customer.email, o.customer.city].join(' ').toLowerCase().includes(q));
+
+    if (!list.length) {
+      $('#ordersBody').innerHTML = '<tr><td colspan="6" class="muted" style="padding:18px 10px">No orders match.</td></tr>';
+      return;
+    }
+    $('#ordersBody').innerHTML = list.map((o) => {
+      const isOpen = openOrder === o.reference;
+      const items = (o.items || []).map((i) => `
+        <div class="order-item">
+          <img src="${esc(i.image)}" alt="" loading="lazy">
+          <div><div class="n">${esc(i.name)} · ${esc(i.variant)}</div><div class="m">${i.size === 'ONE SIZE' ? 'One size' : 'Size ' + esc(i.size)} · ×${i.qty}</div></div>
+          <span>${money(i.line_total)}</span>
+        </div>`).join('');
+      const statuses = ['paid', 'packed', 'shipped', 'delivered', 'cancelled', 'refunded'];
+      return `
+      <tr class="order-row" data-ref="${esc(o.reference)}">
+        <td class="mono">${esc(o.reference)}<br><span class="tiny">${esc(o.mode || '')}</span></td>
+        <td>${esc(o.customer.name)}<br><span class="tiny">${esc(o.customer.email)}</span></td>
+        <td>${money(o.total)}<br><span class="tiny">${(o.items || []).reduce((a, i) => a + i.qty, 0)} pc</span></td>
+        <td class="tiny">${when(o.created_at)}</td>
+        <td><span class="status ${esc(o.status)}">${esc(o.status)}</span></td>
+        <td><div class="row-actions"><button type="button" data-toggle="${esc(o.reference)}">${isOpen ? 'Hide' : 'View'}</button></div></td>
+      </tr>
+      ${isOpen ? `<tr class="order-detail-row"><td colspan="6">
+        <div class="order-detail">
+          <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">
+            <div>
+              <h3>Items</h3>
+              <div class="order-items">${items || '<span class="muted small">—</span>'}</div>
+              <div class="kv" style="margin-top:10px"><span>Subtotal</span><span class="v">${money(o.subtotal)}</span></div>
+              <div class="kv"><span>Delivery</span><span class="v">${money(o.shipping)} · ${esc(o.shipping_label || '')}</span></div>
+              <div class="kv"><span>Total</span><span class="v">${money(o.total)}</span></div>
+            </div>
+            <div>
+              <h3>Deliver to</h3>
+              <p class="small" style="color:var(--parch);line-height:1.7">${esc(o.customer.name)}<br>${esc(o.customer.address)}<br>${esc(o.customer.city)}${o.customer.country ? ', ' + esc(o.customer.country) : ''}<br>${esc(o.customer.phone)}<br>${esc(o.customer.email)}</p>
+              ${o.customer.note ? `<p class="tiny" style="margin-top:6px">Note: ${esc(o.customer.note)}</p>` : ''}
+              <h3 style="margin-top:12px">History</h3>
+              <div class="timeline">${(o.timeline || []).map((t) => `<div><span>${esc(t.status)}</span><span class="muted">${when(t.at)}</span></div>`).join('') || '<div><span>created</span><span class="muted">' + when(o.created_at) + '</span></div>'}</div>
+            </div>
+          </div>
+          <div class="row-actions" style="margin-top:6px">
+            ${statuses.map((s) => s === o.status ? '' : `<button type="button" data-status="${s}" data-ref="${esc(o.reference)}">Mark ${s}</button>`).join('')}
+            <button type="button" data-doc="invoice" data-ref="${esc(o.reference)}">Invoice</button>
+            <button type="button" data-doc="receipt" data-ref="${esc(o.reference)}">Receipt</button>
+            <button type="button" data-doc-send="receipt" data-ref="${esc(o.reference)}">Email receipt</button>
+            <a href="https://wa.me/${esc((data.whatsapp || '').replace(/\D/g, ''))}?text=${encodeURIComponent('Hi ' + o.customer.name + ', about your Tribe Culture order ' + o.reference)}" target="_blank" rel="noopener" style="border:1px solid var(--line);padding:6px 8px;font:400 8px/1 Oswald,sans-serif;letter-spacing:.14em;text-transform:uppercase">WhatsApp</a>
+          </div>
+          ${o.mismatch ? `<div class="warn">Amount mismatch — expected ${money(o.mismatch.expected / 100)}, received ${money(o.mismatch.received / 100)} (${esc(o.mismatch.received_currency)}).</div>` : ''}
+        </div>
+      </td></tr>` : ''}`;
+    }).join('');
+  }
+
+  function renderProducts() {
+    $('#productsBody').innerHTML = Object.values(data.products || {}).map((p) => {
+      const total = Object.values(p.stock || {}).reduce((a, n) => a + Number(n || 0), 0);
+      return `<tr>
+        <td><strong style="color:var(--bone)">${esc(p.name)}</strong><br><span class="tiny">${esc(p.variant)}</span></td>
+        <td><input type="number" min="0" step="500" value="${p.price}" data-price-for="${esc(p.sku)}" style="width:110px;background:#000;border:1px solid var(--line);color:var(--bone);padding:7px;font-size:12px"></td>
+        <td><label class="check" style="font-size:11px"><input type="checkbox" data-active-for="${esc(p.sku)}" ${p.active !== false ? 'checked' : ''}> ${p.active !== false ? 'Live' : 'Hidden'}</label></td>
+        <td>${total}</td>
+        <td><button class="row-actions" style="border:1px solid var(--line);padding:6px 8px;font:400 8px/1 Oswald,sans-serif;letter-spacing:.14em;text-transform:uppercase" type="button" data-save-product="${esc(p.sku)}">Save</button></td>
+      </tr>`;
+    }).join('');
+
+    const maxSizes = 5;
+    $('#stockBody').innerHTML = Object.values(data.products || {}).map((p) => `
+      <div class="stock-row" style="grid-template-columns:1fr repeat(${maxSizes},minmax(44px,1fr))">
+        <div class="nm">${esc(p.name)}<em>${esc(p.variant)}</em></div>
+        ${Array.from({ length: maxSizes }).map((_, i) => {
+          const size = (p.sizes || [])[i];
+          if (!size) return '<span></span>';
+          const v = (p.stock || {})[size] ?? 0;
+          return `<label>${size === 'ONE SIZE' ? 'One' : esc(size)}<input type="number" min="0" max="9999" value="${v}" data-sku="${esc(p.sku)}" data-size="${esc(size)}"></label>`;
+        }).join('')}
+      </div>`).join('');
+  }
+
+  function renderCustomers() {
+    const signups = data.signups || [];
+    $('#signupCount').textContent = signups.length + ' on the list';
+    $('#signupsBody').innerHTML = signups.length
+      ? signups.map((s) => `<tr><td>${esc(s.email)}</td><td class="tiny">${esc(s.source || 'site')}</td><td class="tiny">${when(s.created_at)}</td></tr>`).join('')
+      : '<tr><td colspan="3" class="muted">No signups yet.</td></tr>';
+
+    const map = new Map();
+    (data.orders || []).filter((o) => ['paid', 'packed', 'shipped', 'delivered'].includes(o.status)).forEach((o) => {
+      const key = o.customer.email;
+      const cur = map.get(key) || { name: o.customer.name, email: key, orders: 0, spend: 0 };
+      cur.orders += 1;
+      cur.spend += Number(o.total || 0);
+      map.set(key, cur);
+    });
+    const buyers = Array.from(map.values()).sort((a, b) => b.spend - a.spend);
+    $('#buyersBody').innerHTML = buyers.length
+      ? buyers.map((b) => `<tr><td>${esc(b.name)}</td><td class="tiny">${esc(b.email)}</td><td>${b.orders}</td><td>${money(b.spend)}</td></tr>`).join('')
+      : '<tr><td colspan="4" class="muted">No paid orders yet.</td></tr>';
+  }
+
+  function renderMessages() {
+    const list = data.messages || [];
+    $('#unreadTag').textContent = list.filter((m) => !m.read).length + ' unread';
+    $('#messagesBody').innerHTML = list.length
+      ? list.map((m) => `
+        <article class="msg-item ${m.read ? '' : 'unread'}">
+          <div class="hd">
+            <div><strong style="color:var(--bone);font-weight:400">${esc(m.subject)}</strong> — ${esc(m.name)}</div>
+            <span class="em">${when(m.created_at)}</span>
+          </div>
+          <p>${esc(m.message)}</p>
+          <div class="row-actions">
+            <a href="mailto:${esc(m.email)}?subject=${encodeURIComponent('Re: ' + m.subject)}" style="border:1px solid var(--line);padding:6px 8px;font:400 8px/1 Oswald,sans-serif;letter-spacing:.14em;text-transform:uppercase">Reply</a>
+            <button type="button" data-msg="${esc(m.id)}" data-read="${m.read ? 'false' : 'true'}">${m.read ? 'Mark unread' : 'Mark read'}</button>
+          </div>
+        </article>`).join('')
+      : '<p class="muted small">No messages yet. The contact form lands here.</p>';
+  }
+
+
+  function invoiceLink(o, type) {
+    return '/invoice.html?reference=' + encodeURIComponent(o.reference) + '&type=' + type + '&token=' + encodeURIComponent(o.invoice_token || '');
+  }
+
+  function renderInvoices() {
+    const orders = data.orders || [];
+    const sel = $('#invOrder');
+    const current = sel.value;
+    sel.innerHTML = orders.length
+      ? orders.map((o) => `<option value="${esc(o.reference)}">${esc(o.reference)} · ${esc(o.customer.name)} · ${money(o.total)}${o.invoice_no ? ' · ' + esc(o.invoice_no) : ''}</option>`).join('')
+      : '<option value="">No orders yet</option>';
+    if (current && orders.some((o) => o.reference === current)) sel.value = current;
+
+    $('#invNext').textContent = 'Next number · ' + (data.invoice_next || '—');
+    const withDocs = orders.filter((o) => o.invoice_no);
+    $('#invCount').textContent = withDocs.length + ' documents issued';
+    $('#invBody').innerHTML = withDocs.length
+      ? withDocs.map((o) => `<tr>
+          <td class="mono">${esc(o.invoice_no)}<br><span class="tiny">${esc(o.receipt_no || '')}</span></td>
+          <td class="mono">${esc(o.reference)}</td>
+          <td>${esc(o.customer.name)}<br><span class="tiny">${esc(o.customer.email)}</span></td>
+          <td>${money(o.total)}</td>
+          <td class="tiny">${o.invoice_sent_at ? when(o.invoice_sent_at) : '—'}</td>
+          <td><div class="row-actions">
+            <a class="doc-chip" href="${invoiceLink(o, 'invoice')}" target="_blank" rel="noopener">Invoice</a>
+            <a class="doc-chip" href="${invoiceLink(o, 'receipt')}" target="_blank" rel="noopener">Receipt</a>
+            <a class="doc-chip" href="/api/invoice?reference=${encodeURIComponent(o.reference)}&type=receipt&format=pdf&download=1&token=${encodeURIComponent(o.invoice_token || '')}">PDF</a>
+          </div></td>
+        </tr>`).join('')
+      : '<tr><td colspan="6" class="muted">No invoices yet — pick an order above and email one.</td></tr>';
+
+    refreshInvoiceFrame();
+  }
+
+  function selectedOrder() {
+    const ref = $('#invOrder').value;
+    return (data.orders || []).find((o) => o.reference === ref) || null;
+  }
+
+  function refreshInvoiceFrame() {
+    const o = selectedOrder();
+    const type = $('#invType').value;
+    if (!o) { $('#invFrame').removeAttribute('src'); return; }
+    $('#invFrame').src = invoiceLink(o, type);
+    $('#invOpen').href = invoiceLink(o, type);
+  }
+
+  function renderSettings() {
+    $('#setEmail').value = data.store_email || '';
+    $('#setFree').value = data.free_delivery_over || 0;
+    $('#shipNG').value = (data.shipping.NG || {}).amount || 0;
+    $('#etaNG').value = (data.shipping.NG || {}).eta || '';
+    $('#shipINTL').value = (data.shipping.INTL || {}).amount || 0;
+    $('#etaINTL').value = (data.shipping.INTL || {}).eta || '';
+    $('#cfgMode').textContent = data.mode;
+    $('#cfgCurrency').textContent = data.currency;
+    $('#cfgWebhook').textContent = data.webhook_url;
+    $('#modeTag').textContent = 'Paystack: ' + data.mode.toUpperCase() + ' · ' + (data.store_email || '');
+  }
+
+  function renderAll() {
+    renderOverview(); renderOrders(); renderProducts(); renderCustomers(); renderMessages(); renderInvoices(); renderSettings();
+  }
+
+  /* ------------------------------------------------------------------ load */
+  async function load() {
+    data = await api('?action=overview');
+    $('#appView').hidden = false;
+    renderAll();
+    if (!booted) {
+      booted = true;
+      const wanted = (location.hash || '').replace('#', '');
+      const known = $$('.admin-nav button').map((b) => b.dataset.view);
+      showView(known.includes(wanted) ? wanted : 'overview');
+    }
+  }
+
+  /* --------------------------------------------------------------- actions */
+  document.addEventListener('click', async (e) => {
+    const nav = e.target.closest('.admin-nav button');
+    if (nav) { showView(nav.dataset.view); return; }
+    const goto = e.target.closest('[data-goto]');
+    if (goto) { showView(goto.dataset.goto); return; }
+
+    const toggle = e.target.closest('[data-toggle]');
+    if (toggle) { openOrder = openOrder === toggle.dataset.toggle ? null : toggle.dataset.toggle; renderOrders(); return; }
+    const row = e.target.closest('.order-row');
+    if (row && !toggle) { openOrder = openOrder === row.dataset.ref ? null : row.dataset.ref; renderOrders(); return; }
+
+    const statusBtn = e.target.closest('[data-status]');
+    if (statusBtn) {
+      try {
+        await api('?action=order-status', { method: 'POST', body: JSON.stringify({ reference: statusBtn.dataset.ref, status: statusBtn.dataset.status }) });
+        await load();
+        openOrder = statusBtn.dataset.ref;
+        renderOrders();
+        toast('Order updated');
+      } catch (err) { toast(err.message); }
+      return;
+    }
+
+    const saveProd = e.target.closest('[data-save-product]');
+    if (saveProd) {
+      const sku = saveProd.dataset.saveProduct;
+      const price = $('[data-price-for="' + sku + '"]').value;
+      const active = $('[data-active-for="' + sku + '"]').checked;
+      try {
+        await api('?action=product', { method: 'POST', body: JSON.stringify({ sku, price, active }) });
+        await load();
+        toast('Product updated');
+      } catch (err) { toast(err.message); }
+      return;
+    }
+
+    const docBtn = e.target.closest('[data-doc]');
+    if (docBtn) {
+      const o = (data.orders || []).find((x) => x.reference === docBtn.dataset.ref);
+      if (o) window.open(invoiceLink(o, docBtn.dataset.doc), '_blank', 'noopener');
+      return;
+    }
+
+    const docSend = e.target.closest('[data-doc-send]');
+    if (docSend) {
+      const note = $('#invNote');
+      note.className = 'form-note';
+      note.textContent = 'Preparing and sending the document…';
+      try {
+        const json = await api('?action=invoice-send', { method: 'POST', body: JSON.stringify({ reference: docSend.dataset.ref, type: docSend.dataset.docSend }) });
+        note.className = 'form-note ok';
+        note.textContent = `${json.number} emailed to ${json.sent_to}`;
+        await load();
+        toast('Document emailed');
+      } catch (err) { note.className = 'form-note err'; note.textContent = err.message; }
+      return;
+    }
+
+    const msg = e.target.closest('[data-msg]');
+    if (msg) {
+      try {
+        await api('?action=message-read', { method: 'POST', body: JSON.stringify({ id: msg.dataset.msg, read: msg.dataset.read === 'true' }) });
+        await load();
+      } catch (err) { toast(err.message); }
+    }
+  });
+
+  $('#sideToggle').addEventListener('click', () => $('#adminSide').classList.toggle('open'));
+  ['refreshBtn', 'refreshBtnM'].forEach((id) => $('#' + id).addEventListener('click', () => load().then(() => { showView(view); toast('Refreshed'); }).catch((err) => toast(err.message))));
+  $('#logoutBtn').addEventListener('click', signOut);
+
+  $('#saveStock').addEventListener('click', async () => {
+    const stock = {};
+    $$('#stockBody input[data-sku]').forEach((input) => {
+      stock[input.dataset.sku] = stock[input.dataset.sku] || {};
+      stock[input.dataset.sku][input.dataset.size] = Number(input.value || 0);
+    });
+    const note = $('#stockNote');
+    note.className = 'form-note';
+    note.textContent = 'Saving…';
+    try {
+      await api('?action=stock', { method: 'POST', body: JSON.stringify({ stock }) });
+      note.className = 'form-note ok';
+      note.textContent = 'Stock updated. The storefront reflects it on next load.';
+      await load();
+      toast('Stock saved');
+    } catch (err) { note.className = 'form-note err'; note.textContent = err.message; }
+  });
+
+  $('#invOrder').addEventListener('change', refreshInvoiceFrame);
+  $('#invType').addEventListener('change', refreshInvoiceFrame);
+  $('#invOpen').addEventListener('click', (e) => {
+    const o = selectedOrder();
+    if (!o) { e.preventDefault(); toast('Pick an order first'); return; }
+    e.preventDefault();
+    window.open(invoiceLink(o, $('#invType').value), '_blank', 'noopener');
+  });
+  $('#invPdf').addEventListener('click', () => {
+    const o = selectedOrder();
+    if (!o) return toast('Pick an order first');
+    location.href = `/api/invoice?reference=${encodeURIComponent(o.reference)}&type=${$('#invType').value}&format=pdf&download=1&token=${encodeURIComponent(o.invoice_token || '')}`;
+  });
+  $('#invPrint').addEventListener('click', () => {
+    const o = selectedOrder();
+    if (!o) return toast('Pick an order first');
+    const f = $('#invFrame');
+    f.src = invoiceLink(o, $('#invType').value);
+    setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (err) { toast('Use Preview → Print'); } }, 700);
+  });
+  $('#invSend').addEventListener('click', async () => {
+    const o = selectedOrder();
+    if (!o) return toast('Pick an order first');
+    const note = $('#invNote');
+    note.className = 'form-note';
+    note.textContent = 'Sending…';
+    try {
+      const json = await api('?action=invoice-send', { method: 'POST', body: JSON.stringify({ reference: o.reference, type: $('#invType').value }) });
+      note.className = 'form-note ok';
+      note.textContent = `${json.number} sent to ${json.sent_to}`;
+      await load();
+      toast('Document emailed');
+    } catch (err) { note.className = 'form-note err'; note.textContent = err.message; }
+  });
+
+  $('#settingsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const note = $('#settingsNote');
+    note.className = 'form-note';
+    note.textContent = 'Saving…';
+    try {
+      await api('?action=settings', {
+        method: 'POST',
+        body: JSON.stringify({
+          store_email: $('#setEmail').value,
+          free_delivery_over: Number($('#setFree').value),
+          shipping: {
+            NG: { amount: Number($('#shipNG').value), eta: $('#etaNG').value },
+            INTL: { amount: Number($('#shipINTL').value), eta: $('#etaINTL').value }
+          }
+        })
+      });
+      note.className = 'form-note ok';
+      note.textContent = 'Settings saved.';
+      await load();
+      toast('Settings saved');
+    } catch (err) { note.className = 'form-note err'; note.textContent = err.message; }
+  });
+
+  ['orderSearch', 'orderFilter'].forEach((id) => $('#' + id).addEventListener('input', renderOrders));
+
+  function csv(rows, filename) {
+    const body = rows.map((r) => r.map((v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"').join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([body], { type: 'text/csv' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  }
+  $('#exportSignups').addEventListener('click', () => {
+    csv([['email', 'source', 'joined']].concat((data.signups || []).map((s) => [s.email, s.source || 'site', s.created_at])), 'tribe-list.csv');
+  });
+  $('#exportOrders').addEventListener('click', () => {
+    csv([['reference', 'status', 'placed', 'customer', 'email', 'phone', 'city', 'country', 'items', 'total', 'currency']].concat(
+      (data.orders || []).map((o) => [o.reference, o.status, o.created_at, o.customer.name, o.customer.email, o.customer.phone, o.customer.city, o.customer.country, (o.items || []).map((i) => i.name + ' ' + i.size + ' x' + i.qty).join(' | '), o.total, o.currency])
+    ), 'orders.csv');
+  });
+
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $('#adminSide').classList.remove('open'); });
+
+  load().catch((err) => { if (/Session expired/i.test(err.message)) signOut(); });
+})();
+</script>
+</body>
+</html>

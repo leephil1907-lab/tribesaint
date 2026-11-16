@@ -1,0 +1,497 @@
+{
+  "brand_name": "Tribe Culture",
+  "brand_legal": "Tribe Culture Ltd",
+  "tagline": "Discover new truth",
+  "currency": "NGN",
+  "currency_symbol": "₦",
+  "store_email": "orders@tribeculture.store",
+  "from_email": "Tribe Culture <orders@tribeculture.store>",
+  "support_phone": "+2347064844525",
+  "whatsapp": "2347064844525",
+  "whatsapp_message": "Hi Tribe Culture — I'd like to ask about Drop 001.",
+  "instagram": "",
+  "site_url": "https://tribeculture.store/",
+  "paystack_public_key": "",
+  "paystack_secret_key": "",
+  "admin_password": "change-me-tribe-2026",
+  "allow_preview_checkout": true,
+  "free_delivery_over": 150000,
+  "invoice": {
+    "prefix": "TC/INV",
+    "receipt_prefix": "TC/RCT",
+    "terms": "Payment due on receipt. Goods remain the property of Tribe Culture until paid in full. Unworn items may be returned within 14 days with tags attached.",
+    "notes": "Thank you for wearing the tribe. Keep this document for your records and quote the invoice number in any correspondence.",
+    "bank": {
+      "name": "Tribe Culture Ltd",
+      "bank": "",
+      "account": "",
+      "note": "Bank transfer details are confirmed on request — message WhatsApp or reply to the order email."
+    }
+  },
+  "shipping": {
+    "NG": {
+      "label": "Nigeria (Nationwide Delivery)",
+      "eta": "2–5 business days",
+      "amount": 3000
+    },
+    "INTL": {
+      "label": "International (Worldwide Express)",
+      "eta": "5–10 business days",
+      "amount": 25000
+    }
+  },
+  "products": {
+    "saint-tee-black": {
+      "sku": "saint-tee-black",
+      "name": "Saint Tee",
+      "variant": "Black / Red print",
+      "family": "saint",
+      "colour": "black",
+      "category": "tees",
+      "price": 45000,
+      "active": true,
+      "featured": true,
+      "badge": "Signature",
+      "image": "assets/products/saint-tee-black-front.jpg",
+      "images": {
+        "front": "assets/products/saint-tee-black-front.jpg",
+        "back": "assets/products/saint-tee-black-back.jpg",
+        "detail": "assets/products/saint-tee-black-detail.jpg"
+      },
+      "blurb": "The signature piece. Arched red SAINT across the back, three doves breaking the baseline, the doctrine line beneath it and TRIBE · globes · SOCIETY at the hem. The interlocking TC monogram sits quietly at the left chest.",
+      "details": {
+        "fabric": "260 gsm heavyweight combed cotton",
+        "fit": "Boxy relaxed — size down for a regular fit",
+        "print": "Red plastisol, TC monogram at the left chest",
+        "made": "Small batch · Drop 001 · MMXXVI"
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "default_stock": {
+        "S": 8,
+        "M": 14,
+        "L": 14,
+        "XL": 10,
+        "XXL": 6
+      }
+    },
+    "saint-tee-white": {
+      "sku": "saint-tee-white",
+      "name": "Saint Tee",
+      "variant": "White / Red print",
+      "family": "saint",
+      "colour": "white",
+      "category": "tees",
+      "price": 45000,
+      "active": true,
+      "featured": true,
+      "badge": "Signature",
+      "image": "assets/products/saint-tee-white-front.jpg",
+      "images": {
+        "front": "assets/products/saint-tee-white-front.jpg",
+        "back": "assets/products/saint-tee-white-back.jpg",
+        "detail": "assets/products/saint-tee-white-detail.jpg"
+      },
+      "blurb": "The same Saint print on a white heavyweight body. Red ink on cotton, the TC monogram at the left chest, the doctrine line across the back.",
+      "details": {
+        "fabric": "260 gsm heavyweight combed cotton",
+        "fit": "Boxy relaxed — size down for a regular fit",
+        "print": "Red plastisol on white",
+        "made": "Small batch · Drop 001 · MMXXVI"
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "default_stock": {
+        "S": 6,
+        "M": 12,
+        "L": 12,
+        "XL": 8,
+        "XXL": 5
+      }
+    },
+    "members-tee-black": {
+      "sku": "members-tee-black",
+      "name": "Members Only Tee",
+      "variant": "Black / White print",
+      "family": "members",
+      "colour": "black",
+      "category": "tees",
+      "price": 45000,
+      "active": true,
+      "featured": true,
+      "badge": "Members",
+      "image": "assets/products/members-tee-black-front.jpg",
+      "images": {
+        "front": "assets/products/members-tee-black-front.jpg",
+        "back": "assets/products/members-tee-black-back.jpg",
+        "detail": "assets/products/members-tee-black-detail.jpg"
+      },
+      "blurb": "TRI / BE stacked in heavy slab type with the skull between the letters, members only scripted across it in red. Property of the Tribe Society sits at the hem; the crest is printed at the centre back.",
+      "details": {
+        "fabric": "260 gsm heavyweight combed cotton",
+        "fit": "Boxy relaxed",
+        "print": "White and red plastisol, crest at centre back",
+        "made": "Small batch · Drop 001 · MMXXVI"
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "default_stock": {
+        "S": 7,
+        "M": 11,
+        "L": 11,
+        "XL": 8,
+        "XXL": 5
+      }
+    },
+    "members-tee-white": {
+      "sku": "members-tee-white",
+      "name": "Members Only Tee",
+      "variant": "White / Black print",
+      "family": "members",
+      "colour": "white",
+      "category": "tees",
+      "price": 45000,
+      "active": true,
+      "featured": true,
+      "badge": "Members",
+      "image": "assets/products/members-tee-white-front.jpg",
+      "images": {
+        "front": "assets/products/members-tee-white-front.jpg",
+        "back": "assets/products/members-tee-white-back.jpg",
+        "detail": "assets/products/members-tee-white-detail.jpg"
+      },
+      "blurb": "The Members Only graphic in black on white cotton, the crest printed small at the centre back. Same heavyweight body, same boxy cut.",
+      "details": {
+        "fabric": "260 gsm heavyweight combed cotton",
+        "fit": "Boxy relaxed",
+        "print": "Black plastisol with red script",
+        "made": "Small batch · Drop 001 · MMXXVI"
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "default_stock": {
+        "S": 6,
+        "M": 10,
+        "L": 10,
+        "XL": 7,
+        "XXL": 4
+      }
+    },
+    "worldwide-tee-black": {
+      "sku": "worldwide-tee-black",
+      "name": "Worldwide Tee",
+      "variant": "Black / Distressed print",
+      "family": "worldwide",
+      "colour": "black",
+      "category": "tees",
+      "price": 45000,
+      "active": true,
+      "featured": true,
+      "badge": "Worldwide",
+      "image": "assets/products/worldwide-tee-black-front.jpg",
+      "images": {
+        "front": "assets/products/worldwide-tee-black-front.jpg",
+        "back": "assets/products/worldwide-tee-black-back.jpg",
+        "detail": "assets/products/worldwide-tee-black-detail.jpg"
+      },
+      "blurb": "TRIBE SOCIETY in washed college lettering with Worldwide scripted in red beneath it. The back carries LOS ANGELES over the oversized TC crest and streetwear WORLDWIDE.",
+      "details": {
+        "fabric": "260 gsm heavyweight combed cotton",
+        "fit": "Boxy relaxed",
+        "print": "Distressed discharge-style print, red script overlay",
+        "made": "Small batch · Drop 001 · MMXXVI"
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "default_stock": {
+        "S": 6,
+        "M": 12,
+        "L": 12,
+        "XL": 8,
+        "XXL": 5
+      }
+    },
+    "worldwide-tee-white": {
+      "sku": "worldwide-tee-white",
+      "name": "Worldwide Tee",
+      "variant": "White / Distressed print",
+      "family": "worldwide",
+      "colour": "white",
+      "category": "tees",
+      "price": 45000,
+      "active": true,
+      "featured": true,
+      "badge": "Worldwide",
+      "image": "assets/products/worldwide-tee-white-front.jpg",
+      "images": {
+        "front": "assets/products/worldwide-tee-white-front.jpg",
+        "back": "assets/products/worldwide-tee-white-back.jpg",
+        "detail": "assets/products/worldwide-tee-white-detail.jpg"
+      },
+      "blurb": "The Worldwide graphic on white — charcoal distressed lettering, red script, the full LOS ANGELES crest on the back.",
+      "details": {
+        "fabric": "260 gsm heavyweight combed cotton",
+        "fit": "Boxy relaxed",
+        "print": "Charcoal distressed print with red script",
+        "made": "Small batch · Drop 001 · MMXXVI"
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "default_stock": {
+        "S": 5,
+        "M": 9,
+        "L": 9,
+        "XL": 6,
+        "XXL": 4
+      }
+    },
+    "sadness-tee-white": {
+      "sku": "sadness-tee-white",
+      "name": "Sadness Tee",
+      "variant": "White / Newsprint",
+      "family": "sadness",
+      "colour": "white",
+      "category": "tees",
+      "price": 45000,
+      "active": true,
+      "featured": true,
+      "badge": "Archive",
+      "image": "assets/products/sadness-tee-white-front.jpg",
+      "images": {
+        "front": "assets/products/sadness-tee-white-front.jpg",
+        "back": "assets/products/sadness-tee-white-back.jpg",
+        "detail": "assets/products/sadness-tee-white-detail.jpg"
+      },
+      "blurb": "SADNESS in halftone caps over TEARS AREN'T WEAKNESS. A newsprint collage of portraits carries the line: behind every sweet smile, there is a bitter sadness that no one can ever see and feel. Tribe Culture printed at the hem.",
+      "details": {
+        "fabric": "260 gsm heavyweight combed cotton",
+        "fit": "Boxy relaxed",
+        "print": "Black halftone collage print, front and back",
+        "made": "Small batch · Drop 001 · MMXXVI"
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "default_stock": {
+        "S": 5,
+        "M": 8,
+        "L": 8,
+        "XL": 6,
+        "XXL": 3
+      }
+    },
+    "flame-tank-white": {
+      "sku": "flame-tank-white",
+      "name": "Flame Tank",
+      "variant": "White / Red flames",
+      "family": "flame-tank",
+      "colour": "white",
+      "category": "tanks",
+      "price": 32000,
+      "active": true,
+      "featured": true,
+      "badge": "Summer",
+      "image": "assets/products/flame-tank-white-front.jpg",
+      "images": {
+        "front": "assets/products/flame-tank-white-front.jpg",
+        "back": "assets/products/flame-tank-white-back.jpg",
+        "detail": "assets/products/flame-tank-white-detail.jpg"
+      },
+      "blurb": "Cut-off muscle vest in white cotton with red flame columns running both sides. Red TC crest at the chest, Tribe Society printed at the back neck.",
+      "details": {
+        "fabric": "220 gsm heavyweight cotton jersey",
+        "fit": "Loose, deep armhole, drop hem",
+        "print": "Red flames down both panels",
+        "made": "Small batch · Drop 001 · MMXXVI"
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "default_stock": {
+        "S": 6,
+        "M": 10,
+        "L": 10,
+        "XL": 7,
+        "XXL": 4
+      }
+    },
+    "ringer-tank-black": {
+      "sku": "ringer-tank-black",
+      "name": "Ringer Tank",
+      "variant": "Black / White binding",
+      "family": "ringer-tank",
+      "colour": "black",
+      "category": "tanks",
+      "price": 32000,
+      "active": true,
+      "featured": false,
+      "badge": "Summer",
+      "image": "assets/products/ringer-tank-black-front.jpg",
+      "images": {
+        "front": "assets/products/ringer-tank-black-front.jpg",
+        "back": "assets/products/ringer-tank-black-back.jpg",
+        "detail": "assets/products/ringer-tank-black-detail.jpg"
+      },
+      "blurb": "Black vest with contrast white ribbing at the neck and armholes. White TC crest at the chest, TRIBE across the back yoke.",
+      "details": {
+        "fabric": "220 gsm cotton jersey",
+        "fit": "Regular vest cut",
+        "print": "White crest and back hit",
+        "made": "Small batch · Drop 001 · MMXXVI"
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "default_stock": {
+        "S": 5,
+        "M": 9,
+        "L": 9,
+        "XL": 6,
+        "XXL": 3
+      }
+    },
+    "tracksuit-black": {
+      "sku": "tracksuit-black",
+      "name": "Tribe Track Suit",
+      "variant": "Black / White piping",
+      "family": "tracksuit",
+      "colour": "black",
+      "category": "sets",
+      "price": 95000,
+      "active": true,
+      "featured": true,
+      "badge": "Two-piece",
+      "image": "assets/products/tracksuit-black-front.jpg",
+      "images": {
+        "front": "assets/products/tracksuit-black-front.jpg",
+        "back": "assets/products/tracksuit-black-back.jpg",
+        "detail": "assets/products/tracksuit-black-detail.jpg"
+      },
+      "blurb": "Full zip jacket and wide-leg trousers in black tricot with white piping down the sleeves and legs. TC crest badge at the chest and thigh, Tribe script at the opposite side. Sold as a set.",
+      "details": {
+        "fabric": "Heavy tricot, brushed inside",
+        "fit": "Jacket true to size, trouser wide leg with elastic waist",
+        "print": "Embroidered crest and Tribe script, contrast piping",
+        "made": "Small batch · Drop 001 · MMXXVI"
+      },
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "default_stock": {
+        "S": 3,
+        "M": 6,
+        "L": 6,
+        "XL": 4,
+        "XXL": 2
+      }
+    },
+    "cadet-cap-black": {
+      "sku": "cadet-cap-black",
+      "name": "Cadet Cap",
+      "variant": "Black / Embroidered",
+      "family": "cadet-cap",
+      "colour": "black",
+      "category": "headwear",
+      "price": 20000,
+      "active": true,
+      "featured": true,
+      "badge": "Everyday",
+      "image": "assets/products/cadet-cap-black-front.jpg",
+      "images": {
+        "front": "assets/products/cadet-cap-black-front.jpg",
+        "back": "assets/products/cadet-cap-black-back.jpg",
+        "detail": "assets/products/cadet-cap-black-detail.jpg"
+      },
+      "blurb": "Soft-crown military cut with a curved brim. The TC monogram is stitched at the front crown and the Tribe Culture script runs along the side. Adjustable strap, one size.",
+      "details": {
+        "fabric": "Washed cotton twill",
+        "fit": "Adjustable — 54 to 60 cm",
+        "print": "Raised embroidery, front crest and side script",
+        "made": "Small batch · Drop 001 · MMXXVI"
+      },
+      "sizes": [
+        "ONE SIZE"
+      ],
+      "default_stock": {
+        "ONE SIZE": 18
+      }
+    },
+    "crest-print": {
+      "sku": "crest-print",
+      "name": "Crest Art Print",
+      "variant": "Bone / Archive crest",
+      "family": "crest-print",
+      "colour": "bone",
+      "category": "prints",
+      "price": 28000,
+      "active": true,
+      "featured": false,
+      "badge": "Archive",
+      "image": "assets/products/crest-print-front.jpg",
+      "images": {
+        "front": "assets/products/crest-print-front.jpg",
+        "back": "assets/products/crest-print-back.jpg",
+        "detail": "assets/products/crest-print-detail.jpg"
+      },
+      "blurb": "The house crest as a printed artefact: engraved angels, the Tribe Culture script and ESTABLISHED MMXXVI around an arched panel dated 20 · 26. Printed on 250 gsm uncoated stock, shipped rolled in a tube.",
+      "details": {
+        "fabric": "250 gsm uncoated art stock",
+        "fit": "A2 — 420 × 594 mm, unframed",
+        "print": "Archival pigment, bone ground with red foil feel",
+        "made": "Numbered edition of 100"
+      },
+      "sizes": [
+        "ONE SIZE"
+      ],
+      "default_stock": {
+        "ONE SIZE": 24
+      }
+    }
+  }
+}

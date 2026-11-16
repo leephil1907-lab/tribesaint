@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Studio sign-in — Tribe Culture</title>
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#050505">
+<link rel="icon" href="/assets/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="preload" href="/assets/fonts/anton-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/oswald-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/css/site.css">
+<style>
+  body{background:#050505;min-height:100svh;display:grid;place-items:center;padding:24px 18px;
+       background-image:radial-gradient(80% 60% at 50% -10%,rgba(122,15,20,.42),transparent 68%)}
+  .gate{width:min(420px,100%);display:grid;gap:18px}
+  .gate-brand{display:flex;align-items:center;gap:10px}
+  .gate-brand img{width:30px;height:30px}
+  .gate-brand span{font-size:24px;color:var(--bone)}
+  .gate-card{border:1px solid var(--line);background:rgba(10,9,9,.86);backdrop-filter:blur(6px);padding:clamp(22px,5vw,32px);display:grid;gap:16px;position:relative;overflow:hidden}
+  .gate-card::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:linear-gradient(90deg,var(--red),transparent 72%)}
+  .gate-card h1{font-size:clamp(26px,6vw,34px)}
+  .gate-card .eyebrow{color:var(--red)}
+  .gate-card p{color:var(--mute);font-size:13px;line-height:1.6}
+  .pw-field{position:relative}
+  .pw-field input{width:100%}
+  .pw-field button{position:absolute;right:8px;top:50%;transform:translateY(-50%);font:400 8px/1 Oswald,sans-serif;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--mute);padding:6px 8px;border:1px solid transparent}
+  .pw-field button:hover{color:var(--bone);border-color:var(--line)}
+  .gate-foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+  .gate-foot a{font:400 9px/1 Oswald,sans-serif;letter-spacing:.22em;text-transform:uppercase;color:var(--mute)}
+  .gate-foot a:hover{color:var(--bone)}
+  .gate-note{font:400 8.5px/1.7 Oswald,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#5f584e;text-align:center}
+  .spin{display:inline-block;width:10px;height:10px;border:1.5px solid rgba(236,227,207,.25);border-top-color:var(--bone);
+        border-radius:50%;animation:spin .7s linear infinite;vertical-align:-1px;margin-right:7px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
+</style>
+</head>
+<body>
+<main class="gate">
+  <a class="gate-brand" href="/" aria-label="Tribe Culture home">
+    <img src="/assets/logo-red-sm.png" alt="" width="30" height="30">
+    <span class="script">Tribe Culture</span>
+  </a>
+
+  <section class="gate-card" aria-labelledby="gateTitle">
+    <p class="eyebrow">Studio · Restricted</p>
+    <h1 class="disp" id="gateTitle">Store sign-in</h1>
+    <p>Orders, stock, invoices and settings. This area is not part of the public storefront.</p>
+
+    <form id="gateForm" class="form" novalidate>
+      <div class="field pw-field">
+        <label for="pw">Admin password</label>
+        <input id="pw" name="password" type="password" autocomplete="current-password" required autofocus
+               spellcheck="false" autocapitalize="off">
+        <button type="button" id="reveal" aria-pressed="false">Show</button>
+      </div>
+      <p class="alert" id="gateAlert" role="alert" aria-live="polite"></p>
+      <button class="btn block" type="submit" id="gateBtn"><span>Enter the studio</span></button>
+    </form>
+
+    <p class="gate-note">Rate limited · 8 attempts per 15 minutes</p>
+  </section>
+
+  <div class="gate-foot">
+    <a href="/">← Back to the storefront</a>
+    <a href="/help.html#faq">Need help?</a>
+  </div>
+</main>
+
+<script>
+(() => {
+  const form = document.getElementById('gateForm');
+  const pw = document.getElementById('pw');
+  const btn = document.getElementById('gateBtn');
+  const alertBox = document.getElementById('gateAlert');
+  const reveal = document.getElementById('reveal');
+
+  reveal.addEventListener('click', () => {
+    const show = pw.type === 'password';
+    pw.type = show ? 'text' : 'password';
+    reveal.textContent = show ? 'Hide' : 'Show';
+    reveal.setAttribute('aria-pressed', String(show));
+    pw.focus();
+  });
+
+  const fail = (msg) => {
+    alertBox.textContent = msg;
+    alertBox.classList.add('show');
+    btn.disabled = false;
+    btn.querySelector('span').textContent = 'Enter the studio';
+    pw.select();
+  };
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    alertBox.classList.remove('show');
+    if (!pw.value) return fail('Enter your password.');
+    btn.disabled = true;
+    btn.querySelector('span').innerHTML = '<i class="spin"></i>Checking';
+    try {
+      const res = await fetch('/api/admin?action=login', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw.value })
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || json.ok === false) return fail(json.error || 'Sign in failed.');
+      btn.querySelector('span').innerHTML = '<i class="spin"></i>Opening';
+      location.replace('/studio');
+    } catch {
+      fail('Network error — check your connection and try again.');
+    }
+  });
+})();
+</script>
+</body>
+</html>

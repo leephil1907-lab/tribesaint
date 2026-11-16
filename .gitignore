@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+npm-debug.log*
+
+# runtime data — orders, invoices, customer records must never be committed
+data/
+tc-data/
+*.sqlite
+*.json.tmp
+store.json
+
+# secrets
+.env
+.env.*
+!.env.example
+
+# editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# build + archives
+*.zip
+dist/
+out/
+coverage/

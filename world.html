@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>try{var t=localStorage.getItem('tc-theme');if(t==='light'){document.documentElement.dataset.theme='light';}}catch(e){}</script>
+<script>try{var t=localStorage.getItem('tc-theme');if(t==='light'){document.documentElement.dataset.theme='light';}}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="canonical" href="https://tribeculture.store/world.html">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<title>The World — Tribe Culture</title>
+<meta name="description" content="Step into the Tribe Culture world: the code, the marks and the drop, told as a living 3D page.">
+<link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="assets/icons/icon-192.png" sizes="192x192" type="image/png">
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="application-name" content="Tribe Culture">
+<meta name="apple-mobile-web-app-title" content="Tribe Culture">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#050505" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4ecdd" media="(prefers-color-scheme: light)">
+<meta name="format-detection" content="telephone=no">
+<meta property="og:site_name" content="Tribe Culture">
+<meta property="og:locale" content="en_NG">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tribeculture.store/world.html">
+<meta property="og:title" content="The World — Tribe Culture">
+<meta property="og:description" content="Step into the Tribe Culture world: the code, the marks and the drop, told as a living 3D page.">
+<meta property="og:image" content="https://tribeculture.store/assets/brand/og-cover.jpg">
+<meta property="og:image:secure_url" content="https://tribeculture.store/assets/brand/og-cover.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Tribe Culture — enter the tribe. Drop 001, twelve heavyweight pieces.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@tribeculture">
+<meta name="twitter:title" content="The World — Tribe Culture">
+<meta name="twitter:description" content="Step into the Tribe Culture world: the code, the marks and the drop, told as a living 3D page.">
+<meta name="twitter:image" content="https://tribeculture.store/assets/brand/og-cover.jpg">
+<meta name="twitter:image:alt" content="Tribe Culture — enter the tribe. Drop 001, twelve heavyweight pieces.">
+
+<link rel="stylesheet" href="assets/css/fonts.css">
+<link rel="preload" href="assets/fonts/anton-400.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+  html{overflow-x:clip}
+  .emblem,.value{overflow:hidden}
+</style>
+<style>
+/* ==========================================================================
+   TRIBE CULTURE — "ENTER THE TRIBE"
+   A single-file, dependency-free, scroll-driven experience.
+   ========================================================================== */
+:root{
+  --ink:#050505;
+  --ink-2:#0a0909;
+  --bone:#ece3cf;
+  --parch:#d9cdb2;
+  --red:#d4141b;
+  --ox:#7a0f14;
+  --mute:#8d8577;
+  --line:rgba(236,227,207,.14);
+  --nav:64px;
+  color-scheme:dark;
+  --ease:cubic-bezier(.16,.84,.24,1);
+}
+[hidden]{display:none!important}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+html.lock,body.lock{overflow:hidden;height:100%}
+body{
+  margin:0;background:var(--ink);color:var(--bone);
+  font:200 clamp(15px,.42vw + 13.6px,17px)/1.62 Oswald,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+body.no-cursor,body.no-cursor *{cursor:none!important}
+img,video{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+::selection{background:var(--red);color:#fff}
+:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+.disp{font-family:Anton,Impact,"Arial Narrow Bold",sans-serif;font-weight:400;text-transform:uppercase;line-height:.86;letter-spacing:-.005em}
+.script{font-family:"Pinyon Script","Snell Roundhand",Georgia,cursive;text-transform:none;letter-spacing:0}
+.eyebrow{font:400 10px/1 Oswald,sans-serif;letter-spacing:.4em;text-transform:uppercase;color:var(--mute)}
+.wrap{width:min(100% - 40px,1280px);margin-inline:auto}
+
+/* ---------------- loader ---------------- */
+#boot{
+  position:fixed;inset:0;z-index:200;background:var(--ink);
+  display:grid;place-items:center;transition:opacity .9s var(--ease),visibility .9s;
+}
+#boot.gone{opacity:0;visibility:hidden}
+#dust{position:absolute;inset:0;width:100%;height:100%}
+.boot-in{position:relative;z-index:2;text-align:center;pointer-events:none;opacity:0;transition:opacity .7s ease .25s}
+#boot.armed .boot-in{opacity:1}
+.boot-in .k{font:400 9.5px/1 Oswald,sans-serif;letter-spacing:.52em;text-transform:uppercase;color:var(--mute)}
+.boot-in .l{width:132px;height:1px;background:rgba(236,227,207,.16);margin:18px auto 12px;overflow:hidden}
+.boot-in .l i{display:block;height:100%;width:0;background:var(--red);transition:width .25s linear}
+.boot-in .p{font:300 11px/1 Oswald,sans-serif;letter-spacing:.3em;color:var(--parch)}
+.boot-skip{
+  position:absolute;bottom:32px;left:50%;transform:translateX(-50%);z-index:3;
+  font:400 9px/1 Oswald,sans-serif;letter-spacing:.32em;text-transform:uppercase;color:var(--mute);
+  border-bottom:1px solid transparent;padding-bottom:3px;transition:.25s;
+}
+.boot-skip:hover{color:var(--bone);border-color:var(--red)}
+
+/* ---------------- ambient layers ---------------- */
+#field{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.grain{
+  position:fixed;inset:-50%;z-index:1;pointer-events:none;opacity:.05;mix-blend-mode:screen;
+  background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="220" height="220"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/></filter><rect width="220" height="220" filter="url(%23n)" opacity="0.55"/></svg>');
+  animation:grainShift 7s steps(6) infinite;
+}
+@keyframes grainShift{
+  0%{transform:translate3d(0,0,0)}20%{transform:translate3d(-2%,1%,0)}40%{transform:translate3d(1%,-2%,0)}
+  60%{transform:translate3d(-1%,2%,0)}80%{transform:translate3d(2%,1%,0)}100%{transform:translate3d(0,0,0)}
+}
+.vignette{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(120% 90% at 50% 40%,transparent 40%,rgba(0,0,0,.72) 100%)}
+main{position:relative;z-index:2}
+
+/* ---------------- custom cursor ---------------- */
+.cursor,.cursor-ring{
+  position:fixed;top:0;left:0;z-index:150;pointer-events:none;border-radius:50%;
+  transform:translate3d(-100px,-100px,0);will-change:transform;
+}
+.cursor{width:6px;height:6px;background:var(--red);margin:-3px 0 0 -3px}
+.cursor-ring{
+  width:34px;height:34px;margin:-17px 0 0 -17px;border:1px solid rgba(236,227,207,.34);
+  transition:width .28s var(--ease),height .28s var(--ease),margin .28s var(--ease),border-color .28s,background .28s;
+}
+.cursor-ring.hot{width:60px;height:60px;margin:-30px 0 0 -30px;border-color:var(--red);background:rgba(212,20,27,.08)}
+.cursor-ring.press{width:22px;height:22px;margin:-11px 0 0 -11px;background:rgba(212,20,27,.5)}
+
+/* ---------------- top bar ---------------- */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:120;height:var(--nav);
+  display:flex;align-items:center;gap:18px;
+  padding:0 clamp(16px,4vw,44px);
+  transition:background .5s,backdrop-filter .5s,border-color .5s;
+  border-bottom:1px solid transparent;
+}
+.topbar.solid{background:rgba(5,5,5,.82);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-color:var(--line)}
+.brand{display:flex;align-items:center;gap:11px;flex:0 0 auto}
+.brand img{height:28px;width:auto}
+.brand .script{font-size:clamp(20px,2.1vw,26px);padding-top:4px}
+.topnav{margin-left:auto;display:none;gap:30px;align-items:center;font:400 10px/1 Oswald,sans-serif;letter-spacing:.26em;text-transform:uppercase;color:var(--parch)}
+.topnav a{position:relative;padding:8px 0}
+.topnav a::after{content:"";position:absolute;left:0;right:100%;bottom:2px;height:1px;background:var(--red);transition:right .35s var(--ease)}
+.topnav a:hover::after{right:0}
+.topnav .shop{border:1px solid rgba(236,227,207,.4);padding:11px 16px;color:var(--bone);transition:.28s}
+.topnav .shop::after{display:none}
+.topnav .shop:hover{background:var(--bone);color:#000;border-color:var(--bone)}
+.progress{position:fixed;top:var(--nav);left:0;height:1px;width:0;background:linear-gradient(90deg,var(--ox),var(--red));z-index:121;box-shadow:0 0 14px rgba(212,20,27,.7)}
+@media(min-width:900px){.topnav{display:flex}}
+
+/* ---------------- buttons ---------------- */
+.btn{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:11px;
+  padding:18px 32px;border:1px solid var(--red);background:var(--red);color:#fff;
+  font:500 10.5px/1 Oswald,sans-serif;letter-spacing:.28em;text-transform:uppercase;
+  overflow:hidden;transition:color .35s,border-color .35s,transform .2s var(--ease);
+  will-change:transform;
+}
+.btn span{position:relative;z-index:2}
+.btn::before{
+  content:"";position:absolute;inset:0;background:var(--bone);
+  transform:translateY(101%);transition:transform .45s var(--ease);
+}
+.btn:hover::before{transform:none}
+.btn:hover{color:#000;border-color:var(--bone)}
+.btn.ghost{background:transparent;border-color:rgba(236,227,207,.34);color:var(--bone)}
+.btn.ghost::before{background:var(--bone)}
+.btn.ghost:hover{color:#000;border-color:var(--bone)}
+.btn .dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.6}
+
+/* ---------------- hero ---------------- */
+.hero{
+  position:relative;min-height:100svh;display:grid;align-items:center;
+  padding:calc(var(--nav) + 30px) 0 60px;
+}
+.hero-grid{display:grid;gap:clamp(28px,5vw,64px);grid-template-columns:1fr;align-items:center}
+.hero-h1{margin:14px 0 0;font-size:clamp(62px,13.5vw,158px)}
+.hero-h1 .line{display:block;overflow:hidden}
+.hero-h1 .ch{display:inline-block;transform:translate3d(0,110%,0) rotate(4deg);opacity:0;transition:transform 1.05s var(--ease),opacity 1.05s var(--ease);will-change:transform}
+.reveal .hero-h1 .ch{transform:none;opacity:1}
+.hero-h1 .accent{color:var(--red)}
+.hero-h1 .script{display:inline-block;font-size:.52em;line-height:1;transform-origin:left bottom}
+.hero-sub{
+  max-width:42ch;margin:26px 0 0;color:var(--parch);
+  font-weight:200;font-size:clamp(15px,1.5vw,18.5px);line-height:1.65;
+  opacity:0;transform:translateY(14px);transition:.9s var(--ease) .5s;
+}
+.reveal .hero-sub{opacity:1;transform:none}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px;opacity:0;transform:translateY(14px);transition:.9s var(--ease) .62s}
+.reveal .hero-cta{opacity:1;transform:none}
+.hero-meta{
+  display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-top:40px;padding-top:20px;
+  border-top:1px solid var(--line);opacity:0;transition:opacity 1s ease .85s;
+}
+.reveal .hero-meta{opacity:1}
+.hero-meta span{font:400 9px/1.6 Oswald,sans-serif;letter-spacing:.26em;text-transform:uppercase;color:var(--mute)}
+.hero-meta span b{color:var(--bone);font-weight:400}
+
+/* emblem */
+.emblem-wrap{position:relative;justify-self:center;width:min(100%,440px);perspective:1200px;opacity:0;transform:translateY(30px) scale(.96);transition:1.4s var(--ease) .25s}
+.reveal .emblem-wrap{opacity:1;transform:none}
+.emblem{
+  position:relative;transform-style:preserve-3d;will-change:transform;
+  transition:transform .12s linear;
+}
+.emblem .face{
+  position:relative;border-radius:250px 250px 8px 8px;overflow:hidden;
+  box-shadow:0 60px 120px -50px rgba(212,20,27,.85),0 0 0 1px rgba(236,227,207,.14),inset 0 0 90px rgba(0,0,0,.55);
+  transform:translateZ(40px);
+}
+.emblem .face img{width:100%;height:auto;aspect-ratio:754/824;object-fit:cover;display:block}
+.emblem .face::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(160deg,rgba(255,255,255,.16),transparent 38%,rgba(122,15,20,.32));
+  mix-blend-mode:overlay;pointer-events:none;
+}
+.emblem .halo{
+  position:absolute;inset:-18% -22%;z-index:-1;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(212,20,27,.32),transparent 72%);
+  filter:blur(22px);transform:translateZ(-60px);animation:halo 9s ease-in-out infinite;
+}
+@keyframes halo{0%,100%{opacity:.55;transform:translateZ(-60px) scale(1)}50%{opacity:.95;transform:translateZ(-60px) scale(1.09)}}
+.emblem-hint{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;
+  font:400 8.5px/1 Oswald,sans-serif;letter-spacing:.28em;text-transform:uppercase;color:var(--mute);
+}
+.emblem-hint .pips{display:flex;gap:6px}
+.emblem-hint .pips i{width:16px;height:2px;background:rgba(236,227,207,.2)}
+.emblem-hint .pips i.on{background:var(--red)}
+.scroll-cue{
+  display:flex;align-items:center;gap:12px;margin-top:clamp(34px,6vh,70px);
+  font:400 8.5px/1 Oswald,sans-serif;letter-spacing:.32em;text-transform:uppercase;color:var(--mute);
+}
+.scroll-cue .rail{position:relative;width:64px;height:1px;background:rgba(236,227,207,.18);overflow:hidden}
+.scroll-cue .rail::after{content:"";position:absolute;inset:0;background:var(--red);transform-origin:left;animation:cue 2.6s var(--ease) infinite}
+@keyframes cue{0%{transform:scaleX(0)}55%{transform:scaleX(1)}100%{transform:scaleX(1) translateX(100%)}}
+@media(min-width:960px){
+  .hero-grid{grid-template-columns:1.04fr .96fr}
+  .scroll-cue{position:absolute;bottom:6px;left:0}
+}
+
+/* ---------------- section scaffolding ---------------- */
+section{position:relative;scroll-margin-top:calc(var(--nav) + 18px)}
+.sec{padding:clamp(80px,13vh,160px) 0}
+.sec-head{display:grid;gap:14px;margin-bottom:clamp(30px,5vh,58px)}
+.sec-head h2{margin:0;font-size:clamp(38px,7.4vw,96px)}
+.sec-head p{margin:0;max-width:56ch;color:var(--mute);font-size:clamp(14px,1.35vw,16px)}
+.sec-head .eyebrow{color:var(--red)}
+/* generic reveal */
+.rise{opacity:0;transform:translate3d(0,28px,0);transition:opacity 1s var(--ease),transform 1s var(--ease)}
+.rise.in{opacity:1;transform:none}
+.rise.d1{transition-delay:.09s}.rise.d2{transition-delay:.18s}.rise.d3{transition-delay:.27s}.rise.d4{transition-delay:.36s}
+
+/* ---------------- statement ---------------- */
+.statement{position:relative;padding:clamp(90px,18vh,190px) 0;border-block:1px solid var(--line);background:linear-gradient(180deg,rgba(122,15,20,.10),transparent 45%,rgba(122,15,20,.10))}
+.statement .lede{max-width:24ch;margin:0 0 26px;font:400 9.5px/1 Oswald,sans-serif;letter-spacing:.4em;text-transform:uppercase;color:var(--red)}
+.statement h2{margin:0;font-size:clamp(34px,6.4vw,86px);line-height:1.02;max-width:22ch}
+.statement .w{display:inline-block;margin-right:.22em;opacity:.13;transition:opacity .35s linear}
+.statement .w.lit{opacity:1}
+.statement .fine{margin:34px 0 0;max-width:52ch;color:var(--mute);font-size:clamp(14px,1.35vw,16.5px);font-weight:200}
+
+/* ---------------- values ---------------- */
+.values-grid{display:grid;gap:clamp(14px,2vw,20px);grid-template-columns:1fr}
+@media(min-width:680px){.values-grid{grid-template-columns:1fr 1fr}}
+@media(min-width:1060px){.values-grid{grid-template-columns:repeat(4,1fr)}}
+.value{
+  position:relative;padding:clamp(22px,3vw,30px);border:1px solid var(--line);background:rgba(10,9,9,.6);
+  min-height:260px;display:flex;flex-direction:column;justify-content:space-between;gap:26px;
+  transform-style:preserve-3d;transition:border-color .4s,background .4s,box-shadow .4s;
+  will-change:transform;
+}
+.value:hover{border-color:rgba(212,20,27,.55);box-shadow:0 40px 80px -50px rgba(212,20,27,.9)}
+.value .idx{font:400 9px/1 Oswald,sans-serif;letter-spacing:.3em;color:var(--red)}
+.value h3{margin:0 0 10px;font-size:clamp(22px,2.6vw,28px);transform:translateZ(26px)}
+.value p{margin:0;color:var(--mute);font-size:13.5px;line-height:1.72;transform:translateZ(14px)}
+.value .glow{position:absolute;inset:auto -20% -60% -20%;height:60%;background:radial-gradient(closest-side,rgba(212,20,27,.28),transparent);opacity:0;transition:opacity .5s;pointer-events:none}
+.value:hover .glow{opacity:1}
+
+/* ---------------- experience / collection ---------------- */
+.exp-split{display:grid;gap:clamp(24px,4vw,54px);grid-template-columns:1fr;align-items:center}
+@media(min-width:940px){.exp-split{grid-template-columns:.94fr 1.06fr}}
+.viewer{
+  position:relative;border:1px solid var(--line);background:radial-gradient(80% 70% at 50% 0%,#141010,#000 70%);
+  aspect-ratio:1/1;display:grid;place-items:center;overflow:hidden;touch-action:pan-y;
+}
+.viewer .stack{position:relative;width:74%;aspect-ratio:1;transform-style:preserve-3d;transform-origin:50% 50%;will-change:transform}
+.viewer .stack img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+  border:1px solid rgba(236,227,207,.1);box-shadow:0 40px 80px -40px #000;background:#050505;
+  transition:opacity .5s,transform .5s var(--ease);
+}
+.viewer .stack img[data-layer="b"]{transform:translateZ(-60px) scale(.86);opacity:.42;filter:saturate(.85)}
+.viewer .stack img[data-layer="c"]{transform:translateZ(-120px) scale(.72);opacity:.22;filter:grayscale(.4)}
+.viewer .tag{
+  position:absolute;left:14px;top:14px;z-index:3;
+  font:400 8.5px/1 Oswald,sans-serif;letter-spacing:.26em;text-transform:uppercase;color:var(--parch);
+  background:rgba(0,0,0,.55);border:1px solid var(--line);padding:8px 10px;backdrop-filter:blur(4px);
+}
+.viewer .drag{
+  position:absolute;right:14px;bottom:14px;z-index:3;display:flex;align-items:center;gap:8px;
+  font:400 8.5px/1 Oswald,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:var(--mute);
+}
+.viewer .drag i{width:16px;height:16px;border:1px solid currentColor;border-radius:50%;position:relative}
+.viewer .drag i::after{content:"";position:absolute;inset:4px;border-left:1px solid currentColor;border-right:1px solid currentColor}
+.exp-copy{display:grid;gap:20px;align-content:start}
+.exp-copy h2{margin:0;font-size:clamp(36px,6vw,80px)}
+.exp-copy p{margin:0;color:var(--parch);font-weight:200;max-width:46ch;font-size:clamp(14.5px,1.4vw,17px)}
+.exp-list{list-style:none;margin:2px 0 0;padding:0;display:grid;border-top:1px solid var(--line)}
+.exp-list li{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:baseline;padding:14px 0;border-bottom:1px solid var(--line)}
+.exp-list li b{font:400 9px/1 Oswald,sans-serif;letter-spacing:.24em;color:var(--red);padding-top:3px}
+.exp-list li span{font-size:14px;color:var(--parch)}
+.exp-list li em{font:400 9px/1 Oswald,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);font-style:normal}
+
+/* ---------------- counters ---------------- */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border-block:1px solid var(--line)}
+@media(min-width:820px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{background:var(--ink);padding:clamp(24px,4vw,40px) clamp(16px,3vw,30px);display:grid;gap:10px}
+.stat b{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:clamp(38px,6vw,72px);line-height:.9;letter-spacing:-.01em}
+.stat b .u{color:var(--red)}
+.stat > span{font:400 8.5px/1.5 Oswald,sans-serif;letter-spacing:.28em;text-transform:uppercase;color:var(--mute)}
+.stat b span{font:inherit;letter-spacing:inherit;color:inherit}
+
+/* ---------------- what's next ---------------- */
+.next-list{display:grid;border-top:1px solid var(--line)}
+.next-row{
+  display:grid;grid-template-columns:1fr auto;gap:8px 20px;align-items:center;
+  padding:clamp(20px,3vw,30px) 0;border-bottom:1px solid var(--line);position:relative;
+  transition:padding-inline .45s var(--ease),color .35s;
+}
+@media(min-width:760px){.next-row{grid-template-columns:120px 1fr auto auto}}
+.next-row::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(212,20,27,.12),transparent 70%);opacity:0;transition:opacity .45s}
+.next-row:hover::before{opacity:1}
+.next-row:hover{padding-inline:16px}
+.next-row .when{font:400 9.5px/1 Oswald,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:var(--red)}
+.next-row .what{font-family:Anton,Impact,sans-serif;text-transform:uppercase;font-size:clamp(20px,2.6vw,30px);line-height:1.05}
+.next-row .what small{display:block;font-family:Oswald,sans-serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);margin-top:7px}
+.next-row .pill{font:400 8.5px/1 Oswald,sans-serif;letter-spacing:.22em;text-transform:uppercase;color:var(--parch);border:1px solid var(--line);padding:8px 10px;justify-self:start}
+.next-row .arrow{font-size:16px;color:var(--mute);transition:transform .4s var(--ease),color .3s}
+.next-row:hover .arrow{transform:translateX(6px);color:var(--red)}
+
+/* ---------------- finale ---------------- */
+.finale{
+  position:relative;min-height:92svh;display:grid;place-items:center;text-align:center;overflow:hidden;
+  border-top:1px solid var(--line);
+  background:radial-gradient(60% 60% at 50% 62%,rgba(122,15,20,.55),rgba(5,5,5,1) 72%);
+}
+.portal{
+  position:absolute;left:50%;top:52%;translate:-50% -50%;width:min(78vw,620px);aspect-ratio:1;border-radius:50%;
+  border:1px solid rgba(212,20,27,.4);
+  box-shadow:0 0 120px rgba(212,20,27,.35),inset 0 0 120px rgba(212,20,27,.25);
+  animation:portal 12s ease-in-out infinite;pointer-events:none;
+}
+.portal.two{width:min(58vw,470px);border-color:rgba(236,227,207,.16);animation-duration:16s;animation-direction:reverse}
+.portal.three{width:min(38vw,320px);border-style:dashed;border-color:rgba(212,20,27,.28);animation-duration:20s}
+@keyframes portal{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.06) rotate(8deg)}}
+.finale-in{position:relative;z-index:2;padding:0 20px;display:grid;justify-items:center;gap:20px}
+.finale h2{margin:0;font-size:clamp(44px,11vw,132px);line-height:.85}
+.finale p{margin:0;color:var(--parch);max-width:38ch;font-weight:200;font-size:clamp(15px,1.6vw,18px)}
+.finale .cta-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:12px}
+.finale .crest-mini{width:clamp(52px,6vw,74px);opacity:.9}
+
+/* ---------------- footer ---------------- */
+.foot{border-top:1px solid var(--line);padding:clamp(40px,6vw,70px) 0 26px;background:var(--ink)}
+.foot-grid{display:grid;gap:clamp(26px,4vw,48px);grid-template-columns:1fr}
+@media(min-width:820px){.foot-grid{grid-template-columns:1.2fr .8fr}}
+.foot h3{margin:0 0 10px;font-size:clamp(24px,3.4vw,36px)}
+.foot p{margin:0;color:var(--mute);font-size:13.5px;max-width:44ch}
+.foot-cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.foot-cols h4{margin:0 0 12px;font:400 9px/1 Oswald,sans-serif;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+.foot-cols a{display:block;padding:5px 0;font-size:13.5px;color:var(--parch);transition:color .25s}
+.foot-cols a:hover{color:var(--red)}
+.foot-base{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center;margin-top:clamp(30px,5vw,52px);padding-top:22px;border-top:1px solid var(--line)}
+.foot-base .script{font-size:clamp(28px,4vw,40px)}
+.foot-base .legal{font:400 8.5px/1.8 Oswald,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:#6a6357;text-align:right}
+
+/* ---------------- motion preferences & touch ---------------- */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition-duration:.001ms!important}
+  .hero-h1 .ch,.hero-sub,.hero-cta,.hero-meta,.emblem-wrap{opacity:1!important;transform:none!important}
+  .statement .w{opacity:1!important}
+  .rise{opacity:1!important;transform:none!important}
+  .grain{display:none}
+}
+@media(hover:none){
+  .cursor,.cursor-ring{display:none}
+  .value{transform:none!important}
+}
+</style>
+</head>
+<body class="lock">
+
+<!-- ============ LOADER ============ -->
+<div id="boot" aria-hidden="true">
+  <canvas id="dust"></canvas>
+  <div class="boot-in">
+    <div class="k">Tribe Culture · MMXXVI</div>
+    <div class="l"><i id="bootBar"></i></div>
+    <div class="p" id="bootPct">00</div>
+  </div>
+  <button class="boot-skip" id="bootSkip" type="button">Skip intro</button>
+</div>
+
+<!-- ============ AMBIENT ============ -->
+<canvas id="field" aria-hidden="true"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor" id="curDot" aria-hidden="true"></div>
+<div class="cursor-ring" id="curRing" aria-hidden="true"></div>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<!-- ============ TOP BAR ============ -->
+<header class="topbar" id="topbar">
+  <a class="brand" href="index.html" aria-label="Tribe Culture home">
+    <img src="assets/logo-red-sm.png" alt="" width="28" height="28">
+    <span class="script">Tribe Culture</span>
+  </a>
+  <nav class="topnav" aria-label="Primary">
+    <a href="about.html#code">The Code</a>
+    <a href="#experience">Experience</a>
+    <a href="#next">What's Next</a>
+    <a href="product.html?sku=saint-tee-black">Saint</a>
+    <a href="about.html">About</a>
+    <a href="help.html">Help</a>
+    <a class="shop" href="shop.html">Shop Drop 001</a>
+    <button class="icon-btn theme-btn" type="button" data-theme-toggle aria-pressed="false" aria-label="Switch to daylight theme">
+      <svg class="i-moon" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      <svg class="i-sun" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M12 2.4v2.4M12 19.2v2.4M2.4 12h2.4M19.2 12h2.4M5.2 5.2l1.7 1.7M17.1 17.1l1.7 1.7M18.8 5.2l-1.7 1.7M6.9 17.1l-1.7 1.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      <span class="sr">Toggle theme</span>
+    </button>
+  </nav>
+</header>
+
+<main>
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="enter">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">Drop 001 · Saint Collection</p>
+        <h1 class="disp hero-h1" id="heroTitle">
+          <span class="line"><span class="split">ENTER</span></span>
+          <span class="line"><span class="split">THE</span> <span class="split accent">TRIBE</span></span>
+          <span class="line" style="margin-top:.18em"><span class="script">Tribe Culture</span></span>
+        </h1>
+        <p class="hero-sub">A living world built for movement, connection and creation. Heavyweight garments, blood-red prints, and a society that would rather discover new truth than keep old prejudices.</p>
+        <div class="hero-cta">
+          <a class="btn magnet" href="shop.html" data-hot><span>Explore the drop</span><i class="dot"></i></a>
+          <a class="btn ghost magnet" href="#values" data-hot><span>Join the movement</span></a>
+        </div>
+        <div class="hero-meta">
+          <span>Established <b>MMXXVI</b></span>
+          <span>Lagos · <b>Worldwide</b></span>
+          <span>Twelve pieces · <b>Limited run</b></span>
+        </div>
+      </div>
+
+      <div class="emblem-wrap" id="emblemWrap">
+        <div class="emblem" id="emblem" data-tilt>
+          <span class="halo" aria-hidden="true"></span>
+          <div class="face">
+            <img src="assets/crest-monogram.jpg" alt="Tribe Culture baroque crest with the interlocking TC monogram" width="754" height="824" id="emblemImg">
+          </div>
+        </div>
+        <div class="emblem-hint" aria-hidden="true">
+          <span class="pips"><i class="on" data-pip="0"></i><i data-pip="1"></i></span>
+          <span>Move to tilt · tap to flip</span>
+        </div>
+        <div class="scroll-cue" aria-hidden="true"><span class="rail"></span><span>Scroll to enter</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STATEMENT ============ -->
+  <section class="statement" id="statement" aria-labelledby="statementTitle">
+    <div class="wrap">
+      <p class="lede">The premise</p>
+      <h2 class="disp" id="statementTitle" data-scrub>We are not just a brand. We are a movement. Tribe is where culture, creativity and community collide.</h2>
+      <p class="fine rise">Tribe Culture is a streetwear house built on a single idea: the greatest pleasure is to discover new truth — the next is to shake off old prejudices. Everything we cut, print and embroider follows from that.</p>
+    </div>
+  </section>
+
+  <!-- ============ VALUES ============ -->
+  <section class="sec" id="values" aria-labelledby="valuesTitle">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow rise">What Tribe stands for</p>
+        <h2 class="disp rise d1" id="valuesTitle">The Code</h2>
+        <p class="rise d2">Four lines we hold to. They decide what we make, who we make it with, and who we make it for.</p>
+      </div>
+      <div class="values-grid">
+        <article class="value rise d1" data-tilt>
+          <span class="idx">01</span>
+          <div><h3 class="disp">Community</h3><p>We create space for people to belong, collaborate and grow. Nobody wears the crest alone.</p></div>
+          <span class="glow" aria-hidden="true"></span>
+        </article>
+        <article class="value rise d2" data-tilt>
+          <span class="idx">02</span>
+          <div><h3 class="disp">Creativity</h3><p>We turn ideas into objects that move culture forward — from print studies to film.</p></div>
+          <span class="glow" aria-hidden="true"></span>
+        </article>
+        <article class="value rise d3" data-tilt>
+          <span class="idx">03</span>
+          <div><h3 class="disp">Expression</h3><p>Individuality, style, sound, art and identity. The cut is the same; the meaning is yours.</p></div>
+          <span class="glow" aria-hidden="true"></span>
+        </article>
+        <article class="value rise d4" data-tilt>
+          <span class="idx">04</span>
+          <div><h3 class="disp">Impact</h3><p>We build with intention and create opportunities for our people, city by city.</p></div>
+          <span class="glow" aria-hidden="true"></span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ EXPERIENCE / VIEWER ============ -->
+  <section class="sec" id="experience" aria-labelledby="expTitle" style="background:linear-gradient(180deg,transparent,rgba(122,15,20,.09),transparent)">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow rise">The experience</p>
+        <h2 class="disp rise d1" id="expTitle">Step into it</h2>
+        <p class="rise d2">Drag the frame. The house marks turn with you — the baroque crest on one face, the interlocking TC on the other.</p>
+      </div>
+      <div class="exp-split">
+        <div class="viewer rise" id="viewer" role="img" aria-label="Tribe Culture crest and monogram, drag to rotate">
+          <span class="tag">The House Mark</span>
+          <div class="stack" id="viewStack">
+            <img data-layer="a" id="vMain" src="assets/crest-script.jpg" alt="" width="754" height="824">
+            <img data-layer="b" src="assets/crest-monogram.jpg" alt="" width="754" height="824">
+            <img data-layer="c" src="assets/logo-emblem-black.jpg" alt="" width="800" height="800">
+          </div>
+          <span class="drag"><i></i>Drag</span>
+        </div>
+        <div class="exp-copy">
+          <h2 class="disp rise d1">Print study<br><span class="script" style="text-transform:none;color:var(--red)">Number one</span></h2>
+          <p class="rise d2">Two marks carry the house and nothing else: the Saint print — arched collegiate lettering, three doves breaking the baseline, twin globes locking TRIBE to SOCIETY — and the interlocking TC monogram cut from the baroque crest.</p>
+          <ul class="exp-list rise d3">
+            <li><b>01</b><span>Left chest — TC monogram at 42&nbsp;mm</span><em>Saint Tee</em></li>
+            <li><b>02</b><span>Back — arched red SAINT, three doves</span><em>Saint Tee</em></li>
+            <li><b>03</b><span>Back hem — TRIBE · globes · SOCIETY</span><em>Saint Tee</em></li>
+            <li><b>04</b><span>Front crown — embroidered monogram</span><em>Cadet Cap</em></li>
+          </ul>
+          <div class="cta-row rise d4" style="display:flex;gap:12px;flex-wrap:wrap">
+            <a class="btn magnet" href="product.html?sku=saint-tee-black" data-hot><span>See the Saint tee</span><i class="dot"></i></a>
+            <a class="btn ghost magnet" href="shop.html" data-hot><span>All twelve pieces</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ COUNTERS ============ -->
+  <section aria-label="Tribe in numbers">
+    <div class="wrap">
+      <div class="stats">
+        <div class="stat rise"><b><span data-count="1042">0</span><span class="u">+</span></b><span>On the Tribe list</span></div>
+        <div class="stat rise d1"><b><span data-count="3">0</span></b><span>Pieces in Drop 001</span></div>
+        <div class="stat rise d2"><b><span data-count="12">0</span></b><span>Cities reached</span></div>
+        <div class="stat rise d3"><b><span data-count="1">0</span></b><span>Film · MMXXVI</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ WHAT'S NEXT ============ -->
+  <section class="sec" id="next" aria-labelledby="nextTitle">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow rise">What's next</p>
+        <h2 class="disp rise d1" id="nextTitle">The Calendar</h2>
+        <p class="rise d2">Small runs, no restocks. Members hear first.</p>
+      </div>
+      <div class="next-list">
+        <a class="next-row rise" href="shop.html" data-hot>
+          <span class="when">Now live</span>
+          <span class="what">Drop 001 — the range<small>Twelve pieces · from ₦20,000</small></span>
+          <span class="pill">In stock</span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="next-row rise d1" href="contact.html" data-hot>
+          <span class="when">Q1 · MMXXVI</span>
+          <span class="what">Drop 002 — Members first<small>Tribe list gets 24 hours ahead of the public</small></span>
+          <span class="pill">Join the list</span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="next-row rise d2" href="shop.html" data-hot>
+          <span class="when">Rolling</span>
+          <span class="what">The Drop Film<small>Shot on fabric · Saint tee in motion</small></span>
+          <span class="pill">Watch</span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FINALE ============ -->
+  <section class="finale" id="finale" aria-labelledby="finaleTitle">
+    <span class="portal" aria-hidden="true"></span>
+    <span class="portal two" aria-hidden="true"></span>
+    <span class="portal three" aria-hidden="true"></span>
+    <div class="finale-in">
+      <img class="crest-mini rise" src="assets/logo-bone.png" alt="" width="74" height="81" loading="lazy">
+      <h2 class="disp rise d1" id="finaleTitle">Your tribe<br>is waiting</h2>
+      <p class="rise d2">Step in. Stand out. Move with us — and discover new truth.</p>
+      <div class="cta-row rise d3">
+        <a class="btn magnet" href="shop.html" data-hot><span>Join the Tribe</span><i class="dot"></i></a>
+        <a class="btn ghost magnet" href="contact.html" data-hot><span>Get drop alerts</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <h3 class="disp">Tribe Culture</h3>
+        <p>A streetwear house established MMXXVI. Heavyweight garments, blood-red prints, small runs. Discover new truth.</p>
+
+        <div class="foot-contact">
+          <a class="foot-wa" data-wa-link data-wa-text="Hi Tribe Culture — I have a question about Drop 001."
+             href="https://wa.me/2347064844525" target="_blank" rel="noopener">
+            <svg viewBox="0 0 32 32" width="15" height="15" aria-hidden="true" focusable="false"><path fill="currentColor" d="M16.04 3.2c-7.06 0-12.8 5.73-12.8 12.79 0 2.25.59 4.45 1.71 6.39L3.2 28.8l6.6-1.73a12.8 12.8 0 0 0 6.24 1.61h.01c7.05 0 12.79-5.74 12.79-12.8 0-3.42-1.33-6.63-3.74-9.04a12.7 12.7 0 0 0-9.06-3.64Zm0 23.03h-.01c-1.97 0-3.9-.53-5.6-1.53l-.4-.24-4.16 1.09 1.11-4.06-.26-.42a10.62 10.62 0 0 1-1.63-5.68c0-5.86 4.77-10.63 10.64-10.63 2.84 0 5.5 1.11 7.5 3.12a10.56 10.56 0 0 1 3.11 7.52c0 5.86-4.77 10.63-10.3 10.63Z"/></svg>
+            <span>Chat · +234 706 484 4525</span>
+          </a>
+          <a class="foot-mail" href="mailto:orders@tribeculture.store">orders@tribeculture.store</a>
+        </div>
+
+        <form class="foot-news" data-newsletter novalidate>
+          <label class="sr" for="newsEmail">Email address</label>
+          <input id="newsEmail" type="email" name="email" inputmode="email" autocomplete="email" placeholder="you@email.com" required>
+          <button class="btn sm" type="submit"><span>Join</span></button>
+        </form>
+        <p class="form-note" role="status"></p>
+      </div>
+
+      <nav class="foot-cols" aria-label="Footer">
+        <div>
+          <h4>Shop</h4>
+          <a href="shop.html">Drop 001</a>
+          <a href="shop.html?family=saint">Saint</a>
+          <a href="product.html?sku=tracksuit-black">Track suit</a>
+          <a href="product.html?sku=cadet-cap-black">Cadet cap</a>
+          <a href="track.html">Track order</a>
+        </div>
+        <div>
+          <h4>House</h4>
+          <a href="about.html">About</a>
+          <a href="world.html">The World</a>
+          <a href="about.html#code">The Code</a>
+          <a href="help.html">Help</a>
+          <a href="contact.html">Contact</a>
+        </div>
+        <div>
+          <h4>Care</h4>
+          <a href="help.html#size">Size guide</a>
+          <a href="help.html#shipping">Delivery</a>
+          <a href="help.html#returns">Returns</a>
+          <a href="help.html#care">Garment care</a>
+          <a href="help.html#faq">FAQ</a>
+        </div>
+        <div>
+          <h4>Contact</h4>
+          <a data-wa-link data-wa-text="Hi Tribe Culture — I have a question about Drop 001." href="https://wa.me/2347064844525" target="_blank" rel="noopener">WhatsApp</a>
+          <a href="mailto:orders@tribeculture.store">Email</a>
+          <a href="contact.html#wholesale">Wholesale</a>
+          <a href="contact.html#press">Press</a>
+        </div>
+      </nav>
+    </div>
+
+    <div class="foot-base">
+      <span class="script">Tribe Culture</span>
+      <div class="foot-legal">
+        <a href="help.html#returns">Returns</a>
+        <a href="help.html#shipping">Delivery</a>
+        <a href="contact.html">Support</a>
+        <span class="copy">© 2026 Tribe Culture · Tribe Society · Established MMXXVI</span>
+      </div>
+    </div>
+  </div>
+</footer>
+</main>
+
+<noscript>
+  <style>
+    #boot{display:none}
+    body{overflow:auto;height:auto}
+    .hero-h1 .ch,.hero-sub,.hero-cta,.hero-meta,.emblem-wrap,.rise,.statement .w{opacity:1!important;transform:none!important}
+  </style>
+</noscript>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ======================================================================
+     Environment
+     ====================================================================== */
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fine = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+  const mobile = window.matchMedia('(max-width: 760px)').matches;
+  const DPR = Math.min(window.devicePixelRatio || 1, mobile ? 1.6 : 2);
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+  const state = { booted: false, pointer: { x: 0.5, y: 0.5 } };
+  let scrubWords = [];   // declared early: the first scroll tick runs before section 5
+
+  /* ======================================================================
+     1. Loader — particles converge into the TC monogram, then dissolve
+     ====================================================================== */
+  const bootEl = $('#boot');
+  const dust = $('#dust');
+  const dctx = dust.getContext('2d');
+  let bootParticles = [];
+  let bootT = 0;
+  let bootDone = false;
+
+  function sizeCanvas(canvas, ctx) {
+    const w = canvas.clientWidth || window.innerWidth;
+    const h = canvas.clientHeight || window.innerHeight;
+    canvas.width = Math.round(w * DPR);
+    canvas.height = Math.round(h * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    return { w, h };
+  }
+
+  /** Sample opaque pixels of the logo so particles can form its silhouette. */
+  function sampleLogo(targetCount) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const S = 220; // sampling grid
+        const ratio = img.height / img.width;
+        const cw = S, ch = Math.round(S * ratio);
+        const c = document.createElement('canvas');
+        c.width = cw; c.height = ch;
+        const cx = c.getContext('2d');
+        cx.drawImage(img, 0, 0, cw, ch);
+        let data;
+        try { data = cx.getImageData(0, 0, cw, ch).data; } catch { data = null; }
+        const pts = [];
+        if (data) {
+          for (let y = 0; y < ch; y++) {
+            for (let x = 0; x < cw; x++) {
+              if (data[(y * cw + x) * 4 + 3] > 130) {
+                pts.push({ nx: x / cw, ny: y / ch });
+              }
+            }
+          }
+        }
+        // pick particles proportionally, plus a few strays for texture
+        const out = [];
+        const stride = Math.max(1, Math.floor(pts.length / targetCount));
+        for (let i = 0; i < pts.length && out.length < targetCount; i += stride) out.push(pts[i]);
+        resolve(out);
+      };
+      img.onerror = () => resolve([]);
+      img.src = 'assets/logo-red.png';
+    });
+  }
+
+  async function buildBootParticles() {
+    const { w, h } = sizeCanvas(dust, dctx);
+    const count = mobile ? 1100 : 2600;
+    const pts = await sampleLogo(count);
+    const cx = w / 2, cy = h / 2;
+    const scale = Math.min(w * 0.34, h * 0.42) / 258; // logo art is ~258px of drawn height
+    const artH = 260 * scale;
+    const artW = 236 * scale;
+
+    bootParticles = [];
+    for (let i = 0; i < count; i++) {
+      const p = pts[i % Math.max(1, pts.length)] || { nx: Math.random(), ny: Math.random() };
+      const tx = cx - artW / 2 + p.nx * artW;
+      const ty = cy - artH / 2 + p.ny * artH;
+      const ang = Math.random() * Math.PI * 2;
+      const rad = Math.max(w, h) * (0.45 + Math.random() * 0.5);
+      bootParticles.push({
+        x: cx + Math.cos(ang) * rad, y: cy + Math.sin(ang) * rad,
+        tx, ty, vx: 0, vy: 0,
+        s: 1.1 + Math.random() * 1.8,
+        d: Math.random() * 0.35,     // stagger
+        a: 0.35 + Math.random() * 0.65
+      });
+    }
+  }
+
+  function drawBoot() {
+    const w = dust.clientWidth || window.innerWidth;
+    const h = dust.clientHeight || window.innerHeight;
+    dctx.clearRect(0, 0, w, h);
+    const t = Math.min(1, bootT);
+    for (const p of bootParticles) {
+      const local = Math.max(0, Math.min(1, (t - p.d) / (1 - p.d || 1)));
+      const ease = 1 - Math.pow(1 - local, 3);
+      // drift toward target with a little orbital wobble
+      const wob = (1 - ease) * 14;
+      const x = p.x + (p.tx - p.x) * ease + Math.sin(t * 9 + p.d * 20) * wob;
+      const y = p.y + (p.ty - p.y) * ease + Math.cos(t * 7 + p.d * 20) * wob;
+      const alpha = p.a * (0.25 + ease * 0.75);
+      dctx.fillStyle = `rgba(${214},${20 + (1 - ease) * 90},${27},${alpha})`;
+      dctx.fillRect(x, y, p.s, p.s);
+    }
+  }
+
+  const bootBar = $('#bootBar');
+  const bootPct = $('#bootPct');
+
+  function setProgress(pct) {
+    if (bootBar) bootBar.style.width = Math.round(pct * 100) + '%';
+    if (bootPct) bootPct.textContent = String(Math.round(pct * 100)).padStart(2, '0');
+  }
+
+  function finishBoot() {
+    if (bootDone) return;
+    bootDone = true;
+    bootEl.classList.add('gone');
+    document.body.classList.remove('lock');
+    document.documentElement.classList.remove('lock');
+    setTimeout(() => { bootEl.setAttribute('hidden', ''); }, 1100);
+    document.body.classList.add('reveal');
+    startField();
+  }
+
+  function skipBoot() {
+    bootDone = true;
+    bootEl.classList.add('gone');
+    document.body.classList.remove('lock');
+    document.documentElement.classList.remove('lock');
+    setTimeout(() => { bootEl.setAttribute('hidden', ''); startField(); }, 700);
+    document.body.classList.add('reveal');
+  }
+
+  async function runBoot() {
+    if (reduced) { skipBoot(); return; }
+    await buildBootParticles();
+    bootEl.classList.add('armed');
+
+    const start = performance.now();
+    const FORM_MS = mobile ? 1900 : 2300;
+    const HOLD_MS = 420;
+
+    function frame(now) {
+      const el = now - start;
+      bootT = Math.min(1, el / FORM_MS);
+      setProgress(bootT * 0.96);
+      drawBoot();
+      if (el < FORM_MS + HOLD_MS) {
+        requestAnimationFrame(frame);
+      } else {
+        setProgress(1);
+        // let the formed mark glow, then dissolve into the page
+        setTimeout(() => { bootEl.classList.add('gone'); bootDone = true; document.body.classList.remove('lock'); document.documentElement.classList.remove('lock');
+          document.body.classList.add('reveal'); startField();
+          setTimeout(() => bootEl.setAttribute('hidden', ''), 1200); }, 340);
+        requestAnimationFrame(dissolve);
+      }
+    }
+    requestAnimationFrame(frame);
+
+    function dissolve() { // fade particles outward as the loader lifts
+      const t0 = performance.now();
+      const step = (n) => {
+        const k = Math.min(1, (n - t0) / 900);
+        dctx.clearRect(0, 0, dust.clientWidth, dust.clientHeight);
+        for (const p of bootParticles) {
+          const x = p.tx + (p.tx - (dust.clientWidth / 2)) * k * 0.4;
+          const y = p.ty + (p.ty - (dust.clientHeight / 2)) * k * 0.4;
+          dctx.fillStyle = `rgba(214,20,27,${(1 - k) * 0.9})`;
+          dctx.fillRect(x, y, p.s, p.s);
+        }
+        if (k < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+  }
+
+  $('#bootSkip').addEventListener('click', skipBoot);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !bootDone) skipBoot(); });
+
+  /* ======================================================================
+     2. Ambient particle field — drifts, and leans away from the pointer
+     ====================================================================== */
+  const field = $('#field');
+  const fctx = field.getContext('2d');
+  let fieldParticles = [];
+  let fieldRunning = false;
+  let fieldBox = { w: 0, h: 0 };
+
+  function sizeField() {
+    fieldBox = sizeCanvas(field, fctx);
+    const density = mobile ? 0.000035 : 0.00006;
+    const count = Math.round(fieldBox.w * fieldBox.h * density);
+    fieldParticles = Array.from({ length: count }, () => ({
+      x: Math.random() * fieldBox.w,
+      y: Math.random() * fieldBox.h,
+      vx: (Math.random() - 0.5) * 0.16,
+      vy: -0.05 - Math.random() * 0.16,
+      s: Math.random() < 0.14 ? 1.7 : 0.9,
+      a: 0.12 + Math.random() * 0.42,
+      red: Math.random() < 0.14
+    }));
+  }
+
+  function drawField() {
+    const { w, h } = fieldBox;
+    fctx.clearRect(0, 0, w, h);
+    const px = state.pointer.x * w;
+    const py = state.pointer.y * h;
+
+    for (const p of fieldParticles) {
+      p.x += p.vx;
+      p.y += p.vy;
+
+      // gentle repulsion from the pointer
+      if (fine) {
+        const dx = p.x - px, dy = p.y - py;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < 26000 && d2 > 1) {
+          const f = (1 - d2 / 26000) * 0.9;
+          const d = Math.sqrt(d2);
+          p.x += (dx / d) * f;
+          p.y += (dy / d) * f;
+        }
+      }
+
+      if (p.y < -8) { p.y = h + 8; p.x = Math.random() * w; }
+      if (p.x < -8) p.x = w + 8;
+      if (p.x > w + 8) p.x = -8;
+
+      fctx.fillStyle = p.red
+        ? `rgba(212,20,27,${p.a})`
+        : `rgba(236,227,207,${p.a * 0.6})`;
+      fctx.fillRect(p.x, p.y, p.s, p.s);
+    }
+  }
+
+  function loopField() {
+    if (!fieldRunning) return;
+    drawField();
+    requestAnimationFrame(loopField);
+  }
+
+  function startField() {
+    if (fieldRunning || reduced) return;
+    sizeField();
+    fieldRunning = true;
+    requestAnimationFrame(loopField);
+    document.addEventListener('visibilitychange', () => {
+      fieldRunning = !document.hidden;
+      if (fieldRunning) requestAnimationFrame(loopField);
+    });
+  }
+
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (fieldRunning) sizeField();
+      if (!bootDone) sizeCanvas(dust, dctx);
+    }, 180);
+  });
+
+  /* ======================================================================
+     3. Pointer — custom cursor, tilt, parallax
+     ====================================================================== */
+  const dot = $('#curDot');
+  const ring = $('#curRing');
+  const cursorPos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+  const ringPos = { x: cursorPos.x, y: cursorPos.y };
+
+  if (fine && !reduced) {
+    document.body.classList.add('no-cursor');
+    window.addEventListener('pointermove', (e) => {
+      state.pointer.x = e.clientX / window.innerWidth;
+      state.pointer.y = e.clientY / window.innerHeight;
+      cursorPos.x = e.clientX; cursorPos.y = e.clientY;
+      dot.style.transform = `translate3d(${e.clientX}px,${e.clientY}px,0)`;
+    }, { passive: true });
+
+    window.addEventListener('pointerdown', () => ring.classList.add('press'));
+    window.addEventListener('pointerup', () => ring.classList.remove('press'));
+
+    document.addEventListener('pointerover', (e) => {
+      const hot = e.target.closest('a,button,[data-hot],[data-tilt]');
+      ring.classList.toggle('hot', !!hot);
+    });
+
+    (function ringLoop() {
+      ringPos.x += (cursorPos.x - ringPos.x) * 0.18;
+      ringPos.y += (cursorPos.y - ringPos.y) * 0.18;
+      ring.style.transform = `translate3d(${ringPos.x}px,${ringPos.y}px,0)`;
+      requestAnimationFrame(ringLoop);
+    })();
+  } else {
+    dot.hidden = true; ring.hidden = true;
+  }
+
+  /* ---------------- 3D tilt on [data-tilt] ---------------- */
+  if (fine && !reduced) {
+    $$('[data-tilt]').forEach((el) => {
+      let raf = null;
+      const strength = el.classList.contains('emblem') ? 16 : 9;
+      el.addEventListener('pointermove', (e) => {
+        const r = el.getBoundingClientRect();
+        const nx = (e.clientX - r.left) / r.width - 0.5;
+        const ny = (e.clientY - r.top) / r.height - 0.5;
+        if (raf) cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => {
+          el.style.transform =
+            `rotateY(${(nx * strength).toFixed(2)}deg) rotateX(${(-ny * strength).toFixed(2)}deg) translateZ(0)`;
+        });
+      });
+      el.addEventListener('pointerleave', () => {
+        if (raf) cancelAnimationFrame(raf);
+        el.style.transition = 'transform .9s cubic-bezier(.16,.84,.24,1)';
+        el.style.transform = 'rotateY(0deg) rotateX(0deg)';
+        setTimeout(() => { el.style.transition = ''; }, 900);
+      });
+    });
+  }
+
+  /* ---------------- emblem: idle float + tap to flip faces ---------------- */
+  (function emblem() {
+    const em = $('#emblem');
+    const img = $('#emblemImg');
+    const pips = $$('.emblem-hint .pips i');
+    if (!em) return;
+    let face = 0;
+    const faces = ['assets/crest-monogram.jpg', 'assets/crest-script.jpg'];
+    const swap = () => {
+      face = (face + 1) % 2;
+      img.style.opacity = '0';
+      setTimeout(() => {
+        img.src = faces[face];
+        img.alt = face === 0
+          ? 'Tribe Culture baroque crest with the interlocking TC monogram'
+          : 'Tribe Culture baroque crest with the script wordmark';
+        img.style.opacity = '1';
+      }, 200);
+      pips.forEach((p, i) => p.classList.toggle('on', i === face));
+    };
+    img.style.transition = 'opacity .2s ease';
+    em.parentElement.addEventListener('click', swap);
+    em.parentElement.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); swap(); } });
+    em.parentElement.tabIndex = 0;
+    em.parentElement.setAttribute('role', 'button');
+    em.parentElement.setAttribute('aria-label', 'Flip the Tribe Culture crest');
+
+    if (!reduced) {
+      let t0 = performance.now();
+      (function float() {
+        const t = (performance.now() - t0) / 1000;
+        const y = Math.sin(t * 0.7) * 7;
+        em.style.setProperty('--float', y + 'px');
+        if (!em.style.transform) em.style.transform = `translate3d(0,${y.toFixed(2)}px,0)`;
+        requestAnimationFrame(float);
+      })();
+    }
+  })();
+
+  /* ======================================================================
+     4. Splitting the headline into letters
+     ====================================================================== */
+  $$('.hero-h1 .split').forEach((el, li) => {
+    const text = el.textContent.trim();
+    el.textContent = '';
+    Array.from(text).forEach((ch, i) => {
+      const s = document.createElement('span');
+      s.className = 'ch';
+      s.textContent = ch === ' ' ? '\u00A0' : ch;
+      s.style.transitionDelay = `${0.06 * li + i * 0.045}s`;
+      s.setAttribute('aria-hidden', 'true');
+      el.appendChild(s);
+    });
+    el.setAttribute('aria-label', text);
+  });
+
+  /* ======================================================================
+     5. Scroll: progress bar, topbar state, reveal observers, scrub
+     ====================================================================== */
+  const progress = $('#progress');
+  const topbar = $('#topbar');
+
+  function onScroll() {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const y = window.scrollY;
+    progress.style.width = (max > 0 ? (y / max) * 100 : 0) + '%';
+    topbar.classList.toggle('solid', y > 40);
+    scrubStatement();
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  onScroll();
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((en) => {
+      if (en.isIntersecting) {
+        en.target.classList.add('in');
+        io.unobserve(en.target);
+      }
+    });
+  }, { threshold: 0.16, rootMargin: '0px 0px -8% 0px' });
+  $$('.rise').forEach((el) => io.observe(el));
+
+  /* ---------------- statement word scrub ---------------- */
+  const scrub = $('[data-scrub]');
+  if (scrub) {
+    const words = scrub.textContent.trim().split(/\s+/);
+    scrub.textContent = '';
+    scrubWords = words.map((w) => {
+      const s = document.createElement('span');
+      s.className = 'w';
+      s.textContent = w;
+      scrub.appendChild(s);
+      return s;
+    });
+    scrub.setAttribute('aria-label', words.join(' '));
+  }
+
+  function scrubStatement() {
+    if (!scrubWords.length) return;
+    const host = scrub.closest('.statement');
+    const r = host.getBoundingClientRect();
+    const vh = window.innerHeight;
+    // 0 when the block first enters, 1 when it has mostly passed
+    const p = Math.max(0, Math.min(1, (vh * 0.85 - r.top) / (r.height + vh * 0.35)));
+    const lit = Math.floor(p * (scrubWords.length + 2));
+    scrubWords.forEach((w, i) => w.classList.toggle('lit', i < lit));
+  }
+
+  /* ---------------- counters ---------------- */
+  const counters = $$('[data-count]');
+  if (counters.length) {
+    const cio = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (!en.isIntersecting) return;
+        const el = en.target;
+        cio.unobserve(el);
+        const target = parseInt(el.dataset.count, 10) || 0;
+        if (reduced) { el.textContent = target.toLocaleString('en-US'); return; }
+        const t0 = performance.now();
+        const dur = 1500;
+        const step = (n) => {
+          const k = Math.min(1, (n - t0) / dur);
+          const eased = 1 - Math.pow(1 - k, 3);
+          el.textContent = Math.round(target * eased).toLocaleString('en-US');
+          if (k < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      });
+    }, { threshold: 0.5 });
+    counters.forEach((c) => cio.observe(c));
+  }
+
+  /* ======================================================================
+     6. Drag-to-rotate viewer
+     ====================================================================== */
+  (function viewer() {
+    const v = $('#viewer');
+    const stack = $('#viewStack');
+    if (!v || !stack) return;
+    let dragging = false, startX = 0, startY = 0, rotY = 0, rotX = 0, vel = 0, animating = false;
+
+    const apply = () => {
+      stack.style.transform = `rotateY(${rotY.toFixed(2)}deg) rotateX(${rotX.toFixed(2)}deg)`;
+    };
+
+    v.addEventListener('pointerdown', (e) => {
+      dragging = true; startX = e.clientX; startY = e.clientY; vel = 0;
+      v.setPointerCapture && v.setPointerCapture(e.pointerId);
+      v.style.cursor = 'grabbing';
+    });
+    v.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      rotY += dx * 0.35;
+      rotX = Math.max(-16, Math.min(16, rotX - dy * 0.18));
+      vel = dx * 0.35;
+      startX = e.clientX; startY = e.clientY;
+      apply();
+    });
+    const release = () => {
+      if (!dragging) return;
+      dragging = false;
+      v.style.cursor = '';
+      if (reduced) return;
+      if (animating) return;
+      animating = true;
+      (function inertia() {
+        vel *= 0.94;
+        rotY += vel;
+        rotX *= 0.96;
+        apply();
+        if (Math.abs(vel) > 0.06) requestAnimationFrame(inertia);
+        else animating = false;
+      })();
+    };
+    v.addEventListener('pointerup', release);
+    v.addEventListener('pointercancel', release);
+    v.addEventListener('pointerleave', release);
+
+    // idle drift keeps the frame alive without stealing control
+    if (!reduced) {
+      let idleT = 0;
+      (function idle() {
+        if (!dragging && !animating) {
+          idleT += 0.008;
+          const wobble = Math.sin(idleT) * 5;
+          stack.style.transform = `rotateY(${(rotY + wobble).toFixed(2)}deg) rotateX(${(rotX + Math.cos(idleT * 0.8) * 3).toFixed(2)}deg)`;
+        }
+        requestAnimationFrame(idle);
+      })();
+    }
+  })();
+
+  /* ======================================================================
+     7. Magnetic buttons
+     ====================================================================== */
+  if (fine && !reduced) {
+    $$('.magnet').forEach((el) => {
+      el.addEventListener('pointermove', (e) => {
+        const r = el.getBoundingClientRect();
+        const mx = (e.clientX - r.left - r.width / 2) / (r.width / 2);
+        const my = (e.clientY - r.top - r.height / 2) / (r.height / 2);
+        el.style.transform = `translate(${(mx * 7).toFixed(1)}px,${(my * 5).toFixed(1)}px)`;
+      });
+      el.addEventListener('pointerleave', () => {
+        el.style.transition = 'transform .5s cubic-bezier(.16,.84,.24,1)';
+        el.style.transform = '';
+        setTimeout(() => { el.style.transition = ''; }, 500);
+      });
+    });
+  }
+
+  /* ======================================================================
+     8. Smooth anchor scrolling (native-feeling, no library)
+     ====================================================================== */
+  $$('a[href^="#"]').forEach((a) => {
+    a.addEventListener('click', (e) => {
+      const id = a.getAttribute('href');
+      if (id.length < 2) return;
+      const target = document.querySelector(id);
+      if (!target) return;
+      e.preventDefault();
+      const y = target.getBoundingClientRect().top + window.scrollY - 76;
+      window.scrollTo({ top: y, behavior: reduced ? 'auto' : 'smooth' });
+      history.replaceState(null, '', id);
+    });
+  });
+
+  /* ======================================================================
+     9. Go
+     ====================================================================== */
+  if (document.readyState === 'complete') runBoot();
+  else window.addEventListener('load', runBoot);
+  // hard safety net: never trap the visitor behind the loader
+  setTimeout(() => { if (!bootDone) skipBoot(); }, 6500);
+})();
+</script>
+</body>
+</html>
