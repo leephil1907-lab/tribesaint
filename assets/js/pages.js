@@ -492,8 +492,9 @@
             <button type="button" data-colour-sku="${esc(f.sku)}" aria-pressed="${f.sku === sku}"
               aria-label="${esc(f.variant)}" title="${esc(f.variant)}"
               style="background:${f.colour === 'white' ? '#f2ede2' : f.colour === 'bone' ? '#d9cdb2' : '#0a0a0a'}"></button>`).join('');
-          $$('#pdpSwatches [data-colour-sku]').forEach((b) => b.addEventListener('click', () => {
+          $('#pdpSwatches [data-colour-sku]').forEach((b) => b.addEventListener('click', () => {
             sku = b.dataset.colourSku;
+            history.pushState({ sku }, '', 'product.html?sku=' + encodeURIComponent(sku));
             render();
           }));
         }
@@ -663,6 +664,11 @@
       if (!b) return;
       $$('#pdpFaces [data-face]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
       document.dispatchEvent(new CustomEvent('stage:face', { detail: { face: b.dataset.face } }));
+    });
+
+    window.addEventListener('popstate', () => {
+      const nextSku = new URLSearchParams(location.search).get('sku');
+      if (nextSku) { sku = nextSku; render(); }
     });
 
     TC.on(render);
