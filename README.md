@@ -33,17 +33,18 @@ directory.
 | `PAYSTACK_PUBLIC_KEY` / `PAYSTACK_SECRET_KEY` | Card payments. |
 | `RESEND_API_KEY` | Order and receipt emails. |
 | `STORE_EMAIL` / `FROM_EMAIL` | Notification and sender addresses. |
-| `ALLOW_PREVIEW_CHECKOUT` | `true` completes orders without payment keys, for testing. |
+| `ALLOW_PREVIEW_CHECKOUT` | Local development only. It is forcibly disabled when `NODE_ENV=production`. |
 
 Copy `.env.example` to start. Never commit real values.
 
 ## Before going live
 
-1. Set `ADMIN_PASSWORD` — the console stays locked without it.
+1. Set a unique `ADMIN_PASSWORD` of at least 16 characters — production startup refuses a missing or weak value.
 2. Add Paystack **test** keys and place one real test order end to end.
 3. Switch to live keys only after that order and its emails are confirmed.
 4. Point the Paystack webhook at `/api/webhook`.
 5. Fill in the bank details in `config.json` if you want them printed on invoices.
+6. Set `ALLOW_PREVIEW_CHECKOUT=false` in Render; public order tracking also requires the checkout email.
 
 ---
 
