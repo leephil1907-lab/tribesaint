@@ -29,7 +29,10 @@ function mediaFor(sku, forStage) {
     return {
       name: p.name, variant: p.variant,
       front: p.images.front, back: p.images.back, detail: p.images.detail,
-      tile: forStage ? 'assets/products/3d/' + sku + '.webp' : p.images.front
+      tile: forStage ? 'assets/products/3d/' + sku + '.webp' : p.images.front,
+      /* the garment cut out of its studio wall: this is what the 3D stages hang */
+      cut: 'assets/products/cut/' + sku + '.webp',
+      cutFace: (face) => 'assets/products/cut/' + sku + '-' + (face || 'front') + '.webp'
     };
   }
   return PRODUCT_MEDIA[sku] || null;
@@ -86,15 +89,18 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-/** the plate a piece is printed on: a crisp card with softly eaten corners */
+/** the silhouette a piece is printed on: a soft-edged shape that dissolves into
+    the room instead of a hard photographic card */
 function plateMask() {
   if (plateMask._t) return plateMask._t;
   plateMask._t = canvasTexture(256, 256, (ctx, w, h) => {
     ctx.clearRect(0, 0, w, h);
-    try { ctx.filter = 'blur(2.4px)'; } catch { /* newer canvas only */ }
+    ctx.save();
+    try { ctx.filter = 'blur(11px)'; } catch { /* older canvas: no blur, still soft */ }
     ctx.fillStyle = '#fff';
-    roundRect(ctx, 5, 5, w - 10, h - 10, 16);
+    roundRect(ctx, 20, 16, w - 40, h - 40, 34);
     ctx.fill();
+    ctx.restore();
   });
   return plateMask._t;
 }
@@ -203,9 +209,10 @@ function buildRoom(scene, opts) {
   scene.add(glow);
 
   const horizon = new THREE.Mesh(
-    new THREE.PlaneGeometry(40, 4.4),
-    new THREE.MeshBasicMaterial({ map: horizonMask(), color: 0xa3121a, transparent: true, opacity: 0.3, depthWrite: false, blending: THREE.AdditiveBlending })
+    new THREE.PlaneGeometry(64, 9),
+    new THREE.MeshBasicMaterial({ map: horizonMask(), color: 0xa3121a, transparent: true, opacity: 0.2, depthWrite: false, blending: THREE.AdditiveBlending })
   );
+  horizon.position.z = -8.5;   /* behind everything: it is a wall, not a veil */
   scene.add(horizon);
 
   const count = opts.dust || 380;
@@ -227,15 +234,29 @@ function buildRoom(scene, opts) {
 }
 
 /** one piece on the stage: the print, a hairline, a soft pool of shadow, a light sweep */
-function buildPiece(url, planeGeo) {
+function buildPiece(url, planeGeo, opts) {
+  const cut = !!(opts && opts.cut);
   const group = new THREE.Group();
 
   const photoTex = tex(url);
   const photoMat = new THREE.MeshBasicMaterial({
-    map: photoTex, alphaMap: plateMask(), transparent: true, opacity: 0, depthWrite: false
+    map: photoTex,
+    alphaMap: cut ? null : plateMask(),
+    transparent: true, opacity: 0, depthWrite: false
   });
   const photo = new THREE.Mesh(planeGeo, photoMat);
   group.add(photo);
+
+  /* a backlight behind the piece: without it a black garment disappears into a
+     black room, and the silhouette is what sells the object */
+  const haloMat = new THREE.MeshBasicMaterial({
+    map: radialTexture('rgba(236,227,207,0.85)', 'rgba(236,227,207,0)'),
+    transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending
+  });
+  const halo = new THREE.Mesh(planeGeo, haloMat);
+  halo.scale.set(2.8, 2.8, 1);
+  halo.position.z = -0.02;
+  group.add(halo);
 
   /* the hairline: a ring of light just outside the print */
   const frameMat = new THREE.MeshBasicMaterial({
@@ -245,6 +266,7 @@ function buildPiece(url, planeGeo) {
   const frame = new THREE.Mesh(planeGeo, frameMat);
   frame.scale.set(1.014, 1.014, 1);
   frame.position.z = -0.004;
+  frame.visible = !cut;   /* a cut-out garment has its own silhouette */
   group.add(frame);
 
   /* the pool the piece stands in */
@@ -262,7 +284,7 @@ function buildPiece(url, planeGeo) {
   sweep.position.z = 0.012;
   group.add(sweep);
 
-  return { group, photo, photoMat, photoTex, frame, frameMat, shadow, shadowMat, sweep, sweepMat };
+  return { group, photo, photoMat, photoTex, halo, haloMat, frame, frameMat, shadow, shadowMat, sweep, sweepMat };
 }
 
 /* ================================================================ HERO ==== */
@@ -512,7 +534,8 @@ function mountHero(host) {
       it.photoMat.color.setScalar(0.62 + depth * 0.38);
       const o = base * ease;
       it.photoMat.opacity = o;
-      it.frameMat.opacity = Math.min(1, o * 0.36);
+      it.frameMat.opacity = Math.min(1, o * 0.3);
+      it.haloMat.opacity = o * 0.14;
       it.shadowMat.opacity = o * 0.62;
     });
   }
@@ -609,6 +632,417 @@ function mountHero(host) {
   };
 }
 
+/* ================================================================= RAIL ==== */
+/* The garment rail: the twelve pieces on wire hangers along a steel bar, each
+   swaying on its own rhythm. Drag to slide along the rail, tap to open. */
+function mountRail(host) {
+  const canvas = host.querySelector('canvas');
+  const picker = host.querySelector('.stage-picker');
+  const caption = host.querySelector('.stage-caption');
+  if (!canvas) return null;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 2 : 1.75));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 160);
+  const CAM_Z = 11.4;
+  camera.position.set(0, 0.3, CAM_Z);
+
+  const room = buildRoom(scene, { dust: isMobile ? 150 : 340 });
+  room.glow.position.set(0, 1.4, -10);
+  room.horizon.position.y = 0.1;
+
+  /* ---------- light ---------- */
+  const key = new THREE.DirectionalLight(0xfff2e2, 2.2);
+  key.position.set(1.8, 4.5, 5.2);
+  scene.add(key);
+  const fill = new THREE.AmbientLight(0x6d5b57, 1.25);
+  scene.add(fill);
+  const rim = new THREE.DirectionalLight(0xd4141b, 1.25);
+  rim.position.set(-4.5, 1.4, -3.4);
+  scene.add(rim);
+
+  /* ---------- the wall behind the rail carries the house name ---------- */
+  const wallTex = canvasTexture(1024, 256, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '700 132px Anton, Impact, Haettenschweiler, sans-serif';
+    ctx.letterSpacing = '14px';
+    ctx.fillText('TRIBE CULTURE', w / 2, h / 2);
+    ctx.fillRect(w * 0.18, h * 0.78, w * 0.64, 2);
+  });
+  wallTex.colorSpace = THREE.SRGBColorSpace;
+  const wall = new THREE.Mesh(
+    new THREE.PlaneGeometry(1, 1),
+    new THREE.MeshBasicMaterial({ map: wallTex, color: 0xece3cf, transparent: true, opacity: 0.085, depthWrite: false, blending: THREE.AdditiveBlending })
+  );
+  wall.position.set(0, 1.05, -4.2);
+  scene.add(wall);
+
+  /* ---------- the bar and its two uprights stand still in the room ---------- */
+  const steel = new THREE.MeshStandardMaterial({ color: 0x77736e, metalness: 0.92, roughness: 0.38 });
+  const dark = new THREE.MeshStandardMaterial({ color: 0x2b2825, metalness: 0.75, roughness: 0.58 });
+  const RAIL_Y = 1.46;
+  const POST_X = 3.15;
+
+  const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.048, 60, 14), steel);
+  bar.rotation.z = Math.PI / 2;
+  bar.position.y = RAIL_Y;
+  scene.add(bar);
+
+  [-1, 1].forEach((side) => {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.052, 0.052, RAIL_Y + 3.2, 14), dark);
+    post.position.set(side * POST_X, RAIL_Y - (RAIL_Y + 3.2) / 2, 0);
+    scene.add(post);
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.08, 14, 10), steel);
+    cap.position.set(side * POST_X, RAIL_Y, 0);
+    scene.add(cap);
+    const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.44, 0.07, 26), dark);
+    foot.position.set(side * POST_X, -1.74, 0.14);
+    scene.add(foot);
+  });
+
+  /* ---------- wire hangers, drawn as line work ---------- */
+  const wireMat = new THREE.LineBasicMaterial({ color: 0xc3b6a8, transparent: true, opacity: 0.92 });
+  function hangerWire() {
+    const a = 0.52;
+    const drop = -0.26;
+    const pts = [-a, 0, 0, 0, drop, 0, 0, drop, 0, a, 0, 0, -a, 0, 0, a, 0, 0];
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    return new THREE.LineSegments(g, wireMat);
+  }
+  function hangerHook() {
+    /* the hook curls over the bar: a half circle sitting on top of it */
+    const curve = new THREE.EllipseCurve(0, 0, 0.062, 0.062, Math.PI * 0.55, Math.PI * 2.05, false, 0);
+    const pts = curve.getPoints(22).map((pt) => new THREE.Vector3(pt.x, pt.y, 0));
+    return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), wireMat);
+  }
+
+  /* ---------- the pieces ---------- */
+  const list = (window.TC && window.TC.productList) ? window.TC.productList() : [];
+  const planeGeo = new THREE.PlaneGeometry(1, 1);
+  const cart = new THREE.Group();
+  scene.add(cart);
+
+  let cardH = 1.5;
+  let gap = 1.75;
+
+  const items = [];
+  list.forEach((p, i) => {
+    const media = mediaFor(p.sku, true);
+    if (!media) return;
+    const piece = buildPiece(media.cut || media.tile || media.front, planeGeo, { cut: !!media.cut });
+    const sway = new THREE.Group();               /* pivots on the bar */
+    sway.position.set(i * gap, RAIL_Y, 0);
+    const hook = hangerHook();
+    const wire = hangerWire();
+    hook.position.y = 0.055;
+    wire.position.y = -0.02;
+    sway.add(hook, wire);
+    sway.add(piece.group);
+    piece.group.userData = { sku: p.sku };
+    cart.add(sway);
+    items.push({
+      ...piece, sway, hook, wire, sku: p.sku, product: p,
+      phase: (i * 1.37) % (Math.PI * 2), /* a different rhythm per hanger */
+      scale: cardH
+    });
+  });
+
+  const N = Math.max(items.length, 1);
+
+  let index = 0;
+  let slide = 0;
+  let slideTarget = 0;
+  let active = 0;
+  let dragging = false;
+  let lastX = 0;
+  let moved = 0;
+  let opened = false;
+  let enteredAt = performance.now();
+  let lastInteract = 0;
+  let nextAuto = 0;
+
+  /* ---------- chips ---------- */
+  function buildPicker() {
+    if (!picker) return;
+    picker.innerHTML = list.map((p, i) => `
+      <button type="button" data-index="${i}" aria-pressed="${i === 0}" aria-label="${p.name} — ${p.variant}">
+        <img src="${p.image}" alt="" loading="lazy" width="34" height="34">
+        <span>${p.name.replace(' Tee', '').replace(' Tank', '')}</span>
+      </button>`).join('');
+  }
+  buildPicker();
+
+  function captionFor(i) {
+    if (!caption) return;
+    const p = list[i];
+    if (!p) return;
+    const k = caption.querySelector('.k');
+    const n = caption.querySelector('.n');
+    const pr = caption.querySelector('.p');
+    if (k) k.textContent = `The rail · ${String(i + 1).padStart(2, '0')} / ${String(list.length).padStart(2, '0')}`;
+    if (n) n.textContent = `${p.name} — ${p.variant}`;
+    if (pr) pr.textContent = (window.TC ? window.TC.money(p.price) : '₦' + p.price.toLocaleString('en-NG')) + '  ·  drag the rail · tap to open';
+  }
+
+  function markActive(i) {
+    active = ((i % N) + N) % N;
+    captionFor(active);
+    host.dataset.activeSku = list[active] ? list[active].sku : '';
+    if (picker) {
+      const btns = picker.querySelectorAll('button');
+      btns.forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.index) === active)));
+      const on = btns[active];
+      if (on && isMobile) {
+        const pr = picker.getBoundingClientRect();
+        const br = on.getBoundingClientRect();
+        if (br.left < pr.left + 8 || br.right > pr.right - 8) {
+          picker.scrollTo({ left: on.offsetLeft - (pr.width - br.width) / 2, behavior: reduceMotion ? 'auto' : 'smooth' });
+        }
+      }
+    }
+  }
+
+  function goTo(i, immediate) {
+    index = Math.max(0, Math.min(N - 1, Math.round(i)));
+    /* the rail is centred on the piece, so the cart slides by one gap per step */
+    slideTarget = -index * gap;
+    if (immediate) slide = slideTarget;
+    markActive(index);
+    lastInteract = performance.now();
+    nextAuto = lastInteract + 6200;
+  }
+
+  picker && picker.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-index]');
+    if (!b) return;
+    goTo(Number(b.dataset.index));
+  });
+
+  /* ---------- interaction ---------- */
+  function openActive() {
+    const p = list[active];
+    if (p && !opened) {
+      opened = true;
+      location.href = 'product.html?sku=' + encodeURIComponent(p.sku);
+    }
+  }
+  function onDown(e) {
+    dragging = true;
+    moved = 0;
+    lastX = e.clientX;
+    canvas.style.cursor = 'grabbing';
+    lastInteract = performance.now();
+  }
+  function onMove(e) {
+    if (!dragging) return;
+    const dx = e.clientX - lastX;
+    lastX = e.clientX;
+    moved += Math.abs(dx);
+    slide += dx * 0.013;
+    lastInteract = performance.now();
+    const near = Math.max(0, Math.min(N - 1, Math.round(-slide / gap)));
+    if (near !== active) markActive(near);
+  }
+  function onUp() {
+    if (!dragging) return;
+    dragging = false;
+    canvas.style.cursor = '';
+    if (moved < 9) { openActive(); return; }
+    goTo(-slide / gap);
+  }
+  canvas.addEventListener('pointerdown', onDown);
+  window.addEventListener('pointermove', onMove, { passive: true });
+  window.addEventListener('pointerup', onUp);
+  canvas.addEventListener('pointercancel', onUp);
+  canvas.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') { goTo(index + 1); e.preventDefault(); }
+    if (e.key === 'ArrowLeft') { goTo(index - 1); e.preventDefault(); }
+    if (e.key === 'Enter' || e.key === ' ') { openActive(); e.preventDefault(); }
+  });
+  canvas.tabIndex = 0;
+
+  let px = 0, py = 0, cx = 0, cy = 0;
+  window.addEventListener('pointermove', (e) => {
+    px = (e.clientX / window.innerWidth - 0.5) * 2;
+    py = (e.clientY / window.innerHeight - 0.5) * 2;
+  }, { passive: true });
+
+  /* hover lifts the piece under the cursor */
+  const ray = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  let hovered = null;
+  canvas.addEventListener('pointermove', (e) => {
+    if (dragging) return;
+    const r = canvas.getBoundingClientRect();
+    pointer.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+    pointer.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+    ray.setFromCamera(pointer, camera);
+    const hits = ray.intersectObjects(items.map((it) => it.photo), false);
+    const next = hits.length ? hits[0].object.parent.parent : null;
+    if (next !== hovered) {
+      hovered = next;
+      canvas.style.cursor = next ? 'pointer' : 'grab';
+    }
+  });
+
+  /* ---------- layout ---------- */
+  function resize() {
+    const w = canvas.clientWidth || host.clientWidth || 1;
+    const h = canvas.clientHeight || 1;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    const visibleH = 2 * CAM_Z * Math.tan((camera.fov * Math.PI) / 360);
+    const visibleW = visibleH * camera.aspect;
+    const worldPerPx = visibleH / h;
+    const topReserve = isMobile ? 34 : 40;
+    const botReserve = isMobile ? 100 : 58;
+    const usablePx = Math.max(120, h - topReserve - botReserve);
+    /* the garment hangs from the bar: bar to floor is what must fit */
+    const hangRoom = (usablePx * worldPerPx) - 0.4;
+    cardH = isMobile
+      ? Math.min(hangRoom * 0.84, visibleW * 0.66)
+      : Math.min(hangRoom * 0.98, visibleW * 0.33);
+    cardH = Math.max(0.7, cardH);
+    gap = cardH * 1.2;
+
+    wall.scale.set(visibleW * 0.66, visibleW * 0.165, 1);
+    wall.position.y = RAIL_Y + cardH * 0.52;
+
+    /* centre the whole hanging block — bar plus garment — in the space between
+       the label and the controls, not the bar by itself */
+    const midPx = topReserve + usablePx / 2;
+    const blockY = RAIL_Y - (cardH * 1.06) / 2 - 0.075;
+    scene.position.y = ((visibleH / 2) - midPx * worldPerPx) - blockY;
+
+    items.forEach((it) => {
+      it.sway.position.x = items.indexOf(it) * gap;
+      it.group.scale.set(cardH * 1.06, cardH * 1.06, 1);
+      it.group.position.y = -0.075 - (cardH * 1.06) / 2;
+      it.shadow.scale.set(1.5, 0.9, 1);
+      it.shadow.position.set(0, -cardH * 0.42, -0.008);
+      it.sweep.scale.set(0.5, 1, 1);
+      const wireScale = Math.max(0.5, cardH * 0.6);
+      it.wire.scale.setScalar(wireScale * 1.18);
+      it.wire.position.y = -0.012;
+      it.hook.scale.setScalar(Math.max(0.6, cardH * 0.5));
+      it.hook.position.y = 0.05;
+    });
+    goTo(index, true);
+  }
+  const ro = ('ResizeObserver' in window) ? new ResizeObserver(resize) : null;
+  if (ro) ro.observe(host); else window.addEventListener('resize', resize);
+  resize();
+
+  /* ---------- loop ---------- */
+  let raf = 0;
+  let visible = true;
+  const io = new IntersectionObserver((es) => { visible = es[0].isIntersecting; loop(); }, { threshold: 0.02 });
+  io.observe(host);
+
+  function place(now) {
+    const introT = Math.min(1, (now - enteredAt) / 1500);
+    cart.position.x = slide;
+    items.forEach((it, i) => {
+      /* each hanger swings on its own phase; the piece in focus barely moves */
+      const focus = i === active;
+      const amp = reduceMotion ? 0 : focus ? 0.011 : 0.026;
+      it.sway.rotation.z = Math.sin(now * 0.00046 + it.phase) * amp;
+      it.sway.rotation.x = Math.sin(now * 0.00033 + it.phase * 1.7) * 0.02;
+
+      const arrive = Math.max(0, Math.min(1, introT * 1.9 - i * 0.07));
+      const ease = arrive < 1 ? 1 - Math.pow(1 - arrive, 3) : 1;
+      it.sway.position.y = RAIL_Y + (1 - ease) * 1.1;
+
+      /* the focused piece comes forward a touch and reads brighter */
+      const target = focus ? cardH : cardH * 0.92;
+      const s = it.group.scale.x + (target - it.group.scale.x) * 0.08;
+      it.group.scale.setScalar(s);
+      it.group.position.y = -0.075 - s / 2;
+      it.group.position.z = it.group.position.z + ((focus ? 0.16 : 0) - it.group.position.z) * 0.08;
+
+      const off = Math.abs((i * gap + slide) / gap);
+      const near = Math.max(0, 1 - off * 0.3);
+      it.photoMat.opacity = ease;
+      it.photoMat.color.setScalar(0.5 + near * 0.5);
+      it.frameMat.opacity = ease * (focus ? 0.1 : 0.04);
+      it.haloMat.opacity = ease * (focus ? 0.12 : 0.07);
+      it.shadowMat.opacity = ease * 0.34;
+      it.shadow.position.y = -s / 2 + s * 0.44;
+    });
+  }
+
+  function step(now) {
+    const dt = step._last ? Math.min(64, now - step._last) : 16;
+    step._last = now;
+
+    /* the rail walks itself along when nobody is handling it */
+    if (!reduceMotion && !dragging && now - lastInteract > 4200 && now > nextAuto) {
+      goTo(index >= N - 1 ? 0 : index + 1);
+    }
+    if (!dragging) {
+      slide += (slideTarget - slide) * Math.min(1, dt * 0.0055);
+      if (Math.abs(slideTarget - slide) < 0.0008) slide = slideTarget;
+    }
+
+    cx += (px - cx) * Math.min(1, dt * 0.004);
+    cy += (py - cy) * Math.min(1, dt * 0.004);
+    camera.position.x = cx * 0.46;
+    camera.position.y = 0.3 - cy * 0.16;
+    camera.lookAt(0, 0.02, 0);
+
+    place(now);
+
+    /* one long sweep of light travels the length of the rail */
+    const travel = ((now * 0.00011) % 1) * 2.6 - 1.3;
+    items.forEach((it) => {
+      const local = travel - (it.sway.position.x + slide) / (N * gap);
+      const hit = Math.max(0, 1 - Math.abs(local) * 9);
+      it.sweepMat.opacity = hit * 0.18;
+      it.sweep.position.x = -0.55 + (1 - Math.abs(local) * 9) * 1.1;
+    });
+
+    room.dust.rotation.y += dt * 0.00001;
+    room.glow.material.opacity = 0.26 + Math.sin(now * 0.0006) * 0.035;
+    renderer.render(scene, camera);
+  }
+
+  function loop() {
+    cancelAnimationFrame(raf);
+    if (!visible || document.hidden) return;
+    const tick = (now) => {
+      if (!visible || document.hidden) { raf = 0; step._last = 0; return; }
+      step(now || performance.now());
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+  }
+  document.addEventListener('visibilitychange', loop);
+  loop();
+
+  goTo(0, true);
+  captionFor(0);
+
+  return {
+    dispose() {
+      cancelAnimationFrame(raf);
+      io.disconnect();
+      if (ro) ro.disconnect();
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
+      renderer.dispose();
+    }
+  };
+}
+
 /* ---------- single piece on the floor (product page + the round) ---------- */
 function mountProduct(host) {
   const canvas = host.querySelector('canvas');
@@ -633,19 +1067,19 @@ function mountProduct(host) {
   let face = 'front';
 
   const planeGeo = new THREE.PlaneGeometry(1, 1);
-  const piece = buildPiece(media.tile || media.front, planeGeo);
+  const piece = buildPiece(media.cut || media.tile || media.front, planeGeo, { cut: !!media.cut });
   const group = piece.group;
   scene.add(group);
 
   function urlFor(f) {
     const m = mediaFor(sku, true);
     if (!m) return media.front;
-    return 'assets/products/3d/' + sku + '-' + f + '.webp';
+    return m.cut ? m.cutFace(f) : 'assets/products/3d/' + sku + '-' + f + '.webp';
   }
 
   /* a second photo plane so a face change can cross-fade */
   const B = new THREE.Mesh(planeGeo, new THREE.MeshBasicMaterial({
-    map: tex(urlFor(face)), alphaMap: plateMask(), transparent: true, opacity: 0, depthWrite: false
+    map: tex(urlFor(face)), alphaMap: media.cut ? null : plateMask(), transparent: true, opacity: 0, depthWrite: false
   }));
   B.position.z = 0.004;
   group.add(B);
@@ -764,6 +1198,9 @@ function mountProduct(host) {
     B.scale.set(1, 1, 1);
     piece.shadow.scale.set(1.24, 1.18, 1);
     piece.sweep.scale.set(0.5, 1, 1);
+    /* a cut-out carries its own silhouette: let it own more of the frame than a
+       padded photographic plate could */
+    if (media.cut) plate = Math.min(plate * 1.1, usableH * worldPerPx * 0.99, usableW * worldPerPx * 0.99);
     /* centre the piece in the space between the label and the controls */
     const topFree = topReserve * worldPerPx;
     const freeH = usableH * worldPerPx;
@@ -797,7 +1234,8 @@ function mountProduct(host) {
     if (!reduceMotion) group.rotation.z = Math.sin(now * 0.00052) * 0.01;
 
     piece.photoMat.opacity = ease;
-    piece.frameMat.opacity = Math.min(1, ease * 0.4);
+    piece.frameMat.opacity = Math.min(1, ease * 0.12);
+    piece.haloMat.opacity = ease * 0.26;
     piece.shadowMat.opacity = ease * 0.62;
     piece.shadow.position.y = (floorY - group.position.y) / S;
 
@@ -864,7 +1302,7 @@ async function boot() {
       const loading = host.querySelector('.stage-loading');
       try {
         if (!supportsWebGL()) throw new Error('no webgl');
-        const inst = mode === 'product' ? mountProduct(host) : mountHero(host);
+        const inst = mode === 'product' ? mountProduct(host) : mode === 'rail' ? mountRail(host) : mountHero(host);
         if (!inst) throw new Error('mount failed');
         if (loading) loading.hidden = true;
         host.dataset.stageReady = '1';

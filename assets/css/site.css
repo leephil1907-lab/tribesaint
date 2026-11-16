@@ -261,7 +261,8 @@ table{border-collapse:collapse;width:100%}
 .stage-loading .bar{width:110px;height:1px;background:rgba(236,227,207,.16);overflow:hidden}
 .stage-loading .bar i{display:block;height:100%;width:40%;background:var(--red);animation:loadSlide 1.3s var(--ease) infinite}
 @keyframes loadSlide{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
-.stage-caption{position:relative;pointer-events:none;min-width:0;flex:1 1 220px;padding:0}
+.stage-caption{position:relative;pointer-events:none;min-width:0;flex:1 1 260px;padding:0}
+@media(min-width:1024px){.hero .stage-caption .n{font-size:22px;white-space:nowrap}}
 .stage-caption .k{font:400 8.5px/1 Oswald,sans-serif;letter-spacing:.4em;text-transform:uppercase;color:var(--red)}
 .stage-caption .n{font-family:Anton,Impact,sans-serif;text-transform:uppercase;font-size:clamp(18px,3vw,26px);margin-top:6px}
 .stage-caption .p{font:400 10px/1 Oswald,sans-serif;letter-spacing:.2em;border:none;color:var(--mute);margin-top:4px}
@@ -280,18 +281,37 @@ table{border-collapse:collapse;width:100%}
 .hero-marks span{font:400 8.5px/1.6 Oswald,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:var(--mute)}
 .hero-marks b{color:var(--bone);font-weight:400}
 
-/* desktop: copy left, 3D stage right — the whole intro sits above the fold */
+/* the make of the piece, as a rule of four — it fills the column and tells the
+   visitor what they are buying without another paragraph */
+.hero-spec{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;
+  border-top:1px solid var(--line);margin-top:2px;
+}
+.hero-spec li{display:grid;gap:3px;padding:11px 12px 11px 0;border-bottom:1px solid var(--line-2)}
+.hero-spec li:nth-child(even){padding-left:14px;border-left:1px solid var(--line-2)}
+.hero-spec b{
+  font-family:Anton,Impact,sans-serif;font-weight:400;font-size:16px;letter-spacing:.01em;
+  color:var(--bone);line-height:1;display:flex;align-items:baseline;gap:3px;
+}
+.hero-spec b span{font:400 8px/1 Oswald,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.hero-spec i{font:400 8px/1.4 Oswald,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);font-style:normal}
+@media(min-width:560px){.hero-spec{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .hero-spec li{padding:12px 12px 12px 0}
+  .hero-spec li:nth-child(even){padding-left:0;border-left:0}
+  .hero-spec li + li{padding-left:14px;border-left:1px solid var(--line-2)}}
+
+/* desktop: copy left, the rail right — the whole intro sits above the fold */
 @media (min-width:1024px){
   .hero{
     display:grid;
-    grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);
+    grid-template-columns:minmax(0,.86fr) minmax(0,1.14fr);
     gap:clamp(18px,2.6vw,42px);
     align-items:center;
     min-height:calc(100svh - var(--nav));
     padding-bottom:clamp(10px,2vw,26px);
   }
   .hero-copy{align-self:center;padding-bottom:8px}
-  .hero .stage{height:min(74vh,700px)}
+  .hero .stage{height:min(78vh,760px)}
   .hero .stage-canvas{height:100%}
   .hero .stage-caption{text-align:left}
   .hero .stage-overlay .stage-bottom{position:absolute;inset:auto 0 0 0;padding:0 clamp(10px,1.6vw,18px) clamp(8px,1.4vw,14px);align-items:center}
@@ -536,16 +556,7 @@ table{border-collapse:collapse;width:100%}
 }
 .foot-cac-n b{font-weight:400;color:var(--red)}
 @media(max-width:400px){.foot-cac{gap:9px;padding:8px 11px}.foot-cac-l{font-size:7px;letter-spacing:.16em}}
-@media(max-width:760px){
-  .foot{padding:36px 0 24px;margin-top:44px}
-  .foot-grid{gap:24px}
-  .foot-brand p{font-size:12.5px}
-  .foot-cols{gap:14px 16px}
-  .foot-cols h4{margin-bottom:8px}
-  .foot-cols a{padding:3px 0;font-size:12.5px}
-  .foot-base{margin-top:26px;padding-top:16px}
-  .foot-news{margin-top:14px}
-}
+
 .foot-contact{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin-top:16px}
 .foot-wa{
   display:inline-flex;align-items:center;gap:8px;padding:9px 13px;border:1px solid var(--edge-soft);
@@ -573,6 +584,29 @@ table{border-collapse:collapse;width:100%}
   display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;
   font:400 8px/1.8 Oswald,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);
   padding-right:clamp(0px,7vw,86px);text-align:right;
+}
+
+/* phones: the footer is a directory, not a page — three tight columns */
+@media(max-width:760px){
+  .foot{padding:30px 0 20px;margin-top:36px}
+  .foot-grid{gap:20px}
+  .foot-brand p{font-size:12px;line-height:1.55;max-width:38ch}
+  .foot-brand h3{margin-bottom:7px;font-size:20px}
+  .foot-cac{margin-top:12px;padding:7px 11px 7px 9px}
+  .foot-cac .cac-seal{width:26px;height:26px}
+  .foot-contact{margin-top:12px;gap:8px 14px}
+  .foot-news{margin-top:12px}
+  .foot-news input{padding:11px 11px;font-size:12.5px}
+  /* the link index is the longest block on the page: three tight columns */
+  .foot-cols{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 12px}
+  .foot-cols h4{margin-bottom:6px;font-size:7.5px;letter-spacing:.2em}
+  .foot-cols a{padding:2px 0;font-size:11.5px;line-height:1.35}
+  .foot-base{margin-top:20px;padding-top:14px;gap:10px}
+  .foot-base .script{font-size:24px}
+  .foot-legal{font-size:7px;line-height:1.6;gap:4px 12px;padding-right:0;text-align:left}
+}
+@media(max-width:360px){
+  .foot-cols{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 .foot-legal a{color:var(--parch);transition:color .2s}
 .foot-legal a:hover{color:var(--red)}
