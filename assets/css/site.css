@@ -1058,7 +1058,7 @@ body.ready .rise.d3{transition-delay:.24s}
   .co-summary .tot-row{font-size:12px}
   .co-summary .tot-row.big{font-size:15px}
   #coItems + .stack-sm{margin-top:10px!important}
-  .co-summary .info-card:last-child{display:none}   /* the secure note repeats the marks above the button */
+  /* Keep the delivery information card visible on mobile. */
 }
 @media(min-width:940px){
   .co-summary{position:sticky;top:calc(var(--nav) + 16px)}
