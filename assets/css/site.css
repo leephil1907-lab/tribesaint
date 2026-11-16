@@ -480,8 +480,7 @@ table{border-collapse:collapse;width:100%}
   max-width:100%;transition:border-color .3s var(--ease);
 }
 .foot-cac:hover{border-color:rgba(212,20,27,.42)}
-.foot-cac svg{flex:none;color:var(--parch)}
-.foot-cac .seal-star{color:var(--red)}
+.foot-cac .cac-seal{flex:none;display:block;width:30px;height:30px}
 .foot-cac-t{display:flex;flex-direction:column;gap:5px;min-width:0}
 .foot-cac-l{
   font:400 7.5px/1.35 Oswald,sans-serif;letter-spacing:.2em;text-transform:uppercase;
@@ -498,9 +497,8 @@ table{border-collapse:collapse;width:100%}
   font:400 9px/1 Oswald,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--bone);
   transition:background .28s var(--ease),color .28s,border-color .28s;
 }
-.foot-wa svg{color:#0f8a3c;transition:color .28s}
+.wa-ico{display:block;flex:none;width:15px;height:15px}
 .foot-wa:hover{background:#0f8a3c;border-color:#0f8a3c;color:#fff}
-.foot-wa:hover svg{color:#fff}
 .foot-mail{font:300 13px/1 Oswald,sans-serif;color:var(--parch);border-bottom:1px solid var(--line);padding-bottom:3px;transition:.24s}
 .foot-mail:hover{color:var(--red);border-color:var(--red)}
 .foot-news{display:flex;gap:8px;margin-top:18px;max-width:420px}
@@ -524,6 +522,32 @@ table{border-collapse:collapse;width:100%}
 .foot-legal a{color:var(--parch);transition:color .2s}
 .foot-legal a:hover{color:var(--red)}
 .foot-legal .copy{color:#6a6357}
+/* accepted payment marks — official logos, held quiet so they reassure, not shout */
+.pay-marks{
+  display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;margin-top:18px;
+}
+.pay-marks .lbl{
+  font:400 7.5px/1 Oswald,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);
+}
+.pay-marks ul{display:flex;align-items:center;gap:12px;margin:0;padding:0;list-style:none}
+.pay-marks li{display:flex;align-items:center}
+/* the three logos have very different proportions — normalise the optical weight */
+.pay-marks img{display:block;width:auto;opacity:.85;transition:opacity .25s}
+.pay-marks .pm-paystack{height:15px}
+.pay-marks .pm-visa{height:13px}
+.pay-marks .pm-mc{height:21px}
+.pay-marks li:hover img{opacity:1}
+/* each partner mark has a light-surface and a dark-surface version */
+.mk-on-light{display:none!important}
+[data-theme="light"] .mk-on-dark{display:none!important}
+[data-theme="light"] .mk-on-light{display:block!important}
+[data-theme="light"] .pay-marks img{opacity:.92}
+@media(max-width:520px){.pay-marks .pm-paystack{height:13px}.pay-marks .pm-visa{height:12px}.pay-marks .pm-mc{height:18px}}
+
+/* checkout: the same marks sit right above the pay button */
+.pay-marks.pay-marks-inline{margin:0 0 14px;justify-content:flex-start}
+.pay-marks.pay-marks-inline .lbl{color:var(--mute)}
+
 [data-theme="light"] .foot-legal .copy{color:#8a8071}
 
 /* ---------- misc blocks ---------- */
@@ -645,7 +669,7 @@ body.ready .rise.d3{transition-delay:.24s}
 }
 .wa-fab.on{opacity:1;translate:0 0}
 .wa-fab:hover{background:#0c7031;box-shadow:0 16px 40px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.22) inset}
-.wa-fab svg{flex:none;display:block}
+.wa-fab .wa-ico{flex:none;display:block;width:26px;height:26px}
 .wa-fab .wa-tip{
   max-width:0;overflow:hidden;white-space:nowrap;opacity:0;
   font:400 9px/1 Oswald,sans-serif;letter-spacing:.2em;text-transform:uppercase;
@@ -662,7 +686,7 @@ body.ready .rise.d3{transition-delay:.24s}
   font:400 9px/1 Oswald,sans-serif;letter-spacing:.2em;text-transform:uppercase;transition:.24s
 }
 .wa-inline:hover{background:#0f8a3c;border-color:#0f8a3c;color:#fff}
-.wa-inline svg{width:15px;height:15px;flex:none}
+.wa-inline .wa-ico{width:16px;height:16px;flex:none}
 
 /* --------------------------------------------------- hero stage fallbacks */
 .stage-fallback-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;width:min(100%,460px);padding:10px}
