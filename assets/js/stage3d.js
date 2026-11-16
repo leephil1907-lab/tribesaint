@@ -18,6 +18,7 @@ const systemReduce = window.matchMedia('(prefers-reduced-motion: reduce)').match
 let userStill = document.documentElement.dataset.motion === 'off';
 document.addEventListener('tc:motion', (e) => { userStill = !!(e.detail && e.detail.off); });
 const reduceMotion = systemReduce;
+const motionOff = () => reduceMotion || userStill;
 const isMobile = window.matchMedia('(max-width: 860px)').matches;
 
 /* offline fallback media — the live catalogue drives the stages when it answers */
@@ -534,7 +535,7 @@ function mountHero(host) {
 
   /* ---------- place every piece on the arc ---------- */
   function place(now) {
-    const introT = Math.min(1, (now - enteredAt) / INTRO);
+    const introT = motionOff() ? 1 : Math.min(1, (now - enteredAt) / INTRO);
     items.forEach((it, i) => {
       const a = i * STEP + spin;
       const cos = Math.cos(a);
@@ -594,8 +595,11 @@ function mountHero(host) {
     }
 
     /* cursor parallax */
-    cx += (px - cx) * Math.min(1, dt * 0.004);
-    cy += (py - cy) * Math.min(1, dt * 0.004);
+    if (motionOff()) { px = 0; py = 0; cx = 0; cy = 0; }
+    else {
+      cx += (px - cx) * Math.min(1, dt * 0.004);
+      cy += (py - cy) * Math.min(1, dt * 0.004);
+    }
     camera.position.x = cx * 0.42;
     camera.position.y = 0.34 - cy * 0.22;
     camera.lookAt(0, 0.02, 0);
@@ -611,7 +615,7 @@ function mountHero(host) {
 
     /* light sweep across the piece in focus */
     const piece = items[active];
-    if (piece && !reduceMotion) {
+    if (piece && !motionOff()) {
       if (sweeping < 0 || now - sweeping > 6400) { sweeping = now; sweepT = 0; attachSweep(); }
       const p = (now - sweeping) / 1400;
       if (p >= 0 && p <= 1) {
@@ -623,9 +627,11 @@ function mountHero(host) {
       }
     }
 
-    room.dust.rotation.y += dt * 0.000012;
-    room.dust.position.y = Math.sin(now * 0.00018) * 0.14;
-    room.glow.material.opacity = 0.46 + Math.sin(now * 0.0007) * 0.05;
+    if (!motionOff()) {
+      room.dust.rotation.y += dt * 0.000012;
+      room.dust.position.y = Math.sin(now * 0.00018) * 0.14;
+      room.glow.material.opacity = 0.46 + Math.sin(now * 0.0007) * 0.05;
+    }
 
     renderer.render(scene, camera);
   }
@@ -1011,14 +1017,14 @@ function mountRail(host) {
   io.observe(host);
 
   function place(now) {
-    const introT = Math.min(1, (now - enteredAt) / 1500);
+    const introT = motionOff() ? 1 : Math.min(1, (now - enteredAt) / 1500);
     cart.position.x = slide;
     items.forEach((it, i) => {
       /* each hanger swings on its own phase; the piece in focus barely moves */
       const focus = i === active;
-      const amp = reduceMotion ? 0 : focus ? 0.011 : 0.026;
+      const amp = motionOff() ? 0 : focus ? 0.011 : 0.026;
       it.sway.rotation.z = Math.sin(now * 0.00046 + it.phase) * amp;
-      it.sway.rotation.x = Math.sin(now * 0.00033 + it.phase * 1.7) * 0.02;
+      it.sway.rotation.x = motionOff() ? 0 : Math.sin(now * 0.00033 + it.phase * 1.7) * 0.02;
 
       const arrive = Math.max(0, Math.min(1, introT * 1.9 - i * 0.07));
       const ease = arrive < 1 ? 1 - Math.pow(1 - arrive, 3) : 1;
@@ -1055,8 +1061,11 @@ function mountRail(host) {
       if (Math.abs(slideTarget - slide) < 0.0008) slide = slideTarget;
     }
 
-    cx += (px - cx) * Math.min(1, dt * 0.004);
-    cy += (py - cy) * Math.min(1, dt * 0.004);
+    if (motionOff()) { px = 0; py = 0; cx = 0; cy = 0; }
+    else {
+      cx += (px - cx) * Math.min(1, dt * 0.004);
+      cy += (py - cy) * Math.min(1, dt * 0.004);
+    }
     camera.position.x = cx * 0.46;
     camera.position.y = 0.3 - cy * 0.16;
     camera.lookAt(0, 0.02, 0);
@@ -1064,16 +1073,17 @@ function mountRail(host) {
     place(now);
 
     /* one long sweep of light travels the length of the rail */
-    const travel = ((now * 0.00011) % 1) * 2.6 - 1.3;
-    items.forEach((it) => {
-      const local = travel - (it.sway.position.x + slide) / (N * gap);
-      const hit = Math.max(0, 1 - Math.abs(local) * 9);
-      it.sweepMat.opacity = hit * 0.18;
-      it.sweep.position.x = -0.55 + (1 - Math.abs(local) * 9) * 1.1;
-    });
-
-    room.dust.rotation.y += dt * 0.00001;
-    room.glow.material.opacity = 0.26 + Math.sin(now * 0.0006) * 0.035;
+    if (!motionOff()) {
+      const travel = ((now * 0.00011) % 1) * 2.6 - 1.3;
+      items.forEach((it) => {
+        const local = travel - (it.sway.position.x + slide) / (N * gap);
+        const hit = Math.max(0, 1 - Math.abs(local) * 9);
+        it.sweepMat.opacity = hit * 0.18;
+        it.sweep.position.x = -0.55 + (1 - Math.abs(local) * 9) * 1.1;
+      });
+      room.dust.rotation.y += dt * 0.00001;
+      room.glow.material.opacity = 0.26 + Math.sin(now * 0.0006) * 0.035;
+    }
     renderer.render(scene, camera);
   }
 
@@ -1281,20 +1291,21 @@ function mountProduct(host) {
   function step(now) {
     const dt = step._last ? Math.min(64, now - step._last) : 16;
     step._last = now;
-    const intro = reduceMotion ? 1 : Math.min(1, (now - enteredAt) / 900);
+    const intro = motionOff() ? 1 : Math.min(1, (now - enteredAt) / 900);
     const ease = 1 - Math.pow(1 - intro, 3);
 
     /* let go and the piece settles back to square-on */
     if (!dragging && now - lastDrag > 900) swivelTarget *= 0.965;
     swivel += (swivelTarget - swivel) * Math.min(1, dt * 0.006);
 
-    group.rotation.y = swivel + Math.sin(now * 0.00042) * 0.055;
-    group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, tiltX, 0.07);
+    group.rotation.y = swivel + (motionOff() ? 0 : Math.sin(now * 0.00042) * 0.055);
+    group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, motionOff() ? 0 : tiltX, 0.07);
     const intro2 = 0.88 + ease * 0.12;
     const S = plate * intro2 * (1 + tiltY * 0.04);
     group.scale.setScalar(S);
-    group.position.x = THREE.MathUtils.lerp(group.position.x, tiltY * 0.26, 0.06);
-    if (!reduceMotion) group.rotation.z = Math.sin(now * 0.00052) * 0.01;
+    group.position.x = THREE.MathUtils.lerp(group.position.x, motionOff() ? 0 : tiltY * 0.26, 0.06);
+    if (!motionOff()) group.rotation.z = Math.sin(now * 0.00052) * 0.01;
+    else group.rotation.z = 0;
 
     piece.photoMat.opacity = ease;
     piece.frameMat.opacity = Math.min(1, ease * 0.12);
@@ -1313,7 +1324,7 @@ function mountProduct(host) {
     }
 
     /* a slow sweep of light passes over the piece every few seconds */
-    if (!reduceMotion) {
+    if (!motionOff()) {
       const p = (now - sweeping) / 1600;
       if (p > 1) { sweeping = now; }
       const q = Math.max(0, Math.min(1, p));
@@ -1322,8 +1333,10 @@ function mountProduct(host) {
       piece.sweepMat.opacity = Math.sin(Math.PI * q) * 0.2;
     }
 
-    room.dust.rotation.y += dt * 0.000012;
-    room.glow.material.opacity = 0.42 + Math.sin(now * 0.0008) * 0.05;
+    if (!motionOff()) {
+      room.dust.rotation.y += dt * 0.000012;
+      room.glow.material.opacity = 0.42 + Math.sin(now * 0.0008) * 0.05;
+    }
     renderer.render(scene, camera);
   }
 
