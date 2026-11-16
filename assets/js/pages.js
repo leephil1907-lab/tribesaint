@@ -544,12 +544,13 @@
       const out = $('#trackResult');
       alertBox.classList.remove('show');
       if (!ref) { alertBox.textContent = 'Enter your order reference.'; alertBox.classList.add('show'); return; }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alertBox.textContent = 'Enter the email address used at checkout.'; alertBox.classList.add('show'); return; }
 
       const btn = $('#trackBtn');
       btn.disabled = true;
       out.innerHTML = '<p class="muted small">Looking up your order…</p>';
       try {
-        const res = await fetch('/api/track?reference=' + encodeURIComponent(ref) + (email ? '&email=' + encodeURIComponent(email) : ''));
+        const res = await fetch('/api/track?reference=' + encodeURIComponent(ref) + '&email=' + encodeURIComponent(email));
         const json = await res.json();
         if (!res.ok || !json.ok) throw new Error(json.error || 'Order not found.');
         const o = json.order;
