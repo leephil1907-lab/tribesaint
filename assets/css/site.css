@@ -1037,6 +1037,11 @@ body.ready .rise.d3{transition-delay:.24s}
 }
 
 /* ---------- checkout ---------- */
+.checkout-note{border:1px solid var(--line);background:var(--wash-2);padding:14px 16px;display:grid;gap:7px}
+.checkout-note .small{margin:0;line-height:1.65}
+#checkoutSaveNote{margin:0}
+#checkoutSaveNote.ok{border-color:rgba(90,150,95,.55);background:rgba(47,107,54,.12);color:#a9e0a2}
+
 .co-lead{margin:-6px 0 2px}
 .co-summary{display:grid;gap:12px;align-content:start}
 /* the line item must show the piece, not a crop of the model's chest */
