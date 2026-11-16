@@ -8,6 +8,7 @@ services:
     buildCommand: npm install --omit=dev
     startCommand: node server.js
     healthCheckPath: /api/health
+    maxShutdownDelaySeconds: 20
     autoDeploy: true
     disk:
       name: tribe-data
@@ -32,7 +33,11 @@ services:
         sync: false
       - key: RESEND_API_KEY
         sync: false
+      # keep this false in production: preview mode marks orders paid without
+      # taking money, and is only meant for rehearsing the flow locally
       - key: ALLOW_PREVIEW_CHECKOUT
-        value: "true"
+        value: "false"
+      - key: LOW_STOCK_AT
+        value: "3"
       - key: NODE_ENV
         value: production

@@ -23,7 +23,7 @@ function mediaFor(sku, forStage) {
     return {
       name: p.name, variant: p.variant,
       front: p.images.front, back: p.images.back, detail: p.images.detail,
-      tile: forStage ? 'assets/products/3d/' + sku + '.jpg' : p.images.front
+      tile: forStage ? 'assets/products/3d/' + sku + '.webp' : p.images.front
     };
   }
   return PRODUCT_MEDIA[sku] || null;
@@ -439,7 +439,7 @@ function mountProduct(host) {
   function urlFor(f) {
     const m = mediaFor(sku, true);
     if (!m) return media.front;
-    return 'assets/products/3d/' + sku + '-' + f + '.jpg';
+    return 'assets/products/3d/' + sku + '-' + f + '.webp';
   }
 
   let active = A;   /* plane currently showing the print */

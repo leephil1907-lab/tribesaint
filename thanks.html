@@ -153,6 +153,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(location.search);
   const reference = (params.get('reference') || params.get('trxref') || '').trim();
   const previewToken = (params.get('preview_token') || '').trim();
+  let accessToken = (params.get('t') || '').trim();
+  if (!accessToken && reference) { try { accessToken = sessionStorage.getItem('tc_access_' + reference) || ''; } catch (e) {} }
+  const esc = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const label = { pending: 'Payment pending', paid: 'Paid — packing', packed: 'Packed', shipped: 'Shipped', delivered: 'Delivered', cancelled: 'Cancelled', mismatch: 'Payment mismatch', refunded: 'Refunded' };
 
   function setHead(title, kicker, lede) {
@@ -164,6 +167,26 @@ document.addEventListener('DOMContentLoaded', () => {
   function render(order, verified) {
     if (!order) {
       $('#tSummary').innerHTML = '<p class="muted small">No order details available for this reference.</p>';
+      return;
+    }
+    if (order.locked) {
+      const money = (n) => (order.currency_symbol || '₦') + Number(n || 0).toLocaleString('en-NG');
+      $('#tSummary').innerHTML = `
+        <div class="row-between">
+          <div>
+            <p class="eyebrow red">${esc(order.reference)}</p>
+            <h2 class="disp" style="font-size:clamp(20px,3vw,28px);margin-top:6px">${esc(label[order.status] || order.status)}</h2>
+            <p class="tiny" style="margin-top:4px">${order.item_count} item${order.item_count === 1 ? '' : 's'} · ${money(order.total)}</p>
+          </div>
+          <span class="badge">${esc(order.status)}</span>
+        </div>
+        <p class="muted small" style="margin-top:14px">For your privacy this page shows the full order only from the link in your confirmation email, or once you confirm the email address you ordered with on the tracking page.</p>
+        <a class="btn ghost sm" href="track.html?ref=${encodeURIComponent(order.reference)}" style="justify-self:start;margin-top:12px"><span>Track this order</span></a>`;
+      setHead(order.paid ? 'Order confirmed' : 'Order received', 'Status', order.paid
+        ? 'Your payment is confirmed. We pack Drop 001 within 1–2 business days.'
+        : 'Payment is not confirmed yet. Keep your reference — your receipt arrives by email the moment Paystack clears it.');
+      $('#tRetry').hidden = true;
+      $('#tNote').textContent = 'Reference ' + order.reference;
       return;
     }
     const money = (n) => (order.currency_symbol || '₦') + Number(n || 0).toLocaleString('en-NG');
@@ -180,15 +203,15 @@ document.addEventListener('DOMContentLoaded', () => {
         ${(order.items || []).map((i) => `
           <div class="order-item" style="border:0;border-bottom:1px solid var(--line);padding:10px 0">
             <img src="${i.image}" alt="" width="44" height="44">
-            <div><div class="n">${i.name}</div><div class="m">${i.variant} · ${i.size === 'ONE SIZE' ? 'One size' : 'Size ' + i.size} · ×${i.qty}</div></div>
+            <div><div class="n">${esc(i.name)}</div><div class="m">${esc(i.variant)} · ${i.size === 'ONE SIZE' ? 'One size' : 'Size ' + esc(i.size)} · ×${esc(i.qty)}</div></div>
             <span class="price" style="font-size:12.5px">${money(i.line_total)}</span>
           </div>`).join('')}
       </div>
       <div class="tot-row" style="margin-top:12px"><span>Subtotal</span><span>${money(order.subtotal)}</span></div>
-      <div class="tot-row"><span>Delivery — ${order.shipping_label || ''}</span><span>${order.shipping ? money(order.shipping) : 'Free'}</span></div>
+      <div class="tot-row"><span>Delivery — ${esc(order.shipping_label || '')}</span><span>${order.shipping ? money(order.shipping) : 'Free'}</span></div>
       <div class="tot-row big"><span>Total</span><span>${money(order.total)}</span></div>
       <div class="stack-sm" style="margin-top:12px">
-        <p class="tiny">Deliver to: ${order.customer.name}, ${order.customer.address}, ${order.customer.city}${order.customer.country ? ', ' + order.customer.country : ''}</p>
+        <p class="tiny">Deliver to: ${esc(order.customer.name)}, ${esc(order.customer.address)}, ${esc(order.customer.city)}${order.customer.country ? ', ' + esc(order.customer.country) : ''}</p>
         <p class="tiny">A confirmation email is on its way. Keep your reference for tracking.</p>
         <a class="link" href="track.html?ref=${encodeURIComponent(order.reference)}">Track this order <span class="arw">→</span></a>
       </div>`;
@@ -219,7 +242,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     setHead('Confirming your order', 'Please wait', 'Verifying the payment with Paystack…');
     try {
-      const res = await fetch('/api/verify?reference=' + encodeURIComponent(reference) + (previewToken ? '&preview_token=' + encodeURIComponent(previewToken) : ''));
+      const res = await fetch('/api/verify?reference=' + encodeURIComponent(reference)
+        + (previewToken ? '&preview_token=' + encodeURIComponent(previewToken) : '')
+        + (accessToken ? '&t=' + encodeURIComponent(accessToken) : ''));
       const json = await res.json();
       window.__receiptToken = json.receipt_token || json.token || '';
       if (json.order) render(json.order, json.verified || !!json.order.paid_at);

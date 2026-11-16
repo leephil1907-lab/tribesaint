@@ -28,14 +28,20 @@
     return total + ' pieces in stock';
   }
 
+  /** the grid copy of a shot: same photograph, sized for a card */
+  function thumb(src) {
+    return String(src || '').replace('/assets/products/', '/assets/products/cards/')
+      .replace('/products/', '/products/cards/');
+  }
+
   /** product card used by home / shop / related */
   function cardHTML(p) {
     const backs = p.images && p.images.back ? p.images.back : p.image;
     return `
     <article class="card" data-card="${esc(p.sku)}">
       <a class="card-media" href="product.html?sku=${encodeURIComponent(p.sku)}" aria-label="${esc(p.name)} — ${esc(p.variant)}">
-        <img class="on" data-shot="front" src="${esc(p.image)}" alt="${esc(p.name)}, ${esc(p.variant)}" loading="lazy" width="900" height="900">
-        <img data-shot="back" src="${esc(backs)}" alt="" loading="lazy" width="900" height="900">
+        <img class="on" data-shot="front" src="${esc(thumb(p.image))}" alt="${esc(p.name)}, ${esc(p.variant)}" loading="lazy" decoding="async" width="480" height="480">
+        <img data-shot="back" src="${esc(thumb(backs))}" alt="" loading="lazy" decoding="async" width="480" height="480">
         <span class="badge">${esc(p.badge || 'Drop 001')}</span>
         <span class="views" role="group" aria-label="Product view">
           <button type="button" class="on" data-view="front" aria-pressed="true">1</button>
@@ -251,7 +257,7 @@
         { key: 'back', label: '2', img: p.images.back, alt: p.name + ' alternate' },
         { key: 'detail', label: '3', img: p.images.detail, alt: p.name + ' print detail' }
       ];
-      thumbs.innerHTML = faces.map((f, i) => `<button type="button" data-face="${f.key}" aria-pressed="${i === 0}"><img src="${esc(f.img)}" alt="${esc(f.alt)}" width="64" height="64" loading="lazy"></button>`).join('');
+      thumbs.innerHTML = faces.map((f, i) => `<button type="button" data-face="${f.key}" aria-pressed="${i === 0}" aria-label="Show ${esc(f.alt)}"><img src="${esc(f.img)}" alt="" width="64" height="64" loading="lazy" decoding="async"></button>`).join('');
 
       // colourways: every piece sharing this family (Saint black/white, Members black/white, ...)
       const family = list.filter((x) => (x.family || x.sku) === (p.family || p.sku));
@@ -483,6 +489,10 @@
         const json = await res.json();
         if (!res.ok || !json.ok) throw new Error(json.error || 'Could not start checkout.');
         try { localStorage.setItem('tc_pending_order', JSON.stringify({ reference: json.reference, total: json.total, mode: json.mode })); } catch {}
+        /* proves this browser placed the order, so the confirmation page can show
+           the delivery details without trusting the reference alone */
+        if (json.access_token) { try { sessionStorage.setItem('tc_access_' + json.reference, json.access_token); } catch {} }
+        const withToken = (path) => path + (json.access_token ? '&t=' + encodeURIComponent(json.access_token) : '');
 
         if (json.mode === 'preview') { location.href = json.callback_url; return; }
 
@@ -497,7 +507,7 @@
               currency: json.currency,
               reference: json.reference,
               access_code: json.access_code,
-              onSuccess: () => { location.href = 'thanks.html?reference=' + encodeURIComponent(json.reference); },
+              onSuccess: () => { location.href = withToken('thanks.html?reference=' + encodeURIComponent(json.reference)); },
               onCancel: () => {
                 btn.disabled = false; span.textContent = 'Pay with Paystack';
                 alertBox.textContent = 'Payment cancelled. Your bag is saved.';
@@ -549,10 +559,22 @@
       btn.disabled = true;
       out.innerHTML = '<p class="muted small">Looking up your order…</p>';
       try {
-        const res = await fetch('/api/track?reference=' + encodeURIComponent(ref) + (email ? '&email=' + encodeURIComponent(email) : ''));
+        let token = '';
+        try { token = sessionStorage.getItem('tc_access_' + ref) || ''; } catch {}
+        const res = await fetch('/api/track?reference=' + encodeURIComponent(ref) + (email ? '&email=' + encodeURIComponent(email) : '') + (token ? '&t=' + encodeURIComponent(token) : ''));
         const json = await res.json();
         if (!res.ok || !json.ok) throw new Error(json.error || 'Order not found.');
         const o = json.order;
+        if (json.access_required) {
+          out.innerHTML = `
+            <div class="info-card">
+              <p class="eyebrow red">${esc(o.reference)}</p>
+              <h2 class="disp" style="font-size:clamp(20px,3vw,26px);margin-top:6px">${esc(statusLabel[o.status] || o.status)}</h2>
+              <p class="muted small" style="margin-top:8px">${esc(o.item_count)} item${o.item_count === 1 ? '' : 's'} · ${esc(o.currency_symbol)}${Number(o.total).toLocaleString('en-NG')}</p>
+              <p class="tiny" style="margin-top:10px">Add the email address you ordered with to see the full order and delivery details.</p>
+            </div>`;
+          return;
+        }
         out.innerHTML = `
           <div class="info-card">
             <div class="row-between">
@@ -657,7 +679,7 @@
       host.innerHTML = filled.map((p) => `
         <a class="rail-piece" href="product.html?sku=${encodeURIComponent(p.sku)}" aria-label="${esc(p.name + ' — ' + p.variant)}">
           <span class="rail-hook" aria-hidden="true"></span>
-          <span class="rail-frame"><img src="assets/products/3d/${esc(p.sku)}.jpg" alt="${esc(p.name + ' — ' + p.variant)}" width="360" height="360" loading="lazy"></span>
+          <span class="rail-frame"><img src="assets/products/3d/${esc(p.sku)}.webp" alt="${esc(p.name + ' — ' + p.variant)}" width="360" height="360" loading="lazy" decoding="async"></span>
           <span class="rail-tag">${esc(p.name)}<br>${esc(p.variant)}</span>
           <span class="rail-price">${money(p.price)}</span>
         </a>`).join('');
@@ -712,7 +734,7 @@
         b.setAttribute('aria-pressed', String(on));
       });
       const fb = stage.querySelector('.stage-fallback img');
-      if (fb) fb.src = 'assets/products/3d/' + sku + '-front.jpg';
+      if (fb) fb.src = 'assets/products/3d/' + sku + '-front.webp';
       document.dispatchEvent(new CustomEvent('stage:sku', { detail: { sku } }));
     };
 
@@ -775,7 +797,7 @@
       if (strip) {
         strip.innerHTML = list.map((p) => `
           <button type="button" data-live-sku="${esc(p.sku)}" class="live-chip" aria-pressed="false" title="${esc(p.name + ' — ' + p.variant)}">
-            <img src="assets/products/3d/${esc(p.sku)}.jpg" alt="" width="64" height="64" loading="lazy">
+            <img src="assets/products/3d/${esc(p.sku)}.webp" alt="" width="64" height="64" loading="lazy" decoding="async">
             <span>${esc(p.name)}</span>
           </button>`).join('');
       }

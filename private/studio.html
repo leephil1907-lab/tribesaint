@@ -410,7 +410,7 @@
       const statuses = ['paid', 'packed', 'shipped', 'delivered', 'cancelled', 'refunded'];
       return `
       <tr class="order-row" data-ref="${esc(o.reference)}">
-        <td class="mono">${esc(o.reference)}<br><span class="tiny">${esc(o.mode || '')}</span></td>
+        <td class="mono">${esc(o.reference)}${o.needs_attention ? ` <span title="${esc(o.oversold ? 'Sold past available stock' : 'Receipt email not delivered')}" style="color:var(--red);font-weight:700">!</span>` : ''}<br><span class="tiny">${esc(o.mode || '')}</span></td>
         <td>${esc(o.customer.name)}<br><span class="tiny">${esc(o.customer.email)}</span></td>
         <td>${money(o.total)}<br><span class="tiny">${(o.items || []).reduce((a, i) => a + i.qty, 0)} pc</span></td>
         <td class="tiny">${when(o.created_at)}</td>
@@ -420,6 +420,15 @@
       ${isOpen ? `<tr class="order-detail-row"><td colspan="6">
         <div class="order-detail">
           <div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">
+            ${o.email_error ? `<div style="grid-column:1/-1;border-left:2px solid var(--red);padding:8px 12px;background:rgba(212,20,27,.06)">
+              <p class="tiny" style="color:var(--red);letter-spacing:.14em;text-transform:uppercase">Receipt email not delivered</p>
+              <p class="small" style="margin-top:4px">${esc(o.email_error)}</p>
+              <p class="tiny muted" style="margin-top:4px">The order is paid and recorded — only the email is outstanding. Fix the mail settings and send it again from the invoice panel.</p>
+            </div>` : ''}
+            ${o.oversold ? `<div style="grid-column:1/-1;border-left:2px solid var(--red);padding:8px 12px;background:rgba(212,20,27,.06)">
+              <p class="tiny" style="color:var(--red);letter-spacing:.14em;text-transform:uppercase">Sold past available stock</p>
+              <p class="small" style="margin-top:4px">${o.oversold.map((x) => `${esc(x.sku)} / ${esc(x.size)} — needed ${x.wanted}, had ${x.had}`).join('<br>')}</p>
+            </div>` : ''}
             <div>
               <h3>Items</h3>
               <div class="order-items">${items || '<span class="muted small">—</span>'}</div>

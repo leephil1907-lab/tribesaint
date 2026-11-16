@@ -43,6 +43,7 @@ function loadConfig() {
     /* no shipped default: the studio fails closed until ADMIN_PASSWORD is set */
     admin_password: String(process.env.ADMIN_PASSWORD || raw.admin_password || '').trim(),
     resend_api_key: (process.env.RESEND_API_KEY || '').trim(),
+    low_stock_at: Number(process.env.LOW_STOCK_AT || raw.low_stock_at || 3) || 3,
     allow_preview_checkout:
       process.env.ALLOW_PREVIEW_CHECKOUT !== undefined
         ? process.env.ALLOW_PREVIEW_CHECKOUT === 'true'
@@ -92,57 +93,168 @@ function freshDb() {
   };
 }
 
+/* ---------------------------------------------------------------- storage
+ * The store is a single JSON file. Two rules keep it safe in production:
+ *  1. never invent an empty database over a file we failed to read
+ *  2. never let two requests interleave a read-modify-write
+ * Reads are served from an in-memory copy guarded by the file's mtime, so a
+ * request costs a stat() rather than a full parse.
+ * ------------------------------------------------------------------------- */
+const BACKUP_FILE = DB_FILE + '.bak';
+let dbCache = null;      /* { db, mtimeMs, size } */
+let dbHealthy = true;        /* false while the store is unreadable */
+let dbRecoveredAt = null;    /* when we last had to rebuild from a backup */
+let writeChain = Promise.resolve();
+
+function logEvent(level, msg, extra) {
+  const line = `[${new Date().toISOString()}] ${level} ${msg}${extra ? ' ' + JSON.stringify(extra) : ''}`;
+  if (level === 'error') console.error(line); else console.log(line);
+}
+
+/* normalise whatever we parsed into the shape the rest of the server expects */
+function migrate(db) {
+  db.stock ||= {};
+  db.products ||= {};
+  db.orders ||= [];
+  db.signups ||= [];
+  db.messages ||= [];
+  db.settings ||= {};
+  db.invoices ||= {};
+  if (typeof db.invoice_seq !== 'number') db.invoice_seq = 0;
+  for (const [sku, p] of Object.entries(CONFIG.products)) {
+    if (!db.stock[sku]) db.stock[sku] = { ...p.default_stock };
+    for (const size of p.sizes) {
+      if (typeof db.stock[sku][size] !== 'number') db.stock[sku][size] = p.default_stock[size] ?? 0;
+    }
+    if (!db.products[sku]) db.products[sku] = { price: p.price, active: p.active !== false };
+  }
+  db.settings.shipping ||= CONFIG.shipping;
+  if (db.settings.free_delivery_over == null) db.settings.free_delivery_over = CONFIG.free_delivery_over;
+  if (!db.settings.store_email) db.settings.store_email = CONFIG.store_email;
+  return db;
+}
+
+function readJsonFile(file) {
+  const raw = fs.readFileSync(file, 'utf8');
+  return JSON.parse(raw);
+}
+
+/* called only when the primary file is unreadable: keep the evidence, restore
+   the last good copy if there is one, and shout about it. */
+function recover(reason) {
+  dbHealthy = false;
+  dbRecoveredAt = new Date().toISOString();
+  ensureDir();
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const quarantined = path.join(DATA_DIR, `store.corrupt-${stamp}.json`);
+  try { fs.renameSync(DB_FILE, quarantined); } catch {}
+  logEvent('error', 'store.json could not be read — quarantined', { reason, quarantined });
+
+  try {
+    const backup = migrate(readJsonFile(BACKUP_FILE));
+    logEvent('error', 'restored from store.json.bak', { orders: backup.orders.length });
+    writeDb(backup);
+    dbHealthy = true;      /* serving again; dbRecoveredAt keeps the warning visible */
+    return backup;
+  } catch {
+    logEvent('error', 'no usable backup — starting a fresh store; check the quarantined file');
+    const db = freshDb();
+    writeDb(db);
+    dbHealthy = true;
+    return db;
+  }
+}
+
 function readDb() {
   ensureDir();
-  try {
-    if (!fs.existsSync(DB_FILE)) {
+  let stat;
+  try { stat = fs.statSync(DB_FILE); } catch { stat = null; }
+
+  if (!stat) {
+    if (dbCache && !fs.existsSync(DB_FILE)) {
+      /* someone removed the file under us — honour it with a fresh store */
       const db = freshDb();
       writeDb(db);
       return db;
     }
-    const db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-    db.stock ||= {};
-    db.products ||= {};
-    db.orders ||= [];
-    db.signups ||= [];
-    db.messages ||= [];
-    db.settings ||= {};
-    db.invoices ||= {};
-    if (typeof db.invoice_seq !== 'number') db.invoice_seq = 0;
-    for (const [sku, p] of Object.entries(CONFIG.products)) {
-      if (!db.stock[sku]) db.stock[sku] = { ...p.default_stock };
-      for (const size of p.sizes) {
-        if (typeof db.stock[sku][size] !== 'number') db.stock[sku][size] = p.default_stock[size] ?? 0;
-      }
-      if (!db.products[sku]) db.products[sku] = { price: p.price, active: p.active !== false };
-    }
-    db.settings.shipping ||= CONFIG.shipping;
-    if (db.settings.free_delivery_over == null) db.settings.free_delivery_over = CONFIG.free_delivery_over;
-    if (!db.settings.store_email) db.settings.store_email = CONFIG.store_email;
-    return db;
-  } catch {
     const db = freshDb();
     writeDb(db);
     return db;
+  }
+
+  if (dbCache && dbCache.mtimeMs === stat.mtimeMs && dbCache.size === stat.size) {
+    return dbCache.db;
+  }
+
+  try {
+    const db = migrate(readJsonFile(DB_FILE));
+    dbCache = { db, mtimeMs: stat.mtimeMs, size: stat.size };
+    dbHealthy = true;
+    return db;
+  } catch (err) {
+    return recover(err && err.message);
   }
 }
 
 function writeDb(db) {
   ensureDir();
+  const payload = JSON.stringify(db, null, 2);
   const tmp = DB_FILE + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(db, null, 2), { mode: 0o600 });
+  const fd = fs.openSync(tmp, 'w', 0o600);
+  try {
+    fs.writeFileSync(fd, payload);
+    fs.fsyncSync(fd);          /* durability: survive a container kill */
+  } finally {
+    fs.closeSync(fd);
+  }
   fs.renameSync(tmp, DB_FILE);
+  /* the backup mirrors the newest good state, so a corrupt primary costs us
+     nothing rather than one write */
+  try { fs.copyFileSync(DB_FILE, BACKUP_FILE); } catch {}
+  const stat = fs.statSync(DB_FILE);
+  dbCache = { db, mtimeMs: stat.mtimeMs, size: stat.size };
+}
+
+/* Every mutation goes through here: reads a fresh copy, runs the work, writes,
+   and serialises the whole thing so concurrent requests cannot clobber each
+   other. `fn` may be async; it must not await network calls while it holds the
+   store (do those outside and come back). */
+function withDb(fn) {
+  const run = async () => {
+    const db = readDb();
+    const result = await fn(db);
+    writeDb(db);
+    return result;
+  };
+  const next = writeChain.then(run, run);
+  writeChain = next.catch(() => {});
+  return next;
+}
+
+/* read-only view, safe to use for GETs */
+function peekDb() {
+  return readDb();
 }
 
 /* --------------------------------------------------------------- utilities */
-const text = (v, max = 300) => String(v == null ? '' : v).replace(/[\r\n\t]+/g, ' ').trim().slice(0, max);
+const text = (v, max = 300) => String(v == null ? '' : v)
+  .replace(/[\r\n\t]+/g, ' ')
+  /* eslint-disable-next-line no-control-regex */
+  .replace(/[\u0000-\u001f\u007f]+/g, '')
+  .replace(/\s{2,}/g, ' ')
+  .trim()
+  .slice(0, max);
 const validEmail = (v) => typeof v === 'string' && v.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+
 const money = (n, cfg = CONFIG) => (cfg.currency_symbol || '₦') + Number(n || 0).toLocaleString('en-NG');
 const reference = () => 'TC-2026-' + Date.now().toString(36).toUpperCase().slice(-4) + crypto.randomBytes(3).toString('hex').toUpperCase();
 
 function clientIp(req) {
-  const xff = req.headers['x-forwarded-for'];
-  if (typeof xff === 'string' && xff.trim()) return xff.split(',')[0].trim();
+  const xff = String(req.headers['x-forwarded-for'] || '');
+  const hops = xff.split(',').map((h) => h.trim()).filter(Boolean);
+  /* the right-most entry is the one the trusted proxy appended; the left ones
+     are whatever the caller claimed */
+  if (hops.length) return hops[hops.length - 1];
   return req.socket.remoteAddress || 'unknown';
 }
 
@@ -163,6 +275,15 @@ function ratePeek(key, max, windowMs) {
   buckets.set(key, hits);
   return hits.length < max;
 }
+/* buckets are pruned hourly so a long-lived process cannot accumulate keys */
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, hits] of buckets) {
+    const live = hits.filter((t) => now - t < 60 * 60 * 1000);
+    if (live.length) buckets.set(key, live); else buckets.delete(key);
+  }
+}, 60 * 60 * 1000).unref();
+
 function rateHit(key, windowMs) {
   const now = Date.now();
   const hits = (buckets.get(key) || []).filter((t) => now - t < windowMs);
@@ -228,18 +349,27 @@ function httpsJson(options, payload) {
 function sendMail(cfg, to, subject, body, opts = {}) {
   const entry = `\n=== ${new Date().toISOString()} → ${to} | ${subject} ===\n${body}\n`;
   try { fs.appendFileSync(MAIL_LOG, entry, { mode: 0o600 }); } catch {}
-  if (cfg.resend_api_key) {
-    const payload = { from: cfg.from_email, to: [to], subject, text: body };
-    if (opts.html) payload.html = opts.html;
-    if (opts.attachments && opts.attachments.length) {
-      payload.attachments = opts.attachments.map((a) => ({ filename: a.filename, content: a.content.toString('base64') }));
-    }
-    return httpsJson(
-      { hostname: 'api.resend.com', path: '/emails', method: 'POST', headers: { Authorization: `Bearer ${cfg.resend_api_key}` } },
-      payload
-    ).catch(() => null);
+
+  if (!cfg.resend_api_key) {
+    /* no provider configured — the log above is the only record */
+    return Promise.resolve({ ok: false, error: 'email is not configured (RESEND_API_KEY is missing)' });
   }
-  return Promise.resolve(null);
+
+  const payload = { from: cfg.from_email, to: [to], subject, text: body };
+  if (opts.html) payload.html = opts.html;
+  if (opts.attachments && opts.attachments.length) {
+    payload.attachments = opts.attachments.map((a) => ({ filename: a.filename, content: a.content.toString('base64') }));
+  }
+
+  return httpsJson(
+    { hostname: 'api.resend.com', path: '/emails', method: 'POST', headers: { Authorization: `Bearer ${cfg.resend_api_key}` } },
+    payload
+  ).then(
+    (r) => (r && r.status >= 200 && r.status < 300
+      ? { ok: true, id: (r.json && r.json.id) || null }
+      : { ok: false, error: `resend rejected it (${(r && r.status) || '?'}) ${((r && r.json && (r.json.message || r.json.error)) || '').toString().slice(0, 120)}`.trim() }),
+    (err) => ({ ok: false, error: `resend unreachable: ${(err && err.message) || err}` })
+  );
 }
 
 /* ---------------------------------------------------------------- invoices */
@@ -264,10 +394,9 @@ async function sendOrderEmails(order, cfg, base, db) {
   if (order.email_sent) return;
   const sym = cfg.currency_symbol || '₦';
   const site = base || cfg.site_url || '';
+  /* the receipt number was allocated inside the settlement lock; just read it */
   const store = db || readDb();
   const { doc } = invoiceFor(store, order, cfg, 'receipt');
-  if (store.invoices[order.reference]) store.invoices[order.reference].sent_at = new Date().toISOString();
-  if (!db) writeDb(store);
 
   const lines = order.items
     .map((i) => `  - ${i.name} (${i.variant} / ${i.size === 'ONE SIZE' ? 'One size' : 'Size ' + i.size}) × ${i.qty} — ${money(i.line_total, cfg)}`)
@@ -309,8 +438,8 @@ async function sendOrderEmails(order, cfg, base, db) {
   ].filter(Boolean).join('\n');
 
   const row = (i) => `<tr>
-      <td style="padding:10px 0;border-bottom:1px solid #e8e3d8;font:400 14px/1.4 Helvetica,Arial,sans-serif;color:#111">${i.name}
-        <div style="font:400 11px/1.5 Helvetica,Arial,sans-serif;color:#888;letter-spacing:.04em">${i.variant} · ${i.size === 'ONE SIZE' ? 'One size' : 'Size ' + i.size} · ×${i.qty}</div></td>
+      <td style="padding:10px 0;border-bottom:1px solid #e8e3d8;font:400 14px/1.4 Helvetica,Arial,sans-serif;color:#111">${esc(i.name)}
+        <div style="font:400 11px/1.5 Helvetica,Arial,sans-serif;color:#888;letter-spacing:.04em">${esc(i.variant)} · ${i.size === 'ONE SIZE' ? 'One size' : 'Size ' + i.size} · ×${i.qty}</div></td>
       <td align="right" style="padding:10px 0;border-bottom:1px solid #e8e3d8;font:700 14px/1.4 Helvetica,Arial,sans-serif;color:#111">${money(i.line_total, cfg)}</td></tr>`;
 
   const html = `<!doctype html><html><body style="margin:0;background:#f4f1ea;padding:24px 12px">
@@ -326,10 +455,10 @@ async function sendOrderEmails(order, cfg, base, db) {
     <tr><td style="padding:26px 24px 8px">
       <div style="font:400 11px/1 Helvetica,Arial,sans-serif;color:#d4141b;letter-spacing:.26em;text-transform:uppercase">Thank you</div>
       <h1 style="font:700 24px/1.2 Helvetica,Arial,sans-serif;color:#0a0909;margin:10px 0 6px">Your payment is confirmed</h1>
-      <p style="font:400 14px/1.6 Helvetica,Arial,sans-serif;color:#4a4640;margin:0 0 18px">${order.customer.name}, we have your order <strong>${order.reference}</strong> and the pieces are being packed. Your receipt is attached to this email and always available online.</p>
+      <p style="font:400 14px/1.6 Helvetica,Arial,sans-serif;color:#4a4640;margin:0 0 18px">${esc(order.customer.name)}, we have your order <strong>${esc(order.reference)}</strong> and the pieces are being packed. Your receipt is attached to this email and always available online.</p>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${order.items.map(row).join('')}
         <tr><td style="padding:12px 0 2px;font:400 12px/1.5 Helvetica,Arial,sans-serif;color:#7b756a">Subtotal</td><td align="right" style="padding:12px 0 2px;font:400 12px/1.5 Helvetica,Arial,sans-serif;color:#7b756a">${money(order.subtotal, cfg)}</td></tr>
-        <tr><td style="padding:2px 0;font:400 12px/1.5 Helvetica,Arial,sans-serif;color:#7b756a">Delivery — ${order.shipping_label}</td><td align="right" style="padding:2px 0;font:400 12px/1.5 Helvetica,Arial,sans-serif;color:#7b756a">${order.shipping ? money(order.shipping, cfg) : 'Free'}</td></tr>
+        <tr><td style="padding:2px 0;font:400 12px/1.5 Helvetica,Arial,sans-serif;color:#7b756a">Delivery — ${esc(order.shipping_label)}</td><td align="right" style="padding:2px 0;font:400 12px/1.5 Helvetica,Arial,sans-serif;color:#7b756a">${order.shipping ? money(order.shipping, cfg) : 'Free'}</td></tr>
         <tr><td style="padding:12px 0 0;border-top:1px solid #0a0909;font:700 14px/1.4 Helvetica,Arial,sans-serif;color:#0a0909">TOTAL PAID</td><td align="right" style="padding:12px 0 0;border-top:1px solid #0a0909;font:700 16px/1.4 Helvetica,Arial,sans-serif;color:#d4141b">${money(order.total, cfg)}</td></tr>
       </table>
     </td></tr>
@@ -339,29 +468,31 @@ async function sendOrderEmails(order, cfg, base, db) {
     </td></tr>
     <tr><td style="padding:22px 24px 6px">
       <div style="font:400 9px/1 Helvetica,Arial,sans-serif;color:#d4141b;letter-spacing:.26em;text-transform:uppercase;margin-bottom:8px">Delivering to</div>
-      <div style="font:400 13px/1.65 Helvetica,Arial,sans-serif;color:#4a4640">${order.customer.name}<br>${order.customer.address}<br>${order.customer.city}${order.customer.country ? ', ' + order.customer.country : ''}<br>${order.customer.phone}</div>
+      <div style="font:400 13px/1.65 Helvetica,Arial,sans-serif;color:#4a4640">${esc(order.customer.name)}<br>${esc(order.customer.address)}<br>${esc(order.customer.city)}${order.customer.country ? ', ' + esc(order.customer.country) : ''}<br>${esc(order.customer.phone)}</div>
     </td></tr>
     <tr><td style="padding:18px 24px 26px">
       <p style="font:400 12px/1.65 Helvetica,Arial,sans-serif;color:#7b756a;margin:0">Questions? Message us on WhatsApp${cfg.whatsapp ? ' (+' + cfg.whatsapp + ')' : ''} or reply to this email. Unworn pieces can be returned within 14 days, tags attached.</p>
     </td></tr>
     <tr><td style="background:#0a0909;padding:18px 24px;font:400 10px/1.7 Helvetica,Arial,sans-serif;color:#8a8378">
-      Tribe Culture · Discover new truth · ${site.replace(/^https?:\/\//, '')}<br>${doc.number} · ${order.reference}
+      Tribe Culture · Discover new truth · ${site.replace(/^https?:\/\//, '')}<br>${esc(doc.number)} · ${esc(order.reference)}
     </td></tr>
   </table></body></html>`;
 
-  await sendMail(cfg, order.customer.email, `Tribe Culture — receipt ${doc.number} (${order.reference})`, body, {
+  const customer = await sendMail(cfg, order.customer.email, `Tribe Culture — receipt ${doc.number} (${order.reference})`, body, {
     html,
     attachments: attachment ? [attachment] : []
   });
-  if (cfg.store_email) {
-    await sendMail(cfg, cfg.store_email, `[NEW ORDER] ${order.reference} — ${money(order.total, cfg)}`, body, {
-      attachments: attachment ? [attachment] : []
-    });
-  }
-  order.email_sent = true;
-  order.email_sent_at = new Date().toISOString();
+  const store_mail = cfg.store_email
+    ? await sendMail(cfg, cfg.store_email, `[NEW ORDER] ${order.reference} — ${money(order.total, cfg)}`, body, {
+        attachments: attachment ? [attachment] : []
+      })
+    : { ok: true };
+
+  if (store.invoices[order.reference]) store.invoices[order.reference].sent_at = customer.ok ? new Date().toISOString() : null;
   order.receipt_no = doc.number;
   order.invoice_no = doc.number.replace(/RCT/, 'INV');
+  order.email_sent = !!customer.ok;
+  order.email_error = customer.ok ? (store_mail.ok ? null : `store copy: ${store_mail.error}`) : customer.error;
 }
 
 /* --------------------------------------------------------------- catalogue */
@@ -409,6 +540,40 @@ function cataloguePayload(cfg) {
 }
 
 /* ------------------------------------------------------------------ orders */
+/* a per-order proof that the caller is the buyer: handed to the browser that
+   created the order, so a reference on its own never unlocks a customer's
+   name, phone or address. */
+function orderAccessToken(reference, cfg) {
+  const secret = `tc-access|${cfg.admin_password}|${cfg.paystack_secret_key}|${cfg.currency}`;
+  return crypto.createHmac('sha256', secret).update('order|' + String(reference)).digest('hex').slice(0, 40);
+}
+
+function orderAccessible(req, url, order, cfg) {
+  const token = text(url.searchParams.get('t') || url.searchParams.get('access_token'), 80);
+  const email = text(url.searchParams.get('email'), 254).toLowerCase();
+  const preview = text(url.searchParams.get('preview_token'), 64);
+  if (token && safeEqual(token, orderAccessToken(order.reference, cfg))) return 'token';
+  if (preview && order.preview_token && safeEqual(preview, order.preview_token)) return 'preview';
+  if (email && safeEqual(email, String(order.customer.email || '').toLowerCase())) return 'email';
+  return null;
+}
+
+/* the safe minimum when the caller has only a reference */
+function redactedOrder(order, cfg) {
+  if (!order) return null;
+  return {
+    reference: order.reference,
+    status: order.status,
+    paid: !!order.paid_at,
+    currency: order.currency,
+    currency_symbol: cfg.currency_symbol || '₦',
+    total: order.total,
+    item_count: (order.items || []).reduce((n, i) => n + (i.qty || 0), 0),
+    created_at: order.created_at,
+    locked: true
+  };
+}
+
 function publicOrder(order, cfg) {
   if (!order) return null;
   return {
@@ -440,25 +605,35 @@ function publicOrder(order, cfg) {
   };
 }
 
-async function confirmPaid(ref, tx, cfg, base) {
-  const db = readDb();
-  const order = db.orders.find((o) => o.reference === ref);
-  if (!order) return { ok: false, error: 'Order not found' };
+function callbackOf(order, cfg, req) {
+  const base = `${baseUrl(req, cfg)}/thanks.html?reference=${encodeURIComponent(order.reference)}`;
+  return order.mode === 'preview' && order.preview_token
+    ? `${base}&preview_token=${order.preview_token}&t=${orderAccessToken(order.reference, cfg)}`
+    : `${base}&t=${orderAccessToken(order.reference, cfg)}`;
+}
 
+async function confirmPaid(ref, tx, cfg, base) {
   const status = String(tx.status || '').toLowerCase();
   const amount = Number(tx.amount);
   const currency = String(tx.currency || '').toUpperCase();
 
-  if (status !== 'success') return { ok: false, error: 'Payment not completed yet', order };
-  if (amount !== order.total_kobo || currency !== order.currency) {
-    order.status = 'mismatch';
-    order.mismatch = { expected: order.total_kobo, received: amount, expected_currency: order.currency, received_currency: currency };
-    order.updated_at = new Date().toISOString();
-    writeDb(db);
-    return { ok: false, error: 'Payment amount or currency mismatch', order };
-  }
+  /* Phase 1 — validate and settle under the store lock. No network here. */
+  const settled = await withDb((db) => {
+    const order = db.orders.find((o) => o.reference === ref);
+    if (!order) return { ok: false, code: 404, error: 'Order not found' };
 
-  if (!order.paid_at) {
+    if (status !== 'success') return { ok: false, error: 'Payment not completed yet' };
+
+    if (amount !== order.total_kobo || currency !== order.currency) {
+      order.status = 'mismatch';
+      order.mismatch = { expected: order.total_kobo, received: amount, expected_currency: order.currency, received_currency: currency };
+      order.updated_at = new Date().toISOString();
+      return { ok: false, error: 'Payment amount or currency mismatch' };
+    }
+
+    /* already settled — a duplicate verify or webhook retry is a no-op */
+    if (order.paid_at) return { ok: true, order, alreadyPaid: true };
+
     order.status = 'paid';
     order.paid_at = new Date().toISOString();
     order.updated_at = order.paid_at;
@@ -468,20 +643,55 @@ async function confirmPaid(ref, tx, cfg, base) {
     order.timeline.push({ status: 'paid', at: order.paid_at });
 
     if (!order.stock_deducted) {
+      const short = [];
       for (const item of order.items) {
         const cur = db.stock[item.sku]?.[item.size];
-        if (typeof cur === 'number') {
-          db.stock[item.sku][item.size] = Math.max(0, cur - item.qty);
-          item.stock_after = db.stock[item.sku][item.size];
-        }
+        if (typeof cur !== 'number') continue;
+        if (cur < item.qty) short.push({ sku: item.sku, size: item.size, wanted: item.qty, had: cur });
+        db.stock[item.sku][item.size] = Math.max(0, cur - item.qty);
+        item.stock_after = db.stock[item.sku][item.size];
       }
       order.stock_deducted = true;
+      /* the money is already taken, so never fail the confirmation — flag it for
+         the studio instead of quietly shipping something we do not have */
+      if (short.length) {
+        order.oversold = short;
+        logEvent('error', 'order sold past available stock', { reference: order.reference, short });
+      }
     }
     invoiceFor(db, order, cfg, 'receipt');
-    await sendOrderEmails(order, cfg, base, db);
-    writeDb(db);
+    return { ok: true, order };
+  });
+
+  if (!settled.ok || settled.alreadyPaid) return settled;
+
+  /* Phase 2 — email outside the lock, then record the outcome. */
+  const result = await deliverReceipt(settled.order, cfg, base);
+  return { ok: true, order: result.order || settled.order };
+}
+
+/* Sends the receipt + store notification and records exactly what happened, so
+   the dashboard can show "not sent" and offer a retry instead of lying. */
+async function deliverReceipt(order, cfg, base) {
+  let failure = null;
+  try {
+    await sendOrderEmails(order, cfg, base);
+    if (order.email_error) failure = order.email_error;
+  } catch (err) {
+    failure = (err && err.message) || 'send failed';
   }
-  return { ok: true, order };
+  const saved = await withDb((db) => {
+    const live = db.orders.find((o) => o.reference === order.reference);
+    if (!live) return order;
+    live.email_sent = !failure;
+    live.email_error = failure || null;
+    live.email_sent_at = failure ? null : new Date().toISOString();
+    if (order.receipt_no) live.receipt_no = order.receipt_no;
+    if (order.invoice_no) live.invoice_no = order.invoice_no;
+    return live;
+  });
+  if (failure) logEvent('error', 'receipt email failed', { reference: order.reference, failure });
+  return { order: saved, failure };
 }
 
 /* --------------------------------------------------------------- admin auth */
@@ -500,9 +710,11 @@ function adminValid(token, cfg) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 function safeEqual(a, b) {
-  const x = Buffer.from(String(a || ''));
-  const y = Buffer.from(String(b || ''));
-  return x.length === y.length && crypto.timingSafeEqual(x, y);
+  /* hash both sides: equal length input to timingSafeEqual, and comparison time
+     no longer leaks how long the secret is */
+  const x = crypto.createHash('sha256').update(String(a == null ? '' : a)).digest();
+  const y = crypto.createHash('sha256').update(String(b == null ? '' : b)).digest();
+  return crypto.timingSafeEqual(x, y);
 }
 
 /* recognised weak values, compared as hashes so no plaintext ships in the repo */
@@ -513,6 +725,66 @@ function isWeakPassword(pw) {
   if (!pw) return false;
   const h = crypto.createHash('sha256').update(String(pw)).digest('hex');
   return WEAK_PASSWORDS.has(h);
+}
+
+/* --------------------------------------------------------- response headers
+ * One policy for the whole site. Scripts are nonce-scoped (the theme bootstrap
+ * and the JSON-LD blocks are annotated on the way out) so an injected script
+ * cannot run even if a template ever forgets to escape something.
+ * ------------------------------------------------------------------------- */
+const PAYSTACK_HOSTS = 'https://js.paystack.co https://checkout.paystack.com https://api.paystack.co';
+
+function contentSecurityPolicy(nonce) {
+  return [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    `script-src 'self' 'nonce-${nonce}' https://js.paystack.co`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https://paystack.com https://*.paystack.com https://*.paystack.co",
+    "font-src 'self' data:",
+    "media-src 'self' blob:",
+    `connect-src 'self' ${PAYSTACK_HOSTS}`,
+    `frame-src ${PAYSTACK_HOSTS}`,
+    "manifest-src 'self'",
+    "worker-src 'self'",
+    "upgrade-insecure-requests"
+  ].join('; ');
+}
+
+function securityHeaders(req, nonce, opts = {}) {
+  const secure = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim() === 'https' || !!req.socket.encrypted;
+  const h = {
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'X-Frame-Options': 'DENY',
+    'Permissions-Policy': 'geolocation=(), microphone=(), camera=(), payment=(self "https://js.paystack.co"), usb=(), interest-cohort=()',
+    'Cross-Origin-Opener-Policy': 'same-origin'
+  };
+  if (opts.html !== false) h['Content-Security-Policy'] = contentSecurityPolicy(nonce);
+  if (secure && process.env.NODE_ENV === 'production') h['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
+  return h;
+}
+
+/* every inline <script> the pages ship needs the nonce; scripts with a src and
+   no body are left alone */
+function annotateNonce(html, nonce) {
+  return String(html).replace(/<script(?![^>]*\bsrc=)([^>]*)>/gi, (full, attrs) => {
+    if (/\bnonce=/.test(attrs)) return full;
+    return `<script nonce="${nonce}"${attrs}>`;
+  });
+}
+
+function htmlBytes(html, nonce, req) {
+  const body = annotateNonce(html, nonce);
+  const buf = Buffer.from(body, 'utf8');
+  const acceptsGzip = /\bgzip\b/.test(String(req.headers['accept-encoding'] || ''));
+  if (acceptsGzip && buf.length > 1024) {
+    return { out: zlib.gzipSync(buf, { level: 6 }), headers: { 'Content-Encoding': 'gzip', Vary: 'Accept-Encoding' } };
+  }
+  return { out: buf, headers: {} };
 }
 
 /* ------------------------------------------------------------ studio session */
@@ -538,18 +810,21 @@ function studioAuthorised(req, cfg) {
 }
 
 function sendFile(res, file, req, extra = {}) {
-  let buf;
-  try { buf = fs.readFileSync(file); } catch { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found'); }
+  let raw;
+  try { raw = fs.readFileSync(file, 'utf8'); } catch { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found'); }
+  const nonce = crypto.randomBytes(18).toString('base64');
+  const { out, headers } = htmlBytes(raw, nonce, req);
   res.writeHead(200, {
     'Content-Type': 'text/html; charset=utf-8',
     'Cache-Control': 'no-store',
     'X-Robots-Tag': 'noindex, nofollow',
-    'X-Frame-Options': 'DENY',
-    'X-Content-Type-Options': 'nosniff',
+    ...securityHeaders(req, nonce),
+    ...headers,
+    'Content-Length': out.length,
     ...extra
   });
   if (req.method === 'HEAD') return res.end();
-  res.end(buf);
+  res.end(out);
 }
 
 /* /studio is not part of the public site: no link points here, /admin.html is 404,
@@ -596,12 +871,18 @@ function requestOrigin(req) {
   return `${proto}://${String(host).split(',')[0].trim()}`;
 }
 
+/* The Host header is attacker-controlled. Anything that ends up in an email, a
+   Paystack callback or a receipt link must therefore come from SITE_URL unless
+   the request is genuinely local. */
 function baseUrl(req, cfg) {
+  const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
   if (cfg.site_url) {
-    const host = req.headers['x-forwarded-host'] || req.headers.host || '';
     if (!isLocalHost(host)) return cfg.site_url;
+    return requestOrigin(req);
   }
-  return requestOrigin(req);
+  if (isLocalHost(host)) return requestOrigin(req);
+  logEvent('warn', 'SITE_URL is not set; ignoring a non-local Host header', { host });
+  return `http://localhost:${process.env.PORT || 3000}`;
 }
 
 /* ------------------------------------------------------------------- API */
@@ -611,7 +892,32 @@ async function handleApi(req, res, pathname, url) {
   const cfg = CONFIG;
 
   if (route === '/api/health') {
-    return sendJson(res, 200, { ok: true, uptime: Math.round(process.uptime()), mode: paystackMode(cfg) });
+    const db = peekDb();
+    let disk = { writable: false };
+    try {
+      fs.accessSync(DATA_DIR, fs.constants.W_OK);
+      const st = fs.statSync(DB_FILE);
+      disk = { writable: true, bytes: st.size, updated_at: st.mtime.toISOString() };
+    } catch {}
+    const healthy = disk.writable && dbHealthy;
+    return sendJson(res, healthy ? 200 : 503, {
+      ok: healthy,
+      uptime: Math.round(process.uptime()),
+      paystack: paystackMode(cfg),
+      email: cfg.resend_api_key ? 'configured' : 'not configured',
+      studio: cfg.admin_password ? 'configured' : 'locked',
+      store: { healthy: dbHealthy, recovered_at: dbRecoveredAt, ...disk, orders: (db.orders || []).length },
+      warnings: [
+        !dbHealthy ? 'the store is unreadable right now — check the data directory' : null,
+        dbRecoveredAt && Date.now() - Date.parse(dbRecoveredAt) < 24 * 3600 * 1000
+          ? `the store was rebuilt at ${dbRecoveredAt} from a backup — check data/store.corrupt-*.json`
+          : null,
+        !cfg.admin_password ? 'ADMIN_PASSWORD is not set; the studio is locked' : null,
+        isWeakPassword(cfg.admin_password) ? 'ADMIN_PASSWORD is a well-known default' : null,
+        !cfg.paystack_secret_key ? 'PAYSTACK_SECRET_KEY is not set; checkout runs in preview mode' : null,
+        !cfg.resend_api_key ? 'RESEND_API_KEY is not set; receipts are logged but not emailed' : null
+      ].filter(Boolean)
+    });
   }
 
   /* catalogue */
@@ -716,15 +1022,56 @@ async function handleApi(req, res, pathname, url) {
 
     const callback = `${baseUrl(req, cfg)}/thanks.html?reference=${encodeURIComponent(ref)}`;
 
+    /* idempotency: the same bag from the same address inside two minutes is the
+       same checkout, double-tapped — reuse the pending order instead of opening
+       a second Paystack transaction */
+    const signature = crypto.createHash('sha256')
+      .update(JSON.stringify({ email, zone, items: orderItems.map((i) => [i.sku, i.size, i.qty]).sort(), total }))
+      .digest('hex').slice(0, 24);
+    const duplicate = await withDb((live) => {
+      const cutoff = Date.now() - 120 * 1000;
+      const found = live.orders.find((o) => o.status === 'pending' && !o.paid_at
+        && o.checkout_signature === signature && Date.parse(o.created_at) > cutoff);
+      if (found) return found;
+      order.checkout_signature = signature;
+      return null;
+    });
+
+    if (duplicate) {
+      if (duplicate.mode === 'preview') {
+        return sendJson(res, 200, {
+          ok: true, mode: 'preview', reference: duplicate.reference, reused: true,
+          currency: cfg.currency, currency_symbol: cfg.currency_symbol,
+          subtotal: duplicate.subtotal, shipping: duplicate.shipping, total: duplicate.total,
+          total_kobo: duplicate.total_kobo, email,
+          preview_token: duplicate.preview_token,
+          access_token: orderAccessToken(duplicate.reference, cfg),
+          callback_url: `${callbackOf(duplicate, cfg, req)}`
+        });
+      }
+      if (duplicate.access_code && duplicate.authorization_url) {
+        return sendJson(res, 200, {
+          ok: true, mode: paystackMode(cfg), reference: duplicate.reference, reused: true,
+          access_code: duplicate.access_code, authorization_url: duplicate.authorization_url,
+          public_key: cfg.paystack_public_key || null,
+          access_token: orderAccessToken(duplicate.reference, cfg),
+          email, currency: cfg.currency, currency_symbol: cfg.currency_symbol,
+          subtotal: duplicate.subtotal, shipping: duplicate.shipping, total: duplicate.total,
+          total_kobo: duplicate.total_kobo, callback_url: callbackOf(duplicate, cfg, req)
+        });
+      }
+      /* a pending duplicate without a usable transaction: let it through */
+    }
+
     if (mode === 'preview') {
       order.preview_token = crypto.randomBytes(16).toString('hex');
-      db.orders.unshift(order);
-      writeDb(db);
+      await withDb((live) => { live.orders.unshift(order); });
       return sendJson(res, 200, {
         ok: true, mode: 'preview', reference: ref, currency: cfg.currency, currency_symbol: cfg.currency_symbol,
         subtotal, shipping, total, total_kobo: order.total_kobo, email,
         preview_token: order.preview_token,
-        callback_url: `${callback}&preview_token=${order.preview_token}`
+        access_token: orderAccessToken(ref, cfg),
+        callback_url: `${callback}&preview_token=${order.preview_token}&t=${orderAccessToken(ref, cfg)}`
       });
     }
 
@@ -757,14 +1104,14 @@ async function handleApi(req, res, pathname, url) {
 
     order.access_code = ps.json.data.access_code;
     order.authorization_url = ps.json.data.authorization_url;
-    db.orders.unshift(order);
-    writeDb(db);
+    await withDb((live) => { live.orders.unshift(order); });
 
     return sendJson(res, 200, {
       ok: true, mode, reference: ref,
       access_code: ps.json.data.access_code,
       authorization_url: ps.json.data.authorization_url,
       public_key: cfg.paystack_public_key || null,
+      access_token: orderAccessToken(ref, cfg),
       email, currency: cfg.currency, currency_symbol: cfg.currency_symbol,
       subtotal, shipping, total, total_kobo: order.total_kobo, callback_url: callback
     });
@@ -780,6 +1127,17 @@ async function handleApi(req, res, pathname, url) {
     const db = readDb();
     const order = db.orders.find((o) => o.reference === ref);
     if (!order) return sendJson(res, 404, { ok: false, error: 'Order not found.' });
+    const access = orderAccessible(req, url, order, cfg);
+    if (!access) {
+      /* reference only — confirm the state, reveal nothing personal */
+      return sendJson(res, 200, {
+        ok: true,
+        verified: !!order.paid_at,
+        access_required: true,
+        order: redactedOrder(order, cfg),
+        hint: 'Open the confirmation link from your email, or track with the email you ordered with.'
+      });
+    }
     if (order.paid_at) return sendJson(res, 200, { ok: true, verified: true, receipt_token: invoiceToken(order.reference, cfg), order: publicOrder(order, cfg) });
 
     if (order.mode === 'preview' && cfg.allow_preview_checkout && token && safeEqual(token, order.preview_token)) {
@@ -832,12 +1190,12 @@ async function handleApi(req, res, pathname, url) {
     catch { return sendJson(res, 400, { ok: false, error: 'Invalid request.' }); }
     const email = text(body.email, 254).toLowerCase();
     if (!validEmail(email)) return sendJson(res, 400, { ok: false, error: 'Enter a valid email address.' });
-    const db = readDb();
-    const exists = db.signups.some((s) => s.email === email);
-    if (!exists) {
-      db.signups.unshift({ email, created_at: new Date().toISOString(), source: text(body.source, 40) || 'site' });
-      writeDb(db);
-    }
+    const source = text(body.source, 40) || 'site';
+    const exists = await withDb((db) => {
+      if (db.signups.some((x) => x.email === email)) return true;
+      db.signups.unshift({ email, created_at: new Date().toISOString(), source });
+      return false;
+    });
     return sendJson(res, 200, { ok: true, already: exists, message: exists ? 'You are already on the Tribe list.' : 'Welcome to the Tribe. First access unlocked.' });
   }
 
@@ -854,9 +1212,9 @@ async function handleApi(req, res, pathname, url) {
     if (name.length < 2) return sendJson(res, 400, { ok: false, error: 'Please tell us your name.' });
     if (!validEmail(email)) return sendJson(res, 400, { ok: false, error: 'Please enter a valid email address.' });
     if (message.length < 10) return sendJson(res, 400, { ok: false, error: 'Please add a little more detail to your message.' });
-    const db = readDb();
-    db.messages.unshift({ id: crypto.randomBytes(6).toString('hex'), name, email, subject, message, created_at: new Date().toISOString(), read: false });
-    writeDb(db);
+    await withDb((db) => {
+      db.messages.unshift({ id: crypto.randomBytes(6).toString('hex'), name, email, subject, message, created_at: new Date().toISOString(), read: false });
+    });
     await sendMail(cfg, cfg.store_email, `[CONTACT] ${subject} — ${name}`, `${name} <${email}>\n\n${message}`);
     return sendJson(res, 200, { ok: true, message: 'Message received. We reply within one business day.' });
   }
@@ -870,7 +1228,17 @@ async function handleApi(req, res, pathname, url) {
     const db = readDb();
     const order = db.orders.find((o) => o.reference.toUpperCase() === ref);
     if (!order) return sendJson(res, 404, { ok: false, error: 'No order found with that reference.' });
-    if (email && email !== order.customer.email.toLowerCase()) return sendJson(res, 403, { ok: false, error: 'That email does not match this order.' });
+    if (email && !safeEqual(email, String(order.customer.email || '').toLowerCase())) {
+      return sendJson(res, 403, { ok: false, error: 'That email does not match this order.' });
+    }
+    if (!orderAccessible(req, url, order, cfg)) {
+      return sendJson(res, 200, {
+        ok: true,
+        access_required: true,
+        order: redactedOrder(order, cfg),
+        message: 'Add the email you ordered with to see the full order.'
+      });
+    }
     const view = publicOrder(order, cfg);
     return sendJson(res, 200, {
       ok: true,
@@ -934,15 +1302,23 @@ async function handleApi(req, res, pathname, url) {
       }
       const loginKey = 'admin-login:' + ip;
       const WINDOW = 15 * 60 * 1000;
-      if (!ratePeek(loginKey, 8, WINDOW)) return sendJson(res, 429, { ok: false, error: 'Too many failed sign-in attempts. Wait 15 minutes.' });
+      /* two gates: 8 tries per address, and 25 per instance so a spread-out
+         attempt cannot keep guessing the same single password */
+      if (!ratePeek(loginKey, 8, WINDOW) || !ratePeek('admin-login:global', 25, WINDOW)) {
+        return sendJson(res, 429, { ok: false, error: 'Too many failed sign-in attempts. Wait 15 minutes.' });
+      }
       let body;
       try { body = JSON.parse((await readBody(req, 8 * 1024)).toString('utf8')); }
       catch { return sendJson(res, 400, { ok: false, error: 'Invalid request.' }); }
       if (!safeEqual(body.password, cfg.admin_password)) {
         rateHit(loginKey, WINDOW);
+        rateHit('admin-login:global', WINDOW);
+        await new Promise((r) => setTimeout(r, 350 + Math.floor(Math.random() * 250)));
+        logEvent('warn', 'studio sign-in failed', { ip });
         return sendJson(res, 401, { ok: false, error: 'Incorrect password.' });
       }
       buckets.delete(loginKey);
+      buckets.delete('admin-login:global');
       const token = adminToken(cfg);
       return sendJson(res, 200, { ok: true, token, default_password: isWeakPassword(cfg.admin_password) }, {
         'Set-Cookie': sessionCookie(req, token, 12 * 3600)
@@ -983,10 +1359,17 @@ async function handleApi(req, res, pathname, url) {
           items_sold: paidish.reduce((a, o) => a + o.items.reduce((x, i) => x + i.qty, 0), 0),
           signups: db.signups.length,
           messages: db.messages.length,
-          unread_messages: db.messages.filter((m) => !m.read).length
+          unread_messages: db.messages.filter((m) => !m.read).length,
+          awaiting_email: db.orders.filter((o) => o.paid_at && !o.email_sent).length,
+          oversold: db.orders.filter((o) => o.oversold).length,
+          low_stock: Object.entries(db.stock).flatMap(([sku, sizes]) =>
+            Object.entries(sizes).filter(([, n]) => n <= (cfg.low_stock_at || 3)).map(([size, n]) => ({ sku, size, left: n }))
+          ).length
         },
         orders: db.orders.map((o) => {
           const { preview_token, access_code, authorization_url, ...safe } = o;
+          /* operational flags the dashboard surfaces as badges */
+          safe.needs_attention = !!o.oversold || (!!o.paid_at && !o.email_sent);
           const meta = db.invoices[o.reference];
           if (meta) {
             const inv = buildInvoice(o, cfg, { type: 'invoice', seq: meta.seq });
@@ -1013,31 +1396,44 @@ async function handleApi(req, res, pathname, url) {
       catch { return sendJson(res, 400, { ok: false, error: 'Invalid request.' }); }
       const allowed = ['pending', 'paid', 'packed', 'shipped', 'delivered', 'cancelled', 'refunded'];
       if (!allowed.includes(body.status)) return sendJson(res, 400, { ok: false, error: 'Invalid status.' });
-      const db = readDb();
-      const order = db.orders.find((o) => o.reference === body.reference);
-      if (!order) return sendJson(res, 404, { ok: false, error: 'Order not found.' });
-      order.status = body.status;
-      order.updated_at = new Date().toISOString();
-      order.timeline = order.timeline || [];
-      order.timeline.push({ status: body.status, at: order.updated_at });
-      writeDb(db);
-      return sendJson(res, 200, { ok: true, order });
+      const reference = text(body.reference, 64);
+      const restockable = ['cancelled', 'refunded'];
+      const out = await withDb((db) => {
+        const order = db.orders.find((o) => o.reference === reference);
+        if (!order) return null;
+        /* moving a paid order to cancelled/refunded puts the stock back, once */
+        if (restockable.includes(body.status) && order.stock_deducted) {
+          for (const item of order.items) {
+            const cur = db.stock[item.sku]?.[item.size];
+            if (typeof cur === 'number') db.stock[item.sku][item.size] = cur + item.qty;
+          }
+          order.stock_deducted = false;
+        }
+        order.status = body.status;
+        order.updated_at = new Date().toISOString();
+        order.timeline = order.timeline || [];
+        order.timeline.push({ status: body.status, at: order.updated_at });
+        return order;
+      });
+      if (!out) return sendJson(res, 404, { ok: false, error: 'Order not found.' });
+      return sendJson(res, 200, { ok: true, order: out });
     }
 
     if (req.method === 'POST' && action === 'stock') {
       let body;
       try { body = JSON.parse((await readBody(req, 64 * 1024)).toString('utf8')); }
       catch { return sendJson(res, 400, { ok: false, error: 'Invalid request.' }); }
-      const db = readDb();
-      for (const [sku, sizes] of Object.entries(body.stock || {})) {
-        if (!cfg.products[sku] || typeof sizes !== 'object') continue;
-        db.stock[sku] = db.stock[sku] || {};
-        for (const size of cfg.products[sku].sizes) {
-          if (sizes[size] !== undefined) db.stock[sku][size] = Math.max(0, Math.min(9999, Math.floor(Number(sizes[size]) || 0)));
+      const stock = await withDb((db) => {
+        for (const [sku, sizes] of Object.entries(body.stock || {})) {
+          if (!cfg.products[sku] || typeof sizes !== 'object' || sizes === null) continue;
+          db.stock[sku] = db.stock[sku] || {};
+          for (const size of cfg.products[sku].sizes) {
+            if (sizes[size] !== undefined) db.stock[sku][size] = Math.max(0, Math.min(9999, Math.floor(Number(sizes[size]) || 0)));
+          }
         }
-      }
-      writeDb(db);
-      return sendJson(res, 200, { ok: true, stock: db.stock });
+        return db.stock;
+      });
+      return sendJson(res, 200, { ok: true, stock });
     }
 
     if (req.method === 'POST' && action === 'product') {
@@ -1046,35 +1442,37 @@ async function handleApi(req, res, pathname, url) {
       catch { return sendJson(res, 400, { ok: false, error: 'Invalid request.' }); }
       const sku = String(body.sku || '');
       if (!cfg.products[sku]) return sendJson(res, 404, { ok: false, error: 'Unknown product.' });
-      const db = readDb();
-      db.products[sku] = db.products[sku] || { price: cfg.products[sku].price, active: true };
-      if (body.price !== undefined) db.products[sku].price = Math.max(0, Math.round(Number(body.price) || 0));
-      if (body.active !== undefined) db.products[sku].active = Boolean(body.active);
-      writeDb(db);
-      return sendJson(res, 200, { ok: true, products: readDb().products });
+      const products = await withDb((db) => {
+        db.products[sku] = db.products[sku] || { price: cfg.products[sku].price, active: true };
+        if (body.price !== undefined) db.products[sku].price = Math.max(0, Math.round(Number(body.price) || 0));
+        if (body.active !== undefined) db.products[sku].active = Boolean(body.active);
+        return db.products;
+      });
+      return sendJson(res, 200, { ok: true, products });
     }
 
     if (req.method === 'POST' && action === 'settings') {
       let body;
       try { body = JSON.parse((await readBody(req, 16 * 1024)).toString('utf8')); }
       catch { return sendJson(res, 400, { ok: false, error: 'Invalid request.' }); }
-      const db = readDb();
-      if (body.store_email && validEmail(body.store_email)) db.settings.store_email = body.store_email;
-      if (body.free_delivery_over !== undefined) db.settings.free_delivery_over = Math.max(0, Math.round(Number(body.free_delivery_over) || 0));
-      if (body.shipping && typeof body.shipping === 'object') {
-        for (const zone of ['NG', 'INTL']) {
-          if (body.shipping[zone]) {
-            db.settings.shipping[zone] = {
-              ...db.settings.shipping[zone],
-              amount: Math.max(0, Math.round(Number(body.shipping[zone].amount) || 0)),
-              eta: body.shipping[zone].eta ? text(body.shipping[zone].eta, 60) : db.settings.shipping[zone].eta,
-              label: db.settings.shipping[zone].label
-            };
+      const settings = await withDb((db) => {
+        if (body.store_email && validEmail(body.store_email)) db.settings.store_email = text(body.store_email, 254).toLowerCase();
+        if (body.free_delivery_over !== undefined) db.settings.free_delivery_over = Math.max(0, Math.round(Number(body.free_delivery_over) || 0));
+        if (body.shipping && typeof body.shipping === 'object') {
+          for (const zone of ['NG', 'INTL']) {
+            if (body.shipping[zone]) {
+              db.settings.shipping[zone] = {
+                ...db.settings.shipping[zone],
+                amount: Math.max(0, Math.round(Number(body.shipping[zone].amount) || 0)),
+                eta: body.shipping[zone].eta ? text(body.shipping[zone].eta, 60) : db.settings.shipping[zone].eta,
+                label: db.settings.shipping[zone].label
+              };
+            }
           }
         }
-      }
-      writeDb(db);
-      return sendJson(res, 200, { ok: true, settings: db.settings });
+        return db.settings;
+      });
+      return sendJson(res, 200, { ok: true, settings });
     }
 
     if (req.method === 'POST' && action === 'invoice-send') {
@@ -1082,10 +1480,15 @@ async function handleApi(req, res, pathname, url) {
       try { body = JSON.parse((await readBody(req, 16 * 1024)).toString('utf8')); }
       catch { return sendJson(res, 400, { ok: false, error: 'Invalid request.' }); }
       const type = body.type === 'receipt' ? 'receipt' : 'invoice';
-      const db = readDb();
-      const order = db.orders.find((o) => o.reference === body.reference);
-      if (!order) return sendJson(res, 404, { ok: false, error: 'Order not found.' });
-      const { doc, meta } = invoiceFor(db, order, cfg, type);
+      const reference = text(body.reference, 64);
+      const found = await withDb((db) => {
+        const order = db.orders.find((o) => o.reference === reference);
+        if (!order) return null;
+        const built = invoiceFor(db, order, cfg, type);   /* allocates the number under the lock */
+        return { order, doc: built.doc };
+      });
+      if (!found) return sendJson(res, 404, { ok: false, error: 'Order not found.' });
+      const { order, doc } = found;
       const base = baseUrl(req, cfg);
       let attachment = null;
       try { attachment = { filename: `${doc.number.replace(/[\/]/g, '-')}.pdf`, content: invoicePdf(doc, cfg) }; } catch { attachment = null; }
@@ -1106,12 +1509,19 @@ async function handleApi(req, res, pathname, url) {
         '',
         'Discover new truth. — Tribe Society'
       ].join('\n');
-      await sendMail(cfg, order.customer.email, `Tribe Culture — ${label} ${doc.number}`, bodyText, {
+      const sent = await sendMail(cfg, order.customer.email, `Tribe Culture — ${label} ${doc.number}`, bodyText, {
         attachments: attachment ? [attachment] : []
       });
-      meta.sent_at = new Date().toISOString();
-      order[type === 'receipt' ? 'receipt_no' : 'invoice_no'] = doc.number;
-      writeDb(db);
+      await withDb((db) => {
+        const live = db.orders.find((o) => o.reference === reference);
+        if (!live) return;
+        const meta = db.invoices && db.invoices[reference];
+        if (meta) meta.sent_at = sent.ok ? new Date().toISOString() : null;
+        live[type === 'receipt' ? 'receipt_no' : 'invoice_no'] = doc.number;
+      });
+      if (!sent.ok) {
+        return sendJson(res, 502, { ok: false, error: `Email could not be sent — ${sent.error}`, number: doc.number, link: base + doc.link_path });
+      }
       return sendJson(res, 200, { ok: true, sent_to: order.customer.email, number: doc.number, link: base + doc.link_path });
     }
 
@@ -1119,9 +1529,10 @@ async function handleApi(req, res, pathname, url) {
       let body;
       try { body = JSON.parse((await readBody(req, 8 * 1024)).toString('utf8')); }
       catch { return sendJson(res, 400, { ok: false, error: 'Invalid request.' }); }
-      const db = readDb();
-      const msg = db.messages.find((m) => m.id === body.id);
-      if (msg) { msg.read = body.read !== false; writeDb(db); }
+      await withDb((db) => {
+        const msg = db.messages.find((m) => m.id === text(body.id, 40));
+        if (msg) msg.read = body.read !== false;
+      });
       return sendJson(res, 200, { ok: true });
     }
   }
@@ -1153,8 +1564,8 @@ const TEXTUAL = new Set(['.html', '.css', '.js', '.mjs', '.json', '.svg', '.webm
 const BLOCKED = [/^\/api\//i, /^\/config\.json$/i, /^\/server\.js$/i, /^\/package(-lock)?\.json$/i, /^\/render\.yaml$/i, /^\/README/i, /^\/private\//i, /^\/admin\.html$/i, /^\/\./];
 const gzipCache = new Map();
 
-function gzipped(file, buf) {
-  const key = file + ':' + buf.length;
+function gzipped(file, buf, mtimeMs = 0) {
+  const key = file + ':' + buf.length + ':' + mtimeMs;
   if (gzipCache.has(key)) return gzipCache.get(key);
   const out = zlib.gzipSync(buf, { level: 6 });
   if (gzipCache.size > 40) gzipCache.clear();
@@ -1237,8 +1648,16 @@ function serveStatic(req, res, pathname, search) {
   if (!stat || !stat.isFile()) {
     const notFound = path.join(ROOT, '404.html');
     if (fs.existsSync(notFound)) {
-      res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
-      return fs.createReadStream(notFound).pipe(res);
+      const nonce = crypto.randomBytes(18).toString('base64');
+      const { out, headers } = htmlBytes(fs.readFileSync(notFound, 'utf8'), nonce, req);
+      res.writeHead(404, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store',
+        ...securityHeaders(req, nonce),
+        ...headers,
+        'Content-Length': out.length
+      });
+      return res.end(req.method === 'HEAD' ? undefined : out);
     }
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     return res.end('Not found');
@@ -1251,15 +1670,14 @@ function serveStatic(req, res, pathname, search) {
     const sku = String(search.get('sku') || '');
     const html = productHtml(rel, sku, req);
     if (html) {
-      const buf = Buffer.from(html, 'utf8');
-      const acceptsGzip = /\bgzip\b/.test(String(req.headers['accept-encoding'] || ''));
-      const out = acceptsGzip ? zlib.gzipSync(buf, { level: 6 }) : buf;
+      const nonce = crypto.randomBytes(18).toString('base64');
+      const { out, headers } = htmlBytes(html, nonce, req);
       res.writeHead(200, {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'no-cache',
-        ...(acceptsGzip ? { 'Content-Encoding': 'gzip', Vary: 'Accept-Encoding' } : {}),
-        'Content-Length': out.length,
-        'X-Content-Type-Options': 'nosniff'
+        ...securityHeaders(req, nonce),
+        ...headers,
+        'Content-Length': out.length
       });
       if (req.method === 'HEAD') return res.end();
       return res.end(out);
@@ -1267,8 +1685,20 @@ function serveStatic(req, res, pathname, search) {
   }
 
   const type = MIME[ext] || 'application/octet-stream';
-  const immutable = /\/(vendor|assets)\//.test(decoded) && ext !== '.html';
-  const cache = ext === '.html' ? 'no-cache' : immutable ? 'public, max-age=31536000, immutable' : 'public, max-age=86400';
+  /* nothing here is content-hashed, so "immutable" is reserved for the two
+     things that genuinely never change: the vendored library and the fonts.
+     Styles and scripts stay short so a design change reaches people quickly. */
+  const cache = ext === '.html' ? 'no-cache'
+    : /\.woff2?$/.test(full) || decoded.startsWith('/assets/vendor/') ? 'public, max-age=31536000, immutable'
+    : /\.(css|js|mjs)$/.test(full) ? 'public, max-age=300, must-revalidate'
+    : 'public, max-age=86400';
+
+  /* cheap conditional requests: a 304 instead of the bytes */
+  const etag = `W/"${stat.size.toString(16)}-${Math.round(stat.mtimeMs).toString(16)}"`;
+  if (String(req.headers['if-none-match'] || '') === etag && ext !== '.html') {
+    res.writeHead(304, { ETag: etag, 'Cache-Control': cache });
+    return res.end();
+  }
 
   /* range requests for the drop film */
   const range = req.headers.range;
@@ -1291,18 +1721,32 @@ function serveStatic(req, res, pathname, search) {
     }
   }
 
+  if (ext === '.html') {
+    const nonce = crypto.randomBytes(18).toString('base64');
+    const { out, headers: enc } = htmlBytes(fs.readFileSync(full, 'utf8'), nonce, req);
+    res.writeHead(200, {
+      'Content-Type': type,
+      'Cache-Control': cache,
+      ...securityHeaders(req, nonce),
+      ...(NOINDEX_PAGES.has(rel) ? { 'X-Robots-Tag': 'noindex, nofollow' } : {}),
+      ...enc,
+      'Content-Length': out.length
+    });
+    return res.end(req.method === 'HEAD' ? undefined : out);
+  }
+
   const headers = {
     'Content-Type': type,
     'Accept-Ranges': 'bytes',
     'Cache-Control': cache,
-    'X-Content-Type-Options': 'nosniff',
-    'Referrer-Policy': 'strict-origin-when-cross-origin'
+    ETag: etag,
+    ...securityHeaders(req, '', { html: false })
   };
 
   const acceptsGzip = /\bgzip\b/.test(String(req.headers['accept-encoding'] || ''));
   if (TEXTUAL.has(ext) && acceptsGzip && stat.size > 1024) {
     const buf = fs.readFileSync(full);
-    const out = gzipped(full, buf);
+    const out = gzipped(full, buf, stat.mtimeMs);
     headers['Content-Encoding'] = 'gzip';
     headers['Content-Length'] = out.length;
     headers.Vary = 'Accept-Encoding';
@@ -1316,12 +1760,67 @@ function serveStatic(req, res, pathname, search) {
   fs.createReadStream(full).pipe(res);
 }
 
+/* --------------------------------------------------------- robots + sitemap
+ * Generated from the live catalogue so a new drop is indexed without editing
+ * markup. Transactional pages are kept out of search results.
+ * ------------------------------------------------------------------------- */
+const NOINDEX_PAGES = new Set(['checkout.html', 'thanks.html', 'track.html', 'invoice.html', '404.html']);
+let sitemapCache = { at: 0, xml: '' };
+
+function sitemapXml(base, cfg) {
+  if (Date.now() - sitemapCache.at < 3600 * 1000 && sitemapCache.xml) return sitemapCache.xml;
+  const pages = ['index.html', 'shop.html', 'about.html', 'help.html', 'contact.html', 'world.html'];
+  const url = (loc, priority) => `  <url><loc>${esc(base.replace(/\/+$/, '') + loc)}</loc><changefreq>weekly</changefreq><priority>${priority}</priority></url>`;
+  const rows = pages.map((p, i) => url('/' + (p === 'index.html' ? '' : p), i === 0 ? '1.0' : '0.7'));
+  for (const sku of Object.keys(cfg.products)) {
+    rows.push(url(`/product.html?sku=${encodeURIComponent(sku)}`, '0.6'));
+  }
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${rows.join('\n')}
+</urlset>
+`;
+  sitemapCache = { at: Date.now(), xml };
+  return xml;
+}
+
+function robotsTxt(base) {
+  return `# Tribe Culture
+User-agent: *
+Allow: /
+Disallow: /studio
+Disallow: /studio/*
+Disallow: /private/
+Disallow: /api/
+Disallow: /checkout.html
+Disallow: /thanks.html
+Disallow: /track.html
+Disallow: /invoice.html
+
+Sitemap: ${base.replace(/\/+$/, '')}/sitemap.xml
+`;
+}
+
 /* ------------------------------------------------------------------ server */
 async function handler(req, res) {
   try {
     const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
     if (url.pathname === '/studio' || url.pathname.startsWith('/studio/')) return handleStudio(req, res, url.pathname, CONFIG);
     if (url.pathname.startsWith('/api/')) return await handleApi(req, res, url.pathname, url);
+
+    if (url.pathname === '/robots.txt' || url.pathname === '/sitemap.xml') {
+      const base = baseUrl(req, CONFIG);
+      const isMap = url.pathname === '/sitemap.xml';
+      const body = isMap ? sitemapXml(base, CONFIG) : robotsTxt(base);
+      const buf = Buffer.from(body, 'utf8');
+      res.writeHead(200, {
+        'Content-Type': isMap ? 'application/xml; charset=utf-8' : 'text/plain; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600',
+        'Content-Length': buf.length,
+        'X-Content-Type-Options': 'nosniff'
+      });
+      return res.end(req.method === 'HEAD' ? undefined : buf);
+    }
     return serveStatic(req, res, url.pathname, url.searchParams);
   } catch (err) {
     console.error('request failed', err);
@@ -1337,13 +1836,42 @@ if (require.main === module) {
   const server = http.createServer(handler);
   server.listen(PORT, HOST, () => {
     console.log(`Tribe Culture · http://${HOST}:${PORT} · paystack:${paystackMode(CONFIG)} · data:${DATA_DIR} · studio:/studio`);
+    const warn = (m) => console.warn('⚠  ' + m);
     if (!CONFIG.admin_password) {
-      console.warn('⚠  ADMIN_PASSWORD is not set — the /studio console is locked until it is.');
+      warn('ADMIN_PASSWORD is not set — the /studio console is locked until it is.');
     } else if (isWeakPassword(CONFIG.admin_password)) {
-      console.warn('⚠  ADMIN_PASSWORD is a well-known default — change it before going live.');
+      warn('ADMIN_PASSWORD is a well-known default — change it before going live.');
+    }
+    if (!CONFIG.site_url && process.env.NODE_ENV === 'production') {
+      warn('SITE_URL is not set — receipt links and the Paystack callback will not resolve. Set it to the public origin.');
+    }
+    if (paystackMode(CONFIG) === 'preview' && process.env.NODE_ENV === 'production') {
+      warn('checkout is in PREVIEW mode (no PAYSTACK_SECRET_KEY): orders are marked paid without payment. Set the keys before launch.');
+    }
+    if (CONFIG.allow_preview_checkout && paystackMode(CONFIG) === 'live') {
+      warn('ALLOW_PREVIEW_CHECKOUT is on but live keys are in use — preview checkout is ignored.');
+    }
+    if (!CONFIG.resend_api_key) {
+      warn('RESEND_API_KEY is not set — receipts and order emails are written to the data directory only.');
+    }
+    if (!CONFIG.store_email) {
+      warn('STORE_EMAIL is not set — order notifications have no destination.');
     }
   });
-  const shutdown = () => server.close(() => process.exit(0));
-  process.on('SIGTERM', shutdown);
-  process.on('SIGINT', shutdown);
+  let closing = false;
+  const shutdown = (signal) => {
+    if (closing) return;
+    closing = true;
+    logEvent('info', `shutting down (${signal})`);
+    server.close(() => {
+      /* let any queued store write land before the process leaves */
+      writeChain.then(() => process.exit(0), () => process.exit(0));
+      setTimeout(() => process.exit(0), 3000).unref();
+    });
+    setTimeout(() => process.exit(0), 10000).unref();
+  };
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('unhandledRejection', (err) => logEvent('error', 'unhandled rejection', { error: String((err && err.message) || err) }));
+  process.on('uncaughtException', (err) => logEvent('error', 'uncaught exception', { error: String((err && err.message) || err) }));
 }
