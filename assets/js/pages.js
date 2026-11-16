@@ -681,141 +681,143 @@
     if (!form) return;
     const shipRules = () => (TC.state.catalogue && TC.state.catalogue.shipping) || {};
     const freeOver = () => (TC.state.catalogue && TC.state.catalogue.free_delivery_over) || TC.CONFIG.freeDeliveryOver;
-    const alertBox = $('#checkoutAlert');
-    const payBtn = $('#payBtn');
+    const saveBtn = $('#saveDeliveryBtn');
+    const saveNote = $('#checkoutSaveNote');
 
     function summary() {
       const items = $('#coItems');
       const zone = $('#coZone').value;
       const rule = shipRules()[zone] || { amount: 0, label: 'Delivery', eta: '' };
-      const sub = TC.bagSubtotal();
-      const free = zone === 'NG' && sub >= freeOver();
+      const subtotal = TC.bagSubtotal();
+      const free = zone === 'NG' && subtotal >= freeOver();
       const shipping = free ? 0 : Number(rule.amount || 0);
       $('#countryField').hidden = zone !== 'INTL';
       $('#coCountry').required = zone === 'INTL';
-      $('#coFreeOver').textContent = money(freeOver()) + ' (Nigeria only)';
+      $('#coFreeOver').textContent = money(freeOver());
+
       if (!TC.state.bag.length) {
-        items.innerHTML = `<p class="muted small" style="padding:14px 0">Your bag is empty. <a class="link" href="shop.html">Shop the drop</a></p>`;
+        items.innerHTML = '<p class="muted small" style="padding:14px 0">Your bag is empty. <a class="link" href="shop.html">Shop the drop</a></p>';
       } else {
-        items.innerHTML = TC.state.bag.map((l) => {
-          const p = TC.product(l.sku);
-          if (!p) return '';
-          return `<div class="order-item" style="border:0;border-bottom:1px solid var(--line);padding:10px 0;grid-template-columns:44px 1fr auto">
-            <img src="assets/products/card/${esc(p.sku)}.webp" alt="${esc(p.name)}, ${esc(p.variant)}" width="44" height="44" loading="lazy" decoding="async">
-            <div><div class="n">${esc(p.name)}</div><div class="m">${esc(p.variant)} · ${l.size === 'ONE SIZE' ? 'One size' : 'Size ' + esc(l.size)} · ×${l.qty}</div></div>
-            <span class="price" style="font-size:12.5px">${money(p.price * l.qty)}</span>
-          </div>`;
+        items.innerHTML = TC.state.bag.map((line) => {
+          const product = TC.product(line.sku);
+          if (!product) return '';
+          const size = line.size === 'ONE SIZE' ? 'One size' : 'Size ' + esc(line.size);
+          return '<div class="order-item" style="border:0;border-bottom:1px solid var(--line);padding:10px 0;grid-template-columns:44px 1fr auto">' +
+            '<img src="assets/products/card/' + esc(product.sku) + '.webp" alt="' + esc(product.name) + ', ' + esc(product.variant) + '" width="44" height="44" loading="lazy" decoding="async">' +
+            '<div><div class="n">' + esc(product.name) + '</div><div class="m">' + esc(product.variant) + ' · ' + size + ' · ×' + line.qty + '</div></div>' +
+            '<span class="price" style="font-size:12.5px">' + money(product.price * line.qty) + '</span></div>';
         }).join('');
       }
-      $('#coSubtotal').textContent = money(sub);
-      $('#coShipping').textContent = sub === 0 ? '—' : free ? 'Free' : money(shipping);
+      $('#coSubtotal').textContent = money(subtotal);
+      $('#coShipping').textContent = subtotal === 0 ? '—' : free ? 'Free' : money(shipping);
       $('#coShipLabel').textContent = rule.eta ? '· ' + rule.eta : '';
-      $('#coTotal').textContent = money(sub + (sub ? shipping : 0));
-      payBtn.disabled = !TC.state.bag.length;
-      return { sub, shipping, zone, rule };
+      $('#coTotal').textContent = money(subtotal + (subtotal ? shipping : 0));
+      saveBtn.disabled = !TC.state.bag.length;
+      const label = saveBtn.querySelector('span');
+      if (label) label.textContent = TC.state.bag.length ? 'Save delivery details' : 'Add a piece to continue';
+      return { subtotal, shipping, zone, rule };
     }
 
-    const err = (field, msg) => {
-      const el = form.querySelector(`[data-err="${field}"]`);
-      if (el) el.textContent = msg || '';
-      const input = form.querySelector(`[name="${field}"]`);
-      if (input) input.setAttribute('aria-invalid', msg ? 'true' : 'false');
-      return !msg;
+    const err = (field, message) => {
+      const error = form.querySelector('[data-err="' + field + '"]');
+      if (error) error.textContent = message || '';
+      const input = form.querySelector('[name="' + field + '"]');
+      if (input) input.setAttribute('aria-invalid', message ? 'true' : 'false');
+      return !message;
     };
+
     function validate(data) {
-      let ok = true;
-      ok = err('name', data.name.length < 2 ? 'Enter your full name' : '') && ok;
-      ok = err('email', !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(data.email) ? 'Enter a valid email' : '') && ok;
-      ok = err('phone', data.phone.replace(/\D/g, '').length < 7 ? 'Enter a valid phone number' : '') && ok;
-      ok = err('address', data.address.length < 4 ? 'Enter your delivery address' : '') && ok;
-      ok = err('city', data.city.length < 2 ? 'Enter your city and state / region' : '') && ok;
-      if (data.zone === 'INTL') ok = err('country', data.country.length < 2 ? 'Enter your country' : '') && ok;
+      let valid = true;
+      valid = err('name', data.name.length < 2 ? 'Enter your full name' : '') && valid;
+      valid = err('email', !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(data.email) ? 'Enter a valid email' : '') && valid;
+      valid = err('phone', data.phone.replace(/\D/g, '').length < 7 ? 'Enter a valid phone number' : '') && valid;
+      valid = err('address', data.address.length < 4 ? 'Enter your delivery address' : '') && valid;
+      valid = err('city', data.city.length < 2 ? 'Enter your city and state / region' : '') && valid;
+      if (data.zone === 'INTL') valid = err('country', data.country.length < 2 ? 'Enter your destination country' : '') && valid;
       else err('country', '');
-      return ok;
+      return valid;
     }
 
     try {
       const saved = JSON.parse(localStorage.getItem(TC.CONFIG.customerKey) || '{}');
-      ['name', 'email', 'phone', 'address', 'city', 'country'].forEach((k) => {
-        const el = form.querySelector(`[name="${k}"]`);
-        if (el && saved[k]) el.value = saved[k];
+      ['name', 'email', 'phone', 'address', 'city', 'country', 'note'].forEach((key) => {
+        const input = form.querySelector('[name="' + key + '"]');
+        if (input && saved[key]) input.value = saved[key];
       });
       if (saved.zone === 'NG' || saved.zone === 'INTL') $('#coZone').value = saved.zone;
     } catch {}
-    $('#coZone').addEventListener('change', summary);
+
+    $('#coZone').addEventListener('change', () => {
+      if (saveNote) {
+        saveNote.classList.remove('show');
+        saveNote.dataset.saved = 'false';
+      }
+      summary();
+    });
+    form.addEventListener('input', () => {
+      if (saveNote && saveNote.dataset.saved === 'true') {
+        saveNote.dataset.saved = 'false';
+        saveNote.classList.remove('show');
+      }
+    });
     TC.on(summary);
     summary();
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      alertBox.classList.remove('show');
-      if (!TC.state.bag.length) { TC.toast('Your bag is empty', 'err'); return; }
-      const data = {
-        name: $('#coName').value.trim(), email: $('#coEmail').value.trim(),
-        phone: $('#coPhone').value.trim(), address: $('#coAddress').value.trim(),
-        city: $('#coCity').value.trim(), country: $('#coCountry').value.trim(),
-        zone: $('#coZone').value, note: $('#coNote').value.trim()
-      };
-      if (!validate(data)) {
-        alertBox.textContent = 'Check the highlighted delivery fields and try again.';
-        alertBox.classList.add('show');
-        const first = form.querySelector('[aria-invalid="true"]');
-        if (first) first.focus();
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (saveNote) saveNote.classList.remove('show');
+      if (!TC.state.bag.length) {
+        TC.toast('Your bag is empty', 'err');
         return;
       }
-      try { localStorage.setItem(TC.CONFIG.customerKey, JSON.stringify(data)); } catch {}
-      const span = payBtn.querySelector('span');
-      payBtn.disabled = true;
-      span.textContent = 'Checking order…';
-      try {
-        const res = await fetch('/api/init', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: TC.state.bag.map((l) => ({ sku: l.sku, size: l.size, qty: l.qty })), customer: data })
-        });
-        const json = await res.json();
-        if (!res.ok || !json.ok) throw new Error(json.error || 'Could not start checkout.');
-        try { localStorage.setItem('tc_pending_order', JSON.stringify({ reference: json.reference, total: json.total, mode: json.mode })); } catch {}
-        if (json.access_token) { try { sessionStorage.setItem('tc_access_' + json.reference, json.access_token); } catch {} }
-        const withToken = (path) => path + (json.access_token ? '&t=' + encodeURIComponent(json.access_token) : '');
-        if (json.mode === 'preview') { location.href = json.callback_url; return; }
-        if (json.access_code && json.public_key) {
-          const loaded = await loadPaystack();
-          if (loaded) {
-            const pop = new window.PaystackPop();
-            pop.newTransaction({
-              key: json.public_key, email: json.email, amount: json.total_kobo,
-              currency: json.currency, reference: json.reference, access_code: json.access_code,
-              onSuccess: () => { location.href = withToken('thanks.html?reference=' + encodeURIComponent(json.reference)); },
-              onCancel: () => {
-                payBtn.disabled = false; span.textContent = 'Continue to secure payment';
-                alertBox.textContent = 'Payment cancelled. Your bag is saved.';
-                alertBox.classList.add('show');
-              }
-            });
-            return;
-          }
-        }
-        if (json.authorization_url) { location.href = json.authorization_url; return; }
-        throw new Error('Secure payment could not be opened. Please try again.');
-      } catch (error) {
-        alertBox.textContent = error.message || 'Something went wrong. Please try again.';
-        alertBox.classList.add('show');
-        payBtn.disabled = false;
-        span.textContent = 'Continue to secure payment';
-      }
-    });
-  }
 
-  function loadPaystack() {
-    return new Promise((resolve) => {
-      if (window.PaystackPop) return resolve(true);
-      const s = document.createElement('script');
-      s.src = 'https://js.paystack.co/v2/inline.js';
-      s.async = true;
-      s.onload = () => resolve(!!window.PaystackPop);
-      s.onerror = () => resolve(false);
-      document.head.appendChild(s);
-      setTimeout(() => resolve(!!window.PaystackPop), 6000);
+      const data = {
+        name: $('#coName').value.trim(),
+        email: $('#coEmail').value.trim(),
+        phone: $('#coPhone').value.trim(),
+        address: $('#coAddress').value.trim(),
+        city: $('#coCity').value.trim(),
+        country: $('#coCountry').value.trim(),
+        zone: $('#coZone').value,
+        note: $('#coNote').value.trim()
+      };
+      if (!validate(data)) {
+        if (saveNote) {
+          saveNote.textContent = 'Please correct the highlighted delivery details.';
+          saveNote.classList.add('show');
+        }
+        const firstInvalid = form.querySelector('[aria-invalid="true"]');
+        if (firstInvalid) firstInvalid.focus();
+        return;
+      }
+
+      const review = {
+        customer: data,
+        items: TC.state.bag.map((line) => ({ sku: line.sku, size: line.size, qty: line.qty })),
+        subtotal: TC.bagSubtotal(),
+        destination: data.zone,
+        shipping: summary().shipping,
+        saved_at: new Date().toISOString()
+      };
+      try {
+        localStorage.setItem(TC.CONFIG.customerKey, JSON.stringify(data));
+        localStorage.setItem('tc_checkout_review_v1', JSON.stringify(review));
+      } catch {
+        if (saveNote) {
+          saveNote.textContent = 'Your browser could not save these details. Check device storage and try again.';
+          saveNote.classList.add('show');
+        }
+        return;
+      }
+
+      if (saveNote) {
+        saveNote.textContent = 'Delivery details saved. Your bag and delivery estimate are ready for the payment step. No order has been placed and no payment has been taken.';
+        saveNote.dataset.saved = 'true';
+        saveNote.classList.add('show');
+      }
+      const label = saveBtn.querySelector('span');
+      if (label) label.textContent = 'Update delivery details';
+      TC.toast('Delivery details saved');
     });
   }
 
