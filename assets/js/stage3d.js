@@ -373,6 +373,8 @@ function mountHero(host) {
     active = ((i % N) + N) % N;
     captionFor(active);
     if (typeof paintNow === 'function') paintNow(active);
+    /* the panel beside the rail mirrors whatever is centred */
+    if (list[active]) document.dispatchEvent(new CustomEvent('rail:piece', { detail: { sku: list[active].sku, index: active } }));
     host.dataset.activeSku = list[active] ? list[active].sku : '';
     if (picker) {
       const btns = picker.querySelectorAll('button');
@@ -825,6 +827,8 @@ function mountRail(host) {
     active = ((i % N) + N) % N;
     captionFor(active);
     if (typeof paintNow === 'function') paintNow(active);
+    /* the panel beside the rail mirrors whatever is centred */
+    if (list[active]) document.dispatchEvent(new CustomEvent('rail:piece', { detail: { sku: list[active].sku, index: active } }));
     host.dataset.activeSku = list[active] ? list[active].sku : '';
     if (picker) {
       const btns = picker.querySelectorAll('button');

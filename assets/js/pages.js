@@ -137,21 +137,148 @@
   }
 
   /* --------------------------------------------------------------- home */
+  /* --------------------------------------------------------------- home rack
+     The collection is a horizontal rack: the whole catalogue, filter pills built
+     from the real categories in config.json, and cards wired to the same
+     add-to-bag path as everywhere else. Nothing new is invented — only laid out. */
+  const CAT_LABEL = { tees: 'Tees', tanks: 'Tanks', sets: 'Sets', headwear: 'Headwear', prints: 'Prints' };
+
   function initHome() {
-    const host = $('#homeGrid');
+    const host = $('#homeRack');
     if (!host) return;
+    const bar = $('#rackBar');
+    const countEl = $('#rackCount');
+    let active = 'all';
+
     const draw = () => {
       const all = TC.productList();
-      const featured = all.filter((p) => p.featured !== false);
-      /* the home page shows one row and sends the rest to the shop */
-      const list = (featured.length >= 4 ? featured : all).slice(0, 4);
+      if (!all.length) return;
+
+      const cats = [];
+      all.forEach((p) => { if (p.category && cats.indexOf(p.category) === -1) cats.push(p.category); });
+
+      if (bar && !bar.dataset.built) {
+        bar.dataset.built = '1';
+        bar.innerHTML = '<span class="count" id="rackCount">' + all.length + ' pieces</span>' +
+          ['all'].concat(cats).map((c) => `<button type="button" data-cat="${c}" aria-pressed="${c === 'all'}">${c === 'all' ? 'All' : (CAT_LABEL[c] || c)}</button>`).join('');
+        bar.addEventListener('click', (e) => {
+          const b = e.target.closest('[data-cat]');
+          if (!b) return;
+          active = b.dataset.cat;
+          $$('[data-cat]', bar).forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+          host.classList.add('is-filtering');
+          setTimeout(() => { paint(); host.classList.remove('is-filtering'); }, 180);
+        });
+      }
+
+      paint();
+    };
+
+    const paint = () => {
+      const all = TC.productList();
+      const list = active === 'all' ? all : all.filter((p) => p.category === active);
       host.innerHTML = list.map(cardHTML).join('');
       wireCards(host);
-      const count = $('#homeCount');
-      if (count) count.textContent = 'Showing 4 of ' + all.length + ' pieces in Drop 001';
+      const countEl = $('#rackCount');
+      if (countEl) countEl.textContent = list.length + (list.length === 1 ? ' piece' : ' pieces');
+      const prev = $('#rackPrev'), next = $('#rackNext');
+      if (prev) prev.disabled = host.scrollLeft < 8;
+      if (next) next.disabled = host.scrollLeft + host.clientWidth >= host.scrollWidth - 8;
     };
+
+    const step = (dir) => {
+      const card = host.querySelector('.card');
+      const w = card ? card.getBoundingClientRect().width + 16 : host.clientWidth * 0.8;
+      host.scrollBy({ left: dir * w, behavior: 'smooth' });
+    };
+    $('#rackPrev')?.addEventListener('click', () => step(-1));
+    $('#rackNext')?.addEventListener('click', () => step(1));
+    host.addEventListener('scroll', () => {
+      const prev = $('#rackPrev'), next = $('#rackNext');
+      if (prev) prev.disabled = host.scrollLeft < 8;
+      if (next) next.disabled = host.scrollLeft + host.clientWidth >= host.scrollWidth - 8;
+    }, { passive: true });
+
     TC.on(draw);
     draw();
+  }
+
+  /* --------------------------------------------------------- zine plate swap */
+  function initZine() {
+    const img = $('#zineImg');
+    if (!img) return;
+    const cap = $('#zineCaption');
+    const plates = {
+      print: {
+        src: 'assets/brand/hero-backprint.jpg',
+        webp: 'assets/brand/hero-backprint.webp',
+        alt: 'The Saint print: arched red SAINT lettering, three doves, the doctrine line and the globes.',
+        cap: 'Screen printed plastisol, cured by hand. Red on black, bone on black — nothing else.'
+      },
+      crest: {
+        src: 'assets/brand/crest-ink.jpg',
+        webp: null,
+        alt: 'The Tribe Culture crest: baroque script wordmark, established MMXXVI.',
+        cap: 'The house crest, drawn in Lagos. Baroque script, the mark on every parcel and every receipt.'
+      }
+    };
+    document.querySelectorAll('[data-zine]').forEach((b) => b.addEventListener('click', () => {
+      const p = plates[b.dataset.zine];
+      if (!p) return;
+      document.querySelectorAll('[data-zine]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      const src = b.dataset.zine === 'crest' ? p.src : ((window.matchMedia && matchMedia('(min-width:0px)').matches && img.currentSrc.endsWith('.webp')) ? p.webp : p.src);
+      img.src = src || p.src;
+      img.alt = p.alt;
+      if (cap) cap.textContent = p.cap;
+    }));
+  }
+
+  /* ------------------------------------------------- metric counters + magnet */
+  function initEditorialMotion() {
+    const nums = $$('.metric b[data-count]');
+    const reduce = document.body.classList.contains('no-motion') ||
+      (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const paint = (el, v) => {
+      const pre = el.dataset.prefix || '';
+      const suf = el.dataset.suffix || '';
+      const num = Math.round(v).toLocaleString('en-NG');
+      if (!pre && !suf) { el.textContent = num; return; }
+      el.innerHTML = (pre ? `<span class="u">${pre}</span>` : '') + num + (suf ? `<span class="u">${suf}</span>` : '');
+    };
+    if (!nums.length) return;
+    if (reduce || !('IntersectionObserver' in window)) { nums.forEach((el) => paint(el, +el.dataset.count)); }
+    else {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((en) => {
+          if (!en.isIntersecting) return;
+          const el = en.target;
+          io.unobserve(el);
+          const target = +el.dataset.count;
+          const t0 = performance.now();
+          const tick = (now) => {
+            const p = Math.min(1, (now - t0) / 1100);
+            paint(el, target * (1 - Math.pow(1 - p, 3)));
+            if (p < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        });
+      }, { threshold: 0.4 });
+      nums.forEach((el) => io.observe(el));
+    }
+
+    /* magnetic buttons: the label leans toward the cursor, then settles */
+    if (reduce) return;
+    $$('.magnetic').forEach((btn) => {
+      let raf = 0;
+      const move = (e) => {
+        const r = btn.getBoundingClientRect();
+        const dx = (e.clientX - (r.left + r.width / 2)) / r.width;
+        const dy = (e.clientY - (r.top + r.height / 2)) / r.height;
+        btn.style.transform = `translate(${(dx * 7).toFixed(2)}px,${(dy * 5).toFixed(2)}px)`;
+      };
+      btn.addEventListener('pointermove', move);
+      btn.addEventListener('pointerleave', () => { btn.style.transform = ''; });
+    });
   }
 
   /* --------------------------------------------------------------- shop */
@@ -879,9 +1006,99 @@
     });
   }
 
+  /* ---------------------------------------------------------- rail panel
+     The right-hand panel mirrors whatever the 3D rail has centred: real name,
+     real variant, real price, live sizes from /api/catalogue, and the same
+     add-to-bag call the cards use. stage3d dispatches 'rail:piece'. */
+  function initRailPanel() {
+    const panel = $('#railPanel');
+    if (!panel) return;
+    let sku = 'saint-tee-black';
+    let size = null;
+
+    const paint = () => {
+      const p = TC.product(sku);
+      if (!p) return;
+      $('#railPanelName').textContent = p.name;
+      $('#railPanelVariant').textContent = p.variant;
+      $('#railPanelPrice').textContent = TC.money(p.price);
+      const link = $('#railPanelOpen');
+      if (link) link.href = 'product.html?sku=' + encodeURIComponent(p.sku);
+
+      const box = $('#railPanelSizes');
+      const add = $('#railPanelAdd');
+      if (box) {
+        const sizes = p.sizes || [];
+        if (!sizes.includes(size)) size = null;
+        box.innerHTML = sizes.map((sz) => {
+          const lvl = TC.stockOf(p.sku, sz);
+          const out = lvl === 0;
+          return `<button type="button" data-size="${TC.esc(sz)}" aria-pressed="${sz === size}" ${out ? 'disabled title="Sold out"' : ''}>${sz === 'ONE SIZE' ? 'OS' : TC.esc(sz)}</button>`;
+        }).join('');
+        const hint = $('#railPanelStock');
+        if (hint) {
+          const total = sizes.reduce((a, z) => a + (TC.stockOf(p.sku, z) || 0), 0);
+          hint.textContent = total > 0 ? total + ' in stock · 1–2 day dispatch' : 'Sold out — restocking';
+        }
+      }
+      if (add) {
+        const span = add.querySelector('span');
+        if (!size) { add.disabled = true; span.textContent = 'Choose a size'; }
+        else {
+          const lvl = TC.stockOf(p.sku, size);
+          add.disabled = lvl === 0;
+          span.textContent = lvl === 0 ? 'Sold out in ' + size : 'Add to bag · ' + TC.money(p.price);
+        }
+      }
+    };
+
+    panel.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-size]');
+      if (b && !b.disabled) {
+        size = b.dataset.size;
+        $$('[data-size]', panel).forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        paint();
+        return;
+      }
+      if (e.target.closest('#railPanelAdd') && size) TC.addToBag(sku, size, 1);
+    });
+
+    let wired = false;
+    const sync = () => {
+      if (!wired) {
+        (TC.productList() || []).forEach(() => {});
+        wired = true;
+      }
+      paint();
+    };
+    document.addEventListener('rail:piece', (e) => {
+      if (!e.detail || !e.detail.sku) return;
+      sku = e.detail.sku;
+      size = null;
+      paint();
+    });
+    TC.on(sync);
+    paint();
+  }
+
   /* ---------------------------------------------------------------- boot */
   document.addEventListener('DOMContentLoaded', () => {
     initHome();
+    initZine();
+    /* glass header: gains weight only once it leaves the hero */
+    const bar = document.querySelector('.topbar');
+    if (bar) {
+      let last = -1;
+      const onScroll = () => {
+        const y = window.scrollY || 0;
+        const on = y > 24;
+        if (on !== last) { last = on; bar.classList.toggle('is-scrolled', on); }
+      };
+      addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    }
+    initEditorialMotion();
+    initRailPanel();
     initPoster();
     initLive();
     initShop();

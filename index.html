@@ -198,6 +198,8 @@
     <p class="rail-note">Drag the rail, or use the arrows. Every piece is the real garment — front, chest and back.</p>
   </div>
   <div class="wrap">
+    <div class="rail-grid">
+
     <div class="stage rail-stage" data-stage="rail" id="heroStage">
     <canvas class="stage-canvas" role="listbox" tabindex="0" aria-label="The twelve Drop 001 pieces hanging on a rail. Drag or use the arrow keys to slide along the rail, press Enter to open the piece."></canvas>
     <div class="stage-loading"><span class="bar"><i></i></span></div>
@@ -232,21 +234,52 @@
         </button>
       </div>
     </div>
-  </div>
+    </div>
+
+    <aside class="rail-panel" id="railPanel" aria-live="polite">
+      <p class="k">In this drop</p>
+      <h3 id="railPanelName">Saint Tee</h3>
+      <p class="variant" id="railPanelVariant">Black / Red print</p>
+      <p class="price" id="railPanelPrice">₦45,000</p>
+      <div class="sizes" id="railPanelSizes" role="group" aria-label="Choose a size"></div>
+      <p class="stock" id="railPanelStock">Live stock</p>
+      <button class="btn magnetic" type="button" id="railPanelAdd" disabled><span>Choose a size</span></button>
+      <a class="link" id="railPanelOpen" href="product.html?sku=saint-tee-black">Full details <span class="arw">&#8594;</span></a>
+      <dl class="panel-facts">
+        <div><dt>Delivery</dt><dd>Free in Nigeria over &#8358;150,000</dd></div>
+        <div><dt>Returns</dt><dd>14 days, unworn with tags</dd></div>
+        <div><dt>Ships</dt><dd>Worldwide · 1–2 day dispatch</dd></div>
+      </dl>
+    </aside>
+    </div>
   </div>
 </section>
 
-<section class="sec">
+<section class="sec gallery" id="collection" aria-labelledby="collectionTitle">
   <div class="wrap">
-    <div class="row-between sec-head" style="margin-bottom:22px">
+    <div class="row-between sec-head" style="margin-bottom:clamp(18px,2.6vw,30px)">
       <div>
-        <p class="eyebrow red rise">Drop 001</p>
-        <h2 class="disp rise d1" style="margin-top:8px">The Collection</h2>
-        <p class="tiny rise d2" id="homeCount" style="margin-top:8px">Twelve pieces in Drop 001</p>
+        <p class="eyebrow-bronze rise">Drop 001 · the collection</p>
+        <h2 class="rise d1" id="collectionTitle" style="margin-top:10px">Twelve pieces,<br>cut for the long run.</h2>
+        <p class="folio rise d2" id="homeCount" style="margin-top:12px">12 PIECES · SMALL RUNS · NO RESTOCKS</p>
       </div>
-      <a class="link rise d2" href="shop.html">All twelve pieces <span class="arw">→</span></a>
+      <a class="link rise d2" href="shop.html">Open the shop <span class="arw">→</span></a>
     </div>
-    <div class="grid-products" id="homeGrid" aria-live="polite"></div>
+
+    <div class="rack-wrap">
+      <div class="rack" id="homeRack" aria-live="polite"></div>
+      <div class="rack-bar" id="rackBar" role="group" aria-label="Filter the collection">
+        <span class="count" id="rackCount">12 pieces</span>
+      </div>
+      <div class="rack-nav">
+        <button class="rack-arrow" type="button" id="rackPrev" aria-label="Scroll the rack left">
+          <svg width="15" height="10" viewBox="0 0 14 10" aria-hidden="true"><path d="M13 5H1m0 0 4-4M1 5l4 4" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+        </button>
+        <button class="rack-arrow" type="button" id="rackNext" aria-label="Scroll the rack right">
+          <svg width="15" height="10" viewBox="0 0 14 10" aria-hidden="true"><path d="M1 5h12m0 0-4-4m4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+        </button>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -338,22 +371,41 @@
   </div>
 </section>
 
-<section class="band">
-  <div class="wrap split">
-    <figure class="split-media contain rise">
-      <img src="assets/saint-graphic.jpg" alt="The Saint print: arched red lettering, three doves, the doctrine line and the Tribe Society globes" width="960" height="960" loading="lazy">
-    </figure>
-    <div class="stack rise d1">
-      <p class="eyebrow red">Print study · 01</p>
-      <h2 class="disp" style="font-size:clamp(28px,4.6vw,54px)">Two marks.<br>Nothing else.</h2>
-      <p class="lede">The Saint print — arched collegiate lettering, three doves breaking the baseline, twin globes locking TRIBE to SOCIETY — and the interlocking TC monogram cut from the baroque crest.</p>
-      <div class="quote-block">
-        <p>“The greatest and noblest pleasure which we have in this world is to discover new truth and the next is to shake off old prejudices.”</p>
-        <cite>Tribe Society · crew doctrine</cite>
+<section class="zine" aria-labelledby="zineTitle">
+  <div class="wrap">
+    <div class="zine-in">
+      <div class="zine-page">
+        <p class="zine-folio">Spread 01 — the house</p>
+        <h2 id="zineTitle">We print the <em>doctrine</em>, not the trend.</h2>
+        <p>Tribe Culture began in Lagos with two marks and a sentence: the interlocking TC monogram cut from a baroque crest, and the Saint print — arched collegiate lettering, three doves breaking the baseline, twin globes locking TRIBE to SOCIETY.</p>
+        <blockquote class="zine-quote">“The greatest and noblest pleasure which we have in this world is to discover new truth and the next is to shake off old prejudices.”
+          <cite>Tribe Society · crew doctrine</cite>
+        </blockquote>
+        <div class="zine-swap" role="group" aria-label="Look at the print or the crest">
+          <button type="button" data-zine="print" aria-pressed="true">The Saint print</button>
+          <button type="button" data-zine="crest" aria-pressed="false">The house crest</button>
+        </div>
+        <div class="zine-stats">
+          <div><b>260</b><i>gsm cotton</i></div>
+          <div><b>12</b><i>pieces, drop 001</i></div>
+          <div><b>MMXXVI</b><i>established</i></div>
+        </div>
+        <div class="hero-actions" style="margin-top:4px">
+          <a class="btn" href="product.html?sku=saint-tee-black"><span>View the Saint tee</span></a>
+          <a class="btn ghost" href="about.html"><span>The house</span></a>
+        </div>
       </div>
-      <div class="hero-actions">
-        <a class="btn" href="product.html?sku=saint-tee-black"><span>View the Saint tee</span></a>
-        <a class="btn ghost" href="about.html"><span>The house</span></a>
+
+      <div class="zine-page dark">
+        <p class="zine-folio">Spread 02 — the plate</p>
+        <figure class="zine-fig">
+          <picture>
+            <source srcset="assets/brand/hero-backprint.webp" type="image/webp">
+            <img id="zineImg" src="assets/brand/hero-backprint.jpg" alt="The Saint print: arched red SAINT lettering, three doves, the doctrine line and TRIBE SOCIETY in twin globes." width="760" height="812" loading="lazy" decoding="async">
+          </picture>
+        </figure>
+        <p id="zineCaption">Screen printed plastisol, cured by hand. Red on black, bone on black — nothing else.</p>
+        <p class="zine-folio" style="color:#c97951">Plate 01 · Saint back print</p>
       </div>
     </div>
   </div>
@@ -385,6 +437,29 @@
   </div>
 </section>
 
+<section class="metrics" aria-labelledby="metricsTitle">
+  <div class="wrap metrics-in">
+    <div class="metrics-col">
+      <div class="metric"><b data-count="12">0</b><i>pieces in Drop 001</i></div>
+      <div class="metric"><b data-count="5">0</b><i>categories, one run</i></div>
+      <div class="metric"><b data-count="260">0</b><i>gsm combed cotton</i></div>
+    </div>
+
+    <div class="metrics-arch">
+      <img src="assets/brand/wordmark-bone.png" alt="" width="64" height="70" loading="lazy">
+      <h2 id="metricsTitle">Small runs.<br>Long memory.</h2>
+      <p>Registered in Lagos · RC 7534126 · every parcel leaves with the crest on it.</p>
+      <a class="btn magnetic" href="shop.html"><span>Shop the drop</span></a>
+    </div>
+
+    <div class="metrics-col right">
+      <div class="metric"><b data-count="150" data-prefix="₦" data-suffix="k">0</b><i>free delivery threshold</i></div>
+      <div class="metric"><b data-count="14">0</b><i>day returns window</i></div>
+      <div class="metric"><b data-count="48">0</b><i>hour dispatch window</i></div>
+    </div>
+  </div>
+</section>
+
 <section class="sec tight">
   <div class="wrap split">
     <div class="stack rise">
@@ -401,7 +476,7 @@
 
 <section class="cta-band">
   <div class="wrap in">
-    <img src="assets/logo-bone.png" alt="" width="72" height="79" loading="lazy">
+    <img src="assets/brand/wordmark-bone.png" alt="" width="72" height="79" loading="lazy">
     <h2 class="disp">Discover new truth.</h2>
     <p>Tribe Society · MMXXVI. Join the list for Drop 002 and first access to every release.</p>
     <a class="btn" href="shop.html"><span>Shop the drop</span></a>
