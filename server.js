@@ -903,8 +903,8 @@ async function handleApi(req, res, pathname, url) {
         items: view.items.map((i) => ({ name: i.name, variant: i.variant, size: i.size, qty: i.qty, image: i.image })),
         timeline: view.timeline,
         shipping_label: view.shipping_label,
-        city: view.customer.city,
-        country: view.customer.country
+        city: order.customer.city,
+        country: order.customer.country
       }
     });
   }
