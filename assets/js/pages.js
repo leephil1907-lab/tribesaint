@@ -665,16 +665,21 @@
 
     const shipRules = () => (TC.state.catalogue && TC.state.catalogue.shipping) || {};
     const freeOver = () => (TC.state.catalogue && TC.state.catalogue.free_delivery_over) || TC.CONFIG.freeDeliveryOver;
+    const savedNote = $('#checkoutSaveNote');
+    const saveBtn = $('#saveDeliveryBtn');
 
     function summary() {
       const items = $('#coItems');
       const zone = $('#coZone').value;
       const rule = shipRules()[zone] || { amount: 0, label: 'Delivery', eta: '' };
       const sub = TC.bagSubtotal();
-      const shipping = sub >= freeOver() ? 0 : Number(rule.amount || 0);
+      // The free-delivery offer is domestic only; international delivery keeps its configured rate.
+      const free = zone === 'NG' && sub >= freeOver();
+      const shipping = free ? 0 : Number(rule.amount || 0);
 
       $('#countryField').hidden = zone !== 'INTL';
-      $('#coFreeOver').textContent = money(freeOver());
+      $('#coCountry').required = zone === 'INTL';
+      $('#coFreeOver').textContent = money(freeOver()) + ' (Nigeria only)';
 
       if (!TC.state.bag.length) {
         items.innerHTML = `<p class="muted small" style="padding:14px 0">Your bag is empty. <a class="link" href="shop.html">Shop the drop</a></p>`;
@@ -690,13 +695,12 @@
         }).join('');
       }
       $('#coSubtotal').textContent = money(sub);
-      $('#coShipping').textContent = sub === 0 ? '—' : shipping === 0 ? 'Free' : money(shipping);
-      $('#coShipLabel').textContent = rule.eta ? '(' + rule.eta + ')' : '';
+      $('#coShipping').textContent = sub === 0 ? '—' : free ? 'Free' : money(shipping);
+      $('#coShipLabel').textContent = rule.eta ? '· ' + rule.eta : '';
       $('#coTotal').textContent = money(sub + (sub ? shipping : 0));
-      const payBtn = $('#payBtn');
-      const payLabel = payBtn.querySelector('span');
-      payBtn.disabled = !TC.state.bag.length;
-      if (payLabel) payLabel.textContent = TC.state.bag.length ? 'Pay with Paystack' : 'Add a piece to continue';
+      saveBtn.disabled = !TC.state.bag.length;
+      const label = saveBtn.querySelector('span');
+      if (label) label.textContent = TC.state.bag.length ? 'Save delivery details' : 'Add a piece to continue';
       return { sub, shipping, zone, rule };
     }
 
@@ -714,29 +718,40 @@
       ok = err('email', !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(data.email.trim()) ? 'Enter a valid email' : '') && ok;
       ok = err('phone', data.phone.replace(/\D/g, '').length < 7 ? 'Enter a valid phone number' : '') && ok;
       ok = err('address', data.address.trim().length < 4 ? 'Enter your delivery address' : '') && ok;
-      ok = err('city', data.city.trim().length < 2 ? 'Enter your city and state' : '') && ok;
-      if (data.zone === 'INTL') ok = err('country', data.country.trim().length < 2 ? 'Enter your country' : '') && ok;
+      ok = err('city', data.city.trim().length < 2 ? 'Enter your city and state / region' : '') && ok;
+      if (data.zone === 'INTL') ok = err('country', data.country.trim().length < 2 ? 'Select or enter your country' : '') && ok;
       else err('country', '');
       return ok;
     }
 
-    // restore saved buyer details
+    // Restore the customer's last-entered delivery details on this device.
     try {
       const saved = JSON.parse(localStorage.getItem(TC.CONFIG.customerKey) || '{}');
       ['name', 'email', 'phone', 'address', 'city', 'country'].forEach((k) => {
         const el = form.querySelector(`[name="${k}"]`);
         if (el && saved[k]) el.value = saved[k];
       });
+      if (saved.zone === 'NG' || saved.zone === 'INTL') $('#coZone').value = saved.zone;
     } catch {}
 
-    $('#coZone').addEventListener('change', summary);
+    $('#coZone').addEventListener('change', () => {
+      if (savedNote) savedNote.textContent = 'Review the updated delivery estimate, then save your delivery details.';
+      summary();
+    });
+    form.addEventListener('input', () => {
+      if (savedNote && savedNote.dataset.saved === 'true') {
+        savedNote.dataset.saved = 'false';
+        savedNote.textContent = 'Details changed. Save again to keep the updated delivery information.';
+      }
+    });
     TC.on(summary);
     summary();
 
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
-      const alertBox = $('#checkoutAlert');
-      alertBox.classList.remove('show');
+      if (savedNote) { savedNote.classList.remove('show'); savedNote.dataset.saved = 'false'; }
+      if (!TC.state.bag.length) { TC.toast('Your bag is empty', 'err'); return; }
+
       const data = {
         name: $('#coName').value.trim(),
         email: $('#coEmail').value.trim(),
@@ -747,59 +762,35 @@
         zone: $('#coZone').value,
         note: $('#coNote').value.trim()
       };
-      if (!TC.state.bag.length) { TC.toast('Your bag is empty', 'err'); return; }
-      if (!validate(data)) { alertBox.textContent = 'Check the highlighted fields and try again.'; alertBox.classList.add('show'); return; }
-      try { localStorage.setItem(TC.CONFIG.customerKey, JSON.stringify(data)); } catch {}
-
-      const btn = $('#payBtn');
-      const span = btn.querySelector('span');
-      btn.disabled = true;
-      span.textContent = 'Opening secure payment…';
+      if (!validate(data)) {
+        if (savedNote) { savedNote.textContent = 'Please correct the highlighted delivery details.'; savedNote.classList.add('show'); }
+        const firstInvalid = form.querySelector('[aria-invalid="true"]');
+        if (firstInvalid) firstInvalid.focus();
+        return;
+      }
 
       try {
-        const res = await fetch('/api/init', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: TC.state.bag.map((l) => ({ sku: l.sku, size: l.size, qty: l.qty })), customer: data })
-        });
-        const json = await res.json();
-        if (!res.ok || !json.ok) throw new Error(json.error || 'Could not start checkout.');
-        try { localStorage.setItem('tc_pending_order', JSON.stringify({ reference: json.reference, total: json.total, mode: json.mode })); } catch {}
-        /* proves this browser placed the order, so the confirmation page can show
-           the delivery details without trusting the reference alone */
-        if (json.access_token) { try { sessionStorage.setItem('tc_access_' + json.reference, json.access_token); } catch {} }
-        const withToken = (path) => path + (json.access_token ? '&t=' + encodeURIComponent(json.access_token) : '');
-
-        if (json.mode === 'preview') { location.href = json.callback_url; return; }
-
-        if (json.access_code && json.public_key) {
-          const loaded = await loadPaystack();
-          if (loaded) {
-            const pop = new window.PaystackPop();
-            pop.newTransaction({
-              key: json.public_key,
-              email: json.email,
-              amount: json.total_kobo,
-              currency: json.currency,
-              reference: json.reference,
-              access_code: json.access_code,
-              onSuccess: () => { location.href = withToken('thanks.html?reference=' + encodeURIComponent(json.reference)); },
-              onCancel: () => {
-                btn.disabled = false; span.textContent = 'Pay with Paystack';
-                alertBox.textContent = 'Payment cancelled. Your bag is saved.';
-                alertBox.classList.add('show');
-              }
-            });
-            return;
-          }
-        }
-        location.href = json.authorization_url || 'thanks.html?reference=' + encodeURIComponent(json.reference);
-      } catch (error) {
-        alertBox.textContent = error.message || 'Something went wrong. Please try again.';
-        alertBox.classList.add('show');
-        btn.disabled = false;
-        span.textContent = 'Pay with Paystack';
+        localStorage.setItem(TC.CONFIG.customerKey, JSON.stringify(data));
+        localStorage.setItem('tc_checkout_review_v1', JSON.stringify({
+          customer: data,
+          items: TC.state.bag.map((line) => ({ sku: line.sku, size: line.size, qty: line.qty })),
+          subtotal: TC.bagSubtotal(),
+          destination: data.zone,
+          saved_at: new Date().toISOString()
+        }));
+      } catch {
+        if (savedNote) { savedNote.textContent = 'Your browser could not save these details. Check device storage and try again.'; savedNote.classList.add('show'); }
+        return;
       }
+
+      if (savedNote) {
+        savedNote.dataset.saved = 'true';
+        savedNote.textContent = 'Delivery details saved. Your bag and delivery estimate are ready for the payment step, which will be added later. No order has been placed.';
+        savedNote.classList.add('show');
+      }
+      const label = saveBtn.querySelector('span');
+      if (label) label.textContent = 'Update delivery details';
+      TC.toast('Delivery details saved');
     });
   }
 
