@@ -358,9 +358,14 @@
       ['Tribe list', k.signups], ['Messages', k.messages]
     ].map(([label, value]) => `<div class="kpi"><b>${esc(value)}</b><span>${esc(label)}</span></div>`).join('');
 
-    $('#modeWarn').innerHTML = data.mode !== 'live'
-      ? `<div class="warn">Paystack is in <strong>${esc(data.mode)}</strong> mode${data.mode === 'preview' ? ' — orders are test orders and take no money' : ''}. Add <code>PAYSTACK_SECRET_KEY</code> and <code>PAYSTACK_PUBLIC_KEY</code> on Render to go live.</div>`
-      : '';
+    const warnings = [];
+    if (data.default_password) {
+      warnings.push(`<div class="warn">Signed in with the <strong>default password</strong>. Set <code>ADMIN_PASSWORD</code> in the environment before the store opens.</div>`);
+    }
+    if (data.mode !== 'live') {
+      warnings.push(`<div class="warn">Paystack is in <strong>${esc(data.mode)}</strong> mode${data.mode === 'preview' ? ' — orders are test orders and take no money' : ''}. Add <code>PAYSTACK_SECRET_KEY</code> and <code>PAYSTACK_PUBLIC_KEY</code> on Render to go live.</div>`);
+    }
+    $('#modeWarn').innerHTML = warnings.join('');
 
     const recent = (data.orders || []).slice(0, 6);
     $('#latestOrders').innerHTML = recent.length

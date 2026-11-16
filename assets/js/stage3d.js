@@ -521,14 +521,24 @@ function mountProduct(host) {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     const visibleH = 2 * camera.position.z * Math.tan((camera.fov * Math.PI) / 360);
-    /* keep the plate clear of the overlay label (top) and face picker (bottom) */
-    const fill = parseFloat(host.dataset.plate) || 0.64;
-    const size = Math.min(visibleH * fill, visibleH * camera.aspect * (fill + 0.02));
+    /* reserve real pixels for the overlay chrome (label above, face picker below)
+       so the plate can never sit under either, at any canvas aspect */
+    const worldPerPx = visibleH / h;
+    const wide = w > 620;
+    const topReserve = wide ? 52 : 54;
+    const botReserve = wide ? 58 : 98;
+    const usableH = Math.max(140, h - topReserve - botReserve);
+    const usableW = Math.max(140, w - (wide ? 56 : 34));
+    const scaleBoost = parseFloat(host.dataset.plate) ? 1.06 : 1;
+    const size = Math.min(usableH * worldPerPx, usableW * worldPerPx) * 0.94 * scaleBoost;
     A.scale.set(size, size, 1);
     B.scale.set(size, size, 1);
     mat.scale.set(size * 1.085, size * 1.085, 1);
     line.scale.set(size * 1.05, size * 1.05, 1);
-    group.position.y = visibleH * 0.035;
+    /* recentre inside the space that is actually free */
+    const topFree = topReserve * worldPerPx;
+    const freeH = usableH * worldPerPx;
+    group.position.y = (visibleH / 2) - topFree - freeH / 2;
   }
   const ro = ('ResizeObserver' in window) ? new ResizeObserver(resize) : null;
   if (ro) ro.observe(host); else window.addEventListener('resize', resize);

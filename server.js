@@ -948,6 +948,7 @@ async function handleApi(req, res, pathname, url) {
       return sendJson(res, 200, {
         ok: true,
         mode: paystackMode(cfg),
+        default_password: cfg.admin_password === 'change-me-tribe-2026',
         currency: cfg.currency,
         currency_symbol: cfg.currency_symbol,
         store_email: db.settings.store_email,
@@ -1318,7 +1319,10 @@ if (require.main === module) {
   const HOST = process.env.HOST || '0.0.0.0';
   const server = http.createServer(handler);
   server.listen(PORT, HOST, () => {
-    console.log(`Tribe Culture · http://${HOST}:${PORT} · paystack:${paystackMode(CONFIG)} · data:${DATA_DIR}`);
+    console.log(`Tribe Culture · http://${HOST}:${PORT} · paystack:${paystackMode(CONFIG)} · data:${DATA_DIR} · studio:/studio`);
+    if (CONFIG.admin_password === 'change-me-tribe-2026') {
+      console.warn('⚠  ADMIN_PASSWORD is still the default — set it in the environment before going live.');
+    }
   });
   const shutdown = () => server.close(() => process.exit(0));
   process.on('SIGTERM', shutdown);
