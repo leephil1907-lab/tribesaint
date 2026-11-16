@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="tot-row"><span>Delivery — ${order.shipping_label || ''}</span><span>${order.shipping ? money(order.shipping) : 'Free'}</span></div>
       <div class="tot-row big"><span>Total</span><span>${money(order.total)}</span></div>
       <div class="stack-sm" style="margin-top:12px">
-        <p class="tiny">Deliver to: ${order.customer.name}, ${order.customer.address}, ${order.customer.city}${order.customer.country ? ', ' + order.customer.country : ''}</p>
+        <p class="tiny">Delivery details are included in your confirmation email. Keep your order reference for tracking.</p>
         <p class="tiny">A confirmation email is on its way. Keep your reference for tracking.</p>
         <a class="link" href="track.html?ref=${encodeURIComponent(order.reference)}">Track this order <span class="arw">→</span></a>
       </div>`;
