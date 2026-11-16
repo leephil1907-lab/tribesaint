@@ -74,6 +74,7 @@ function buildInvoice(order, cfg, opts = {}) {
     seller: {
       name: cfg.brand_name || 'Tribe Culture',
       legal: cfg.brand_legal || cfg.brand_name || 'Tribe Culture',
+      rc: cfg.brand_rc || '',
       email: cfg.store_email || '',
       phone: cfg.support_phone || '',
       whatsapp: cfg.whatsapp || '',
@@ -467,7 +468,9 @@ function invoicePdf(doc, cfg) {
     /* footer */
     const fy = p.h - 62;
     p.line(M, fy - 10, M + CW, fy - 10, INK, 0.8);
-    p.text(M, fy + 2, doc.seller.name.toUpperCase() + '  ·  ' + doc.seller.tagline, { size: 8, bold: true, color: INK, tracking: 0.9 });
+    const sealLine = [doc.seller.name.toUpperCase(), doc.seller.rc ? 'RC ' + doc.seller.rc : null, doc.seller.tagline]
+      .filter(Boolean).join('  ·  ');
+    p.text(M, fy + 2, sealLine, { size: 8, bold: true, color: INK, tracking: 0.9 });
     const contact = [
       doc.seller.site ? doc.seller.site.replace(/^https?:\/\//, '') : 'tribeculture.store',
       doc.seller.email,

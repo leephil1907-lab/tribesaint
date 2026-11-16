@@ -434,6 +434,7 @@ async function sendOrderEmails(order, cfg, base, db) {
     `Track your order: ${site}/track.html?ref=${order.reference}`,
     `Questions: reply to this email, message WhatsApp${cfg.whatsapp ? ' +' + cfg.whatsapp : ''}, or write to ${cfg.store_email}.`,
     '',
+    cfg.brand_rc ? `${cfg.brand_legal || 'Tribe Culture'} · RC ${cfg.brand_rc}` : '',
     'Discover new truth. — Tribe Society'
   ].filter(Boolean).join('\n');
 
@@ -474,7 +475,7 @@ async function sendOrderEmails(order, cfg, base, db) {
       <p style="font:400 12px/1.65 Helvetica,Arial,sans-serif;color:#7b756a;margin:0">Questions? Message us on WhatsApp${cfg.whatsapp ? ' (+' + cfg.whatsapp + ')' : ''} or reply to this email. Unworn pieces can be returned within 14 days, tags attached.</p>
     </td></tr>
     <tr><td style="background:#0a0909;padding:18px 24px;font:400 10px/1.7 Helvetica,Arial,sans-serif;color:#8a8378">
-      Tribe Culture · Discover new truth · ${site.replace(/^https?:\/\//, '')}<br>${esc(doc.number)} · ${esc(order.reference)}
+      ${esc(cfg.brand_legal || 'Tribe Culture')}${cfg.brand_rc ? ' · RC ' + esc(cfg.brand_rc) : ''} · Discover new truth · ${esc(site.replace(/^https?:\/\//, ''))}<br>${esc(doc.number)} · ${esc(order.reference)}
     </td></tr>
   </table></body></html>`;
 

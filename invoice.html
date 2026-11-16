@@ -198,7 +198,7 @@
               <img src="assets/brand/crest-bone.png" alt="Tribe Culture crest">
               <div>
                 <div class="name">Tribe Culture</div>
-                <div class="est">Established MMXXVI · Lagos · Worldwide</div>
+                <div class="est">Established MMXXVI · Lagos · Worldwide${d.seller.rc ? ' · RC ' + esc(d.seller.rc) : ''}</div>
               </div>
             </div>
             <div class="contact">
@@ -271,6 +271,7 @@
           <div class="docfoot">
             <div>
               <div class="b">${esc(d.seller.name)} — ${esc(d.seller.tagline)}</div>
+              ${d.seller.rc ? `<div class="s" style="margin-top:5px">Registered with the Corporate Affairs Commission · RC ${esc(d.seller.rc)}</div>` : ''}
               <div class="s">
                 ${esc(d.seller.email)}${d.seller.whatsapp ? ' · WhatsApp +' + esc(d.seller.whatsapp) : ''}<br>
                 ${esc((d.seller.site || 'tribeculture.store').replace(/^https?:\/\//, ''))}
