@@ -914,7 +914,11 @@ async function handleApi(req, res, pathname, url) {
           : null,
         !cfg.admin_password ? 'ADMIN_PASSWORD is not set; the studio is locked' : null,
         isWeakPassword(cfg.admin_password) ? 'ADMIN_PASSWORD is a well-known default' : null,
-        !cfg.paystack_secret_key ? 'PAYSTACK_SECRET_KEY is not set; checkout runs in preview mode' : null,
+        !cfg.paystack_secret_key
+          ? (cfg.allow_preview_checkout
+              ? 'PAYSTACK_SECRET_KEY is not set; checkout is in preview mode and takes no money'
+              : 'PAYSTACK_SECRET_KEY is not set; checkout is switched off until you add it')
+          : null,
         !cfg.resend_api_key ? 'RESEND_API_KEY is not set; receipts are logged but not emailed' : null
       ].filter(Boolean)
     });
