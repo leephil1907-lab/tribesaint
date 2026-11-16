@@ -598,6 +598,41 @@ html[data-motion="off"] .annbar-track{animation:none}
 .sw-row .sw button:hover{transform:translateY(-2px)}
 .sw-row .sw-name{font:400 9px/1 Oswald,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--parch)}
 
+/* ---------- original garment reference spread ---------- */
+.pdp-reference{
+  display:grid;gap:16px;padding-top:clamp(18px,2.5vw,28px);
+  border-top:1px solid var(--line);min-width:0;
+}
+.pdp-reference-head{display:grid;gap:8px}
+.pdp-reference-head h2{font-size:clamp(23px,3vw,34px);letter-spacing:.01em}
+.pdp-reference-head>p:last-child{max-width:54ch;color:var(--mute);font-size:12.5px;line-height:1.65}
+.pdp-reference-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pdp-reference-card{display:grid;gap:8px;min-width:0}
+.pdp-reference-media{
+  display:grid;place-items:center;min-width:0;aspect-ratio:4/5;overflow:hidden;
+  border:1px solid var(--line);
+  background:radial-gradient(70% 60% at 50% 40%,#332629 0%,#171112 62%,#0b0909 100%);
+}
+.pdp-reference-media img{
+  display:block;width:100%;height:100%;max-width:100%;max-height:100%;
+  object-fit:contain;object-position:center;padding:5%;
+  user-select:none;-webkit-user-drag:none;
+}
+.pdp-reference-card figcaption{
+  display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;
+  font:400 9px/1.4 Oswald,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--bone)
+}
+.pdp-reference-card figcaption span{color:var(--red);font-variant-numeric:tabular-nums}
+.pdp-reference-card figcaption i{font:400 8px/1.4 Oswald,sans-serif;letter-spacing:.08em;color:var(--mute);font-style:normal}
+@media(max-width:420px){
+  .pdp-reference-grid{gap:6px}
+  .pdp-reference-card figcaption{font-size:8px;letter-spacing:.1em}
+  .pdp-reference-card figcaption i{width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+  .pdp-reference-media img{transition:none}
+}
+
 /* accordion */
 .acc{border-top:1px solid var(--line)}
 .acc details{border-bottom:1px solid var(--line)}
@@ -1002,6 +1037,11 @@ body.ready .rise.d3{transition-delay:.24s}
 }
 
 /* ---------- checkout ---------- */
+.checkout-note{border:1px solid var(--line);background:var(--wash-2);padding:14px 16px;display:grid;gap:7px}
+.checkout-note .small{margin:0;line-height:1.65}
+#checkoutSaveNote{margin:0}
+#checkoutSaveNote.ok{border-color:rgba(90,150,95,.55);background:rgba(47,107,54,.12);color:#a9e0a2}
+
 .co-lead{margin:-6px 0 2px}
 .co-summary{display:grid;gap:12px;align-content:start}
 /* the line item must show the piece, not a crop of the model's chest */
@@ -1018,7 +1058,7 @@ body.ready .rise.d3{transition-delay:.24s}
   .co-summary .tot-row{font-size:12px}
   .co-summary .tot-row.big{font-size:15px}
   #coItems + .stack-sm{margin-top:10px!important}
-  .co-summary .info-card:last-child{display:none}   /* the secure note repeats the marks above the button */
+  /* Keep the delivery information card visible on mobile. */
 }
 @media(min-width:940px){
   .co-summary{position:sticky;top:calc(var(--nav) + 16px)}
