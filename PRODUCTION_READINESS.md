@@ -63,6 +63,10 @@ Keep ALLOW_PREVIEW_CHECKOUT=false. Production code disables it regardless of the
 - [ ] Test two simultaneous checkouts for the final unit.
 - [ ] Back up the store and perform a restore drill before live orders.
 
+## CI follow-up
+
+The post-merge smoke test is aligned with the current main-branch backup recovery implementation and validates the production password gate, disabled preview checkout, tracking email requirement, cart cap, and paid-order fulfilment guard.
+
 ## Conclusion
 
 Critical production configuration, privacy and payment-state fixes are implemented. Atomic inventory reservation, transactional persistence, email retry, shared rate limiting and external integration verification remain before a high-confidence live launch.
