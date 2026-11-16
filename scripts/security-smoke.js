@@ -15,7 +15,7 @@ const pageControllers = read('assets/js/pages.js');
 assert.match(server, /allow_preview_checkout:\s*!production/);
 assert.match(server, /Production requires a unique ADMIN_PASSWORD of at least 16 characters/);
 assert.match(server, /crypto\.randomBytes\(16\)/);
-assert.match(server, /store\\.json could not be read/);
+assert.match(server, /store\.json could not be read/);
 assert.match(server, /if \(!validEmail\(email\)\).*checkout/i);
 assert.match(server, /Only a Paystack-confirmed paid order can enter fulfilment/);
 assert.match(server, /combinedQty > 10/);
