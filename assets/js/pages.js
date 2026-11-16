@@ -38,11 +38,12 @@
   function cardHTML(p) {
     const backs = p.images && p.images.back ? p.images.back : p.image;
     return `
-    <article class="card" data-card="${esc(p.sku)}">
-      <a class="card-media" href="product.html?sku=${encodeURIComponent(p.sku)}" aria-label="${esc(p.name)} — ${esc(p.variant)}">
+    <article class="card${totalStock(p) === 0 ? ' is-sold' : ''}" data-card="${esc(p.sku)}">
+      <a class="card-media" href="product.html?sku=${encodeURIComponent(p.sku)}" aria-label="${esc(p.name)} — ${esc(p.variant)}${totalStock(p) === 0 ? ', sold out' : ''}">
         <img class="on" data-shot="front" src="${esc(thumb(p.image))}" alt="${esc(p.name)}, ${esc(p.variant)}" loading="lazy" decoding="async" width="480" height="480">
         <img data-shot="back" src="${esc(thumb(backs))}" alt="" loading="lazy" decoding="async" width="480" height="480">
         <span class="badge">${esc(p.badge || 'Drop 001')}</span>
+        ${totalStock(p) === 0 ? '<span class="sold-badge">Sold out</span>' : ''}
         <span class="views" role="group" aria-label="Product view">
           <button type="button" class="on" data-view="front" aria-pressed="true">1</button>
           <button type="button" data-view="back" aria-pressed="false">2</button>
@@ -335,6 +336,29 @@
       document.dispatchEvent(new CustomEvent('stage:sku', { detail: { sku } }));
     }
 
+    /* the quantity stepper is only meaningful once a size is chosen and in stock */
+    let pdpQty = 1;
+
+    function paintQty() {
+      const p = TC.product(sku);
+      const size = $('#pdpAdd') ? $('#pdpAdd').dataset.size : null;
+      const box = $('#pdpQty');
+      const n = $('#pdpQtyN');
+      if (!box || !n) return;
+      const stock = size && p ? p.stock[size] : 0;
+      box.hidden = !size || !p || !stock;
+      const cap = Math.max(1, Math.min(stock || 1, 10));
+      pdpQty = Math.max(1, Math.min(pdpQty, cap));
+      n.textContent = String(pdpQty);
+      const minus = box.querySelector('[data-pdp-qty="-1"]');
+      const plus = box.querySelector('[data-pdp-qty="1"]');
+      if (minus) minus.disabled = pdpQty <= 1;
+      if (plus) plus.disabled = pdpQty >= cap;
+      const add = $('#pdpAdd');
+      const span = add && add.querySelector('span');
+      if (span && add && !add.disabled) span.textContent = 'Add to bag · ' + money((p ? p.price : 0) * pdpQty);
+    }
+
     function setSize(size) {
       const p = TC.product(sku);
       const sel = $('#pdpSizes');
@@ -342,13 +366,31 @@
       const add = $('#pdpAdd');
       if (!add) return;
       const span = add.querySelector('span');
-      if (!size) { add.disabled = true; span.textContent = 'Sold out'; return; }
+      if (!size) { add.disabled = true; span.textContent = 'Sold out'; delete add.dataset.size; paintQty(); return; }
       const lvl = p.stock[size];
-      if (lvl === 0) { add.disabled = true; span.textContent = 'Sold out in ' + size; return; }
+      if (lvl === 0) { add.disabled = true; span.textContent = 'Sold out in ' + size; delete add.dataset.size; paintQty(); return; }
       add.disabled = false;
-      span.textContent = 'Add to bag · ' + money(p.price);
       add.dataset.size = size;
+      pdpQty = 1;
+      paintQty();
     }
+
+    $('#pdpQty')?.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-pdp-qty]');
+      if (!b) return;
+      pdpQty = Math.max(1, pdpQty + Number(b.dataset.pdpQty));
+      paintQty();
+    });
+
+    /* the size-guide trigger opens the panel already on the page instead of
+       sending the shopper to the help centre mid-decision */
+    $('#pdpGuide')?.addEventListener('click', () => {
+      const panel = $('#pdpGuidePanel');
+      if (!panel) return;
+      panel.open = true;
+      panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      panel.querySelector('summary')?.focus({ preventScroll: true });
+    });
 
     $('#pdpSizes')?.addEventListener('change', (e) => {
       setSize(e.target.value || null);
@@ -356,7 +398,10 @@
 
     $('#pdpAdd')?.addEventListener('click', () => {
       const size = $('#pdpAdd').dataset.size;
-      if (size) TC.addToBag(sku, size);
+      if (!size) return;
+      TC.addToBag(sku, size, pdpQty);
+      pdpQty = 1;
+      paintQty();
     });
 
     // gallery faces (2D main + 3D stage)

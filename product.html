@@ -184,7 +184,7 @@
         </div>
 
         <div class="field-group">
-          <span class="field-label">Size <a href="help.html#size" class="link" style="border:0;padding:0">Size guide</a></span>
+          <span class="field-label">Size <button class="link" type="button" id="pdpGuide" aria-controls="pdpGuidePanel">Size guide</button></span>
           <div class="size-row">
             <div class="size-field">
               <div class="select-wrap">
@@ -197,6 +197,14 @@
           <p class="size-meta" id="pdpStock"></p>
         </div>
 
+        <div class="pdp-qty" id="pdpQty" hidden>
+          <span class="lbl">Quantity</span>
+          <div class="qty" role="group" aria-label="Quantity">
+            <button type="button" data-pdp-qty="-1" aria-label="One fewer">−</button>
+            <span id="pdpQtyN" aria-live="polite">1</span>
+            <button type="button" data-pdp-qty="1" aria-label="One more">+</button>
+          </div>
+        </div>
         <div class="pdp-actions">
           <button class="btn" type="button" id="pdpAdd" disabled><span>Select a size</span></button>
           <a class="btn ghost" href="checkout.html"><span>Checkout</span></a>
@@ -228,7 +236,7 @@
             <summary>Delivery &amp; returns</summary>
             <div class="acc-body" id="pdpDelivery"></div>
           </details>
-          <details>
+          <details id="pdpGuidePanel">
             <summary>Size guide</summary>
             <div class="acc-body">
               <div class="row-between" style="margin-bottom:8px">

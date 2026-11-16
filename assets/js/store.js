@@ -66,16 +66,17 @@
     emit();
   }
 
-  function addToBag(sku, size) {
+  function addToBag(sku, size, qty) {
     const p = product(sku);
     if (!p) { toast('That piece is unavailable', 'err'); return false; }
     if (!size) { toast('Choose a size first', 'err'); return false; }
     const lvl = stockOf(sku, size);
     if (lvl === 0) { toast('Sold out in ' + size, 'err'); return false; }
+    const want = Math.max(1, Math.floor(Number(qty) || 1));
     const line = state.bag.find((l) => l.sku === sku && l.size === size);
-    const next = (line ? line.qty : 0) + 1;
+    const next = (line ? line.qty : 0) + want;
     if (lvl !== null && next > lvl) { toast('Only ' + lvl + ' left in ' + size, 'err'); return false; }
-    if (line) line.qty = next; else state.bag.push({ sku, size, qty: 1 });
+    if (line) line.qty = next; else state.bag.push({ sku, size, qty: want });
     saveBag();
     openBag();
     toast('Added — ' + p.name + ', ' + size);
