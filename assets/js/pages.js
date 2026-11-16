@@ -375,20 +375,21 @@
       $('#pdpPrice').textContent = money(p.price);
       $('#pdpCurrency').textContent = (TC.state.catalogue && TC.state.catalogue.currency) || 'NGN';
       $('#pdpBlurb').textContent = p.blurb || '';
-      /* the gallery shows the garment itself, cut from its studio wall — the
-         same object the rail and the cards present */
-      /* detail shots stay photographic: they are close-ups, not objects to cut out */
+      /* the gallery shows the original studio photograph, whole — never a cut
+         silhouette. The card crops stay for the grids and thumbnails. */
       const cut = (face) => (face === 'detail'
         ? p.images.detail
-        : 'assets/products/card/' + p.sku + (face === 'front' ? '' : '-' + face) + '.webp');
+        : 'assets/products/' + p.sku + '-' + face + '.jpg');
       const imgA = $('#pdpImgA'), imgB = $('#pdpImgB');
       imgA.src = cut('front'); imgA.alt = p.name + ' — ' + p.variant;
       imgB.src = cut('back'); imgB.alt = p.name + ' — alternate view';
+      const pbg = $('#pdpBg');
+      if (pbg) pbg.src = imgA.src;
 
       const thumbs = $('#pdpThumbs');
       const faces = [
-        { key: 'front', label: '1', img: cut('front'), alt: p.name + ' front' },
-        { key: 'back', label: '2', img: cut('back'), alt: p.name + ' alternate' },
+        { key: 'front', label: '1', img: 'assets/products/card/' + p.sku + '.webp', alt: p.name + ' front' },
+        { key: 'back', label: '2', img: 'assets/products/card/' + p.sku + '-back.webp', alt: p.name + ' alternate' },
         { key: 'detail', label: '3', img: cut('detail'), alt: p.name + ' print detail' }
       ];
       thumbs.innerHTML = faces.map((f, i) => `<button type="button" data-face="${f.key}" aria-pressed="${i === 0}" aria-label="Show ${esc(f.alt)}"><img src="${esc(f.img)}" alt="" width="64" height="64" loading="lazy" decoding="async"></button>`).join('');
@@ -547,9 +548,15 @@
       const p2 = TC.product(sku);
       const cutFace = (f) => (f === 'detail'
         ? p2.images.detail
-        : 'assets/products/card/' + p2.sku + (f === 'front' ? '' : '-' + f) + '.webp');
-      if (face === 'back') { a.classList.remove('on'); bb.classList.add('on'); bb.src = cutFace('back'); }
-      else { bb.classList.remove('on'); a.classList.add('on'); a.src = cutFace(face); }
+        : 'assets/products/' + p2.sku + '-' + f + '.jpg');
+      const pbg2 = $('#pdpBg');
+      if (face === 'back') {
+        a.classList.remove('on'); bb.classList.add('on'); bb.src = cutFace('back');
+        if (pbg2) pbg2.src = cutFace('back');
+      } else {
+        bb.classList.remove('on'); a.classList.add('on'); a.src = cutFace(face);
+        if (pbg2) pbg2.src = cutFace(face);
+      }
       document.dispatchEvent(new CustomEvent('stage:face', { detail: { face } }));
     });
 
@@ -1006,6 +1013,163 @@
     });
   }
 
+  /* ----------------------------------------------------------------- plate
+     The twelve pieces exactly as photographed — the whole garment in frame,
+     never a trimmed silhouette. Front/back, swipe, arrows and a picker, and
+     the panel beside it stays in step. */
+  function initPlate() {
+    const host = $('#plateStack');
+    if (!host) return;
+    const frame = $('#plateFrame');
+    const idxEl = $('#plateIdx');
+    let built = false;
+
+    function build() {
+      if (built) return true;
+      const list = TC.productList();
+      if (!list.length) return false;
+      built = true;
+
+      let i = 0;
+      let face = 'front';
+
+      host.innerHTML = list.map((p, n) => `
+        <figure class="plate-slide${n === 0 ? ' is-on' : ''}" data-slide="${n}" data-sku="${esc(p.sku)}">
+          <img class="p-front" alt="${esc(p.name)} — ${esc(p.variant)}, front." loading="lazy" decoding="async">
+          <img class="p-back" alt="${esc(p.name)} — ${esc(p.variant)}, back." loading="lazy" decoding="async">
+        </figure>`).join('');
+
+      const slides = Array.from(host.children);
+      const bg = document.getElementById('plateBg');
+      const backBtn = document.querySelector('[data-face="back"]');
+      const frontBtn = document.querySelector('[data-face="front"]');
+
+      const hydrate = (n) => {
+        const el = slides[n];
+        if (!el || el.dataset.noBack === '1') return;
+        const p = list[n];
+        const f = el.querySelector('.p-front');
+        const b = el.querySelector('.p-back');
+        if (!f.getAttribute('src')) f.src = 'assets/products/' + p.sku + '-front.jpg';
+        if (!b.getAttribute('src')) {
+          b.addEventListener('error', () => { el.dataset.noBack = '1'; if (backBtn && slides[i] === el && face === 'back') face = 'front'; paint(); }, { once: true });
+          b.src = 'assets/products/' + p.sku + '-back.jpg';
+        }
+      };
+
+      /* the matte takes the colour of each photo's own studio ground, so the
+         frame looks like a mounted print instead of a pasted rectangle */
+      const matteCache = {};
+      const matte = (img) => {
+        const key = img.currentSrc || img.src;
+        if (!key) return;
+        if (matteCache[key]) { frame.style.background = matteCache[key]; return; }
+        const apply = () => {
+          try {
+            const c = document.createElement('canvas');
+            c.width = c.height = 12;
+            const g = c.getContext('2d');
+            g.drawImage(img, 0, 0, 12, 12);
+            const d = g.getImageData(0, 0, 12, 12).data;
+            let r = 0, gr = 0, bl = 0, n = 0;
+            for (let y = 0; y < 12; y++) {
+              for (let x = 0; x < 12; x++) {
+                if (x > 3 && x < 8 && y > 3 && y < 8) continue; /* skip the garment */
+                const o = (y * 12 + x) * 4;
+                r += d[o]; gr += d[o + 1]; bl += d[o + 2]; n++;
+              }
+            }
+            /* lift it a little toward bone so the mount reads as paper, not concrete */
+            const lift = (v) => Math.round(v * 0.82 + 246 * 0.18);
+            const col = 'rgb(' + lift(r / n) + ',' + lift(gr / n) + ',' + lift(bl / n) + ')';
+            matteCache[key] = col;
+            frame.style.background = col;
+          } catch (e) { /* keep the default matte */ }
+        };
+        if (img.complete && img.naturalWidth) apply();
+        else img.addEventListener('load', apply, { once: true });
+      };
+
+      const paint = () => {
+        hydrate(i);
+        hydrate((i + 1) % list.length);
+        hydrate((i - 1 + list.length) % list.length);
+        slides.forEach((el, n) => el.classList.toggle('is-on', n === i));
+        const back = face === 'back' && slides[i].dataset.noBack !== '1';
+        slides[i].classList.toggle('show-back', back);
+        if (backBtn) {
+          backBtn.disabled = slides[i].dataset.noBack === '1';
+          backBtn.setAttribute('aria-pressed', String(back));
+        }
+        if (frontBtn) frontBtn.setAttribute('aria-pressed', String(!back));
+        if (idxEl) idxEl.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(list.length).padStart(2, '0');
+        if (frame) {
+          const shown = slides[i].querySelector(back ? '.p-back' : '.p-front');
+          if (shown) matte(shown);
+          if (bg) {
+            const src = shown && (shown.currentSrc || shown.src);
+            if (src && bg.getAttribute('src') !== src) bg.src = src;
+          }
+        }
+        $$('.stage-picker button').forEach((b, n) => b.setAttribute('aria-pressed', String(n === i)));
+        document.dispatchEvent(new CustomEvent('rail:piece', { detail: { sku: list[i].sku, index: i } }));
+      };
+
+      const go = (n) => { i = ((n % list.length) + list.length) % list.length; face = 'front'; paint(); };
+
+      const picker = document.querySelector('.stage-picker');
+      if (picker) {
+        picker.innerHTML = list.map((p, n) =>
+          `<button type="button" data-index="${n}" aria-pressed="${n === 0}" aria-label="${esc(p.name)} — ${esc(p.variant)}"></button>`).join('');
+        picker.addEventListener('click', (e) => {
+          const b = e.target.closest('[data-index]');
+          if (b) go(Number(b.dataset.index));
+        });
+      }
+
+      const prev = document.querySelector('[data-rail-prev]');
+      const next = document.querySelector('[data-rail-next]');
+      if (prev) prev.addEventListener('click', (e) => { e.preventDefault(); go(i - 1); });
+      if (next) next.addEventListener('click', (e) => { e.preventDefault(); go(i + 1); });
+
+      document.querySelectorAll('[data-face]').forEach((b) => b.addEventListener('click', () => {
+        if (b.disabled) return;
+        face = b.dataset.face;
+        paint();
+      }));
+
+      if (frame) {
+        let x0 = null, y0 = null, moved = 0;
+        frame.addEventListener('pointerdown', (e) => { x0 = e.clientX; y0 = e.clientY; moved = 0; });
+        frame.addEventListener('pointermove', (e) => {
+          if (x0 === null) return;
+          moved = Math.max(moved, Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0));
+        });
+        frame.addEventListener('pointerup', (e) => {
+          if (x0 === null) return;
+          const dx = e.clientX - x0;
+          x0 = null;
+          if (Math.abs(dx) > 42) { go(i + (dx < 0 ? 1 : -1)); return; }
+          if (moved < 12) location.href = 'product.html?sku=' + encodeURIComponent(list[i].sku);
+        });
+        frame.addEventListener('pointercancel', () => { x0 = null; });
+        frame.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowRight') { e.preventDefault(); go(i + 1); }
+          else if (e.key === 'ArrowLeft') { e.preventDefault(); go(i - 1); }
+          else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); location.href = 'product.html?sku=' + encodeURIComponent(list[i].sku); }
+        });
+      }
+
+      paint();
+      return true;
+    }
+
+    if (build()) return;
+    /* the catalogue may still be in flight — build the moment it lands */
+    let stop = () => {};
+    stop = TC.on(() => { if (build()) stop(); });
+  }
+
   /* ---------------------------------------------------------- rail panel
      The right-hand panel mirrors whatever the 3D rail has centred: real name,
      real variant, real price, live sizes from /api/catalogue, and the same
@@ -1063,14 +1227,7 @@
       if (e.target.closest('#railPanelAdd') && size) TC.addToBag(sku, size, 1);
     });
 
-    let wired = false;
-    const sync = () => {
-      if (!wired) {
-        (TC.productList() || []).forEach(() => {});
-        wired = true;
-      }
-      paint();
-    };
+    const sync = () => paint();
     document.addEventListener('rail:piece', (e) => {
       if (!e.detail || !e.detail.sku) return;
       sku = e.detail.sku;
@@ -1085,6 +1242,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     initHome();
     initZine();
+    initPlate();
     /* glass header: gains weight only once it leaves the hero */
     const bar = document.querySelector('.topbar');
     if (bar) {

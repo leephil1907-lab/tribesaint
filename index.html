@@ -192,48 +192,37 @@
 <section class="rail-sec" id="rail" aria-labelledby="railTitle">
   <div class="wrap rail-head">
     <div>
-      <p class="eyebrow red"><i class="live-dot" aria-hidden="true"></i> The rail · live 3D</p>
-      <h2 class="disp" id="railTitle">Twelve pieces, one hanger at a time</h2>
+      <p class="eyebrow red"><i class="live-dot" aria-hidden="true"></i> Drop 001 · as photographed</p>
+      <h2 class="disp" id="railTitle">Twelve pieces, nothing cropped</h2>
     </div>
-    <p class="rail-note">Drag the rail, or use the arrows. Every piece is the real garment — front, chest and back.</p>
+    <p class="rail-note">The original studio photographs, whole in frame. Flip front to back, swipe or use the arrows, then add your size without leaving the page.</p>
   </div>
   <div class="wrap">
     <div class="rail-grid">
 
-    <div class="stage rail-stage" data-stage="rail" id="heroStage">
-    <canvas class="stage-canvas" role="listbox" tabindex="0" aria-label="The twelve Drop 001 pieces hanging on a rail. Drag or use the arrow keys to slide along the rail, press Enter to open the piece."></canvas>
-    <div class="stage-loading"><span class="bar"><i></i></span></div>
-    <div class="stage-fallback" hidden>
-      <div class="stage-fallback-grid">
-        <a href="product.html?sku=saint-tee-black"><img src="assets/products/saint-tee-black-front.jpg" alt="Saint Tee, black" width="900" height="900" loading="lazy" decoding="async"></a>
-        <a href="product.html?sku=members-tee-white"><img src="assets/products/members-tee-white-front.jpg" alt="Members Only Tee, white" width="900" height="900" loading="lazy" decoding="async"></a>
-        <a href="product.html?sku=tracksuit-black"><img src="assets/products/tracksuit-black-front.jpg" alt="Tribe Track Suit" width="900" height="900" loading="lazy" decoding="async"></a>
-        <a href="product.html?sku=cadet-cap-black"><img src="assets/products/cadet-cap-black-front.jpg" alt="Cadet Cap" width="900" height="900" loading="lazy" decoding="async"></a>
+    <div class="plate" id="railPlate">
+      <div class="plate-frame" id="plateFrame" tabindex="0" role="group"
+           aria-label="The twelve Drop 001 pieces, exactly as photographed. Swipe, or use the arrows. Press Enter to open the piece.">
+        <img class="plate-bg" id="plateBg" alt="" aria-hidden="true" decoding="async">
+        <div class="plate-stack" id="plateStack"></div>
+        <p class="plate-idx" id="plateIdx">01 / 12</p>
+        <span class="plate-hint"><i aria-hidden="true"></i> Swipe · tap to open</span>
       </div>
-    </div>
-    <div class="stage-overlay">
-      <div class="stage-top">
-        <span class="eyebrow">The rail · Drop 001</span>
-        <span class="stage-hint"><i></i> Drag the rail · tap to open</span>
+      <div class="plate-bar">
+        <div class="plate-face" role="group" aria-label="Product view">
+          <button type="button" data-face="front" aria-pressed="true">Front</button>
+          <button type="button" data-face="back" aria-pressed="false">Back</button>
+        </div>
+        <div class="stage-nav">
+          <button class="stage-arrow" type="button" data-rail-prev aria-label="Previous piece">
+            <svg width="14" height="10" viewBox="0 0 14 10" aria-hidden="true"><path d="M13 5H1m0 0 4-4M1 5l4 4" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+          </button>
+          <div class="stage-picker" role="group" aria-label="Choose a piece"></div>
+          <button class="stage-arrow" type="button" data-rail-next aria-label="Next piece">
+            <svg width="14" height="10" viewBox="0 0 14 10" aria-hidden="true"><path d="M1 5h12m0 0-4-4m4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+          </button>
+        </div>
       </div>
-    </div>
-    <div class="stage-bar">
-      <span class="stage-bar-hint">Drag the rail · tap to open</span>
-      <div class="stage-caption">
-        <div class="k"></div>
-        <div class="n"></div>
-        <div class="p"></div>
-      </div>
-      <div class="stage-nav">
-        <button class="stage-arrow" type="button" data-rail-prev aria-label="Previous piece">
-          <svg width="14" height="10" viewBox="0 0 14 10" aria-hidden="true"><path d="M13 5H1m0 0 4-4M1 5l4 4" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
-        </button>
-        <div class="stage-picker" role="group" aria-label="Choose a piece"></div>
-        <button class="stage-arrow" type="button" data-rail-next aria-label="Next piece">
-          <svg width="14" height="10" viewBox="0 0 14 10" aria-hidden="true"><path d="M1 5h12m0 0-4-4m4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
-        </button>
-      </div>
-    </div>
     </div>
 
     <aside class="rail-panel" id="railPanel" aria-live="polite">
