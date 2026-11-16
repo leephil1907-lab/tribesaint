@@ -44,6 +44,8 @@ function loadConfig() {
     admin_password: String(process.env.ADMIN_PASSWORD || raw.admin_password || '').trim(),
     resend_api_key: (process.env.RESEND_API_KEY || '').trim(),
     low_stock_at: Number(process.env.LOW_STOCK_AT || raw.low_stock_at || 3) || 3,
+    /* signs receipt links; see ensureInvoiceSecret() */
+    invoice_secret: (process.env.INVOICE_SECRET || '').trim(),
     allow_preview_checkout:
       process.env.ALLOW_PREVIEW_CHECKOUT !== undefined
         ? process.env.ALLOW_PREVIEW_CHECKOUT === 'true'
@@ -1807,8 +1809,29 @@ Sitemap: ${base.replace(/\/+$/, '')}/sitemap.xml
 }
 
 /* ------------------------------------------------------------------ server */
+let invoiceSecretReady = false;
+function ensureInvoiceSecret() {
+  if (invoiceSecretReady) return;
+  invoiceSecretReady = true;
+  if (CONFIG.invoice_secret) return;
+  try {
+    const db = readDb();
+    if (!db.settings.invoice_secret) {
+      db.settings.invoice_secret = crypto.randomBytes(24).toString('hex');
+      writeDb(db);
+      logEvent('info', 'created a store secret for receipt links (kept in the data directory)');
+    }
+    CONFIG.invoice_secret = db.settings.invoice_secret;
+  } catch (err) {
+    logEvent('warn', 'could not persist the receipt-link secret; falling back to the password-derived token', {
+      error: String((err && err.message) || err)
+    });
+  }
+}
+
 async function handler(req, res) {
   try {
+    ensureInvoiceSecret();
     const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
     if (url.pathname === '/studio' || url.pathname.startsWith('/studio/')) return handleStudio(req, res, url.pathname, CONFIG);
     if (url.pathname.startsWith('/api/')) return await handleApi(req, res, url.pathname, url);
@@ -1838,6 +1861,7 @@ module.exports = { handler, loadConfig };
 if (require.main === module) {
   const PORT = Number(process.env.PORT || 3000);
   const HOST = process.env.HOST || '0.0.0.0';
+  ensureInvoiceSecret();
   const server = http.createServer(handler);
   server.listen(PORT, HOST, () => {
     console.log(`Tribe Culture · http://${HOST}:${PORT} · paystack:${paystackMode(CONFIG)} · data:${DATA_DIR} · studio:/studio`);

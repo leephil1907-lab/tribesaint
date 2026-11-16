@@ -12,23 +12,48 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-/* ------------------------------------------------------------------ tokens */
-function invoiceSecret(cfg) {
+/* ------------------------------------------------------------------ tokens
+   A document link is a capability handed to a customer. It is signed with a
+   dedicated secret that lives on the server (env INVOICE_SECRET, or generated
+   into the store on first boot) so that rotating the studio password or the
+   Paystack keys never invalidates receipts already sitting in an inbox.
+   The old derivation is still accepted so nothing sent before is broken.
+ * ------------------------------------------------------------------------- */
+function legacySecret(cfg) {
   return crypto
     .createHash('sha256')
     .update('tc-invoice|' + (cfg.admin_password || '') + '|' + (cfg.paystack_secret_key || '') + '|' + (cfg.currency || 'NGN'))
     .digest();
 }
 
+function invoiceSecret(cfg) {
+  if (cfg.invoice_secret) {
+    return crypto.createHash('sha256').update('tc-invoice|' + cfg.invoice_secret).digest();
+  }
+  return legacySecret(cfg);
+}
+
+function sign(reference, key) {
+  return crypto.createHmac('sha256', key).update(String(reference)).digest('hex').slice(0, 32);
+}
+
 function invoiceToken(reference, cfg) {
-  return crypto.createHmac('sha256', invoiceSecret(cfg)).update(String(reference)).digest('hex').slice(0, 32);
+  return sign(reference, invoiceSecret(cfg));
+}
+
+function sameToken(a, b) {
+  const x = crypto.createHash('sha256').update(String(a)).digest();
+  const y = crypto.createHash('sha256').update(String(b)).digest();
+  return crypto.timingSafeEqual(x, y);
 }
 
 function tokenValid(reference, token, cfg) {
   if (!reference || !token) return false;
-  const a = Buffer.from(String(token));
-  const b = Buffer.from(invoiceToken(reference, cfg));
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
+  const given = String(token);
+  if (sameToken(given, invoiceToken(reference, cfg))) return true;
+  /* links issued before the dedicated secret existed */
+  if (cfg.invoice_secret && sameToken(given, sign(reference, legacySecret(cfg)))) return true;
+  return false;
 }
 
 /* ---------------------------------------------------------------- document */
