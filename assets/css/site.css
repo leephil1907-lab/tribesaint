@@ -209,6 +209,7 @@ table{border-collapse:collapse;width:100%}
 
 /* ---------- sections ---------- */
 .sec{padding:clamp(44px,7vw,84px) 0}
+@media(max-width:760px){.sec{padding:clamp(30px,6.4vw,44px) 0}.sec.tight{padding:26px 0}}
 .sec.tight{padding:clamp(30px,4vw,48px) 0}
 .sec-head{display:grid;gap:12px;margin-bottom:clamp(22px,3.4vw,38px)}
 .sec-head h2{margin:0;font-size:clamp(28px,5vw,58px)}
@@ -219,13 +220,22 @@ table{border-collapse:collapse;width:100%}
   position:relative;background:radial-gradient(75% 70% at 50% 30%,#150d0e,#040404 72%);
   border-block:1px solid var(--line);overflow:hidden;isolation:isolate;
 }
+/* the room fades out at the floor line and darkens at the corners */
+.stage::after{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(4,4,4,.6) 0%,rgba(4,4,4,0) 14%,rgba(4,4,4,0) 80%,rgba(4,4,4,.5) 91%,rgba(4,4,4,.88) 100%),
+    linear-gradient(90deg,#080506 0%,rgba(8,5,6,.55) 5%,rgba(8,5,6,0) 15%,rgba(8,5,6,0) 85%,rgba(8,5,6,.55) 95%,#080506 100%),
+    radial-gradient(115% 92% at 50% 42%,rgba(0,0,0,0) 54%,rgba(0,0,0,.55) 100%);
+}
 .stage-canvas{width:100%;height:clamp(380px,64vh,660px);display:block;touch-action:pan-y}
 .stage-overlay{
   position:absolute;inset:0;z-index:2;pointer-events:none;display:grid;
   grid-template-rows:auto 1fr auto;padding:clamp(14px,2.4vw,26px);
 }
-.stage-overlay .stage-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.stage-overlay .stage-bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.stage-overlay .stage-top{grid-row:1;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+/* pinned to the last grid row: the flex layout inside can never lift it into the middle */
+.stage-overlay .stage-bottom{grid-row:3;align-self:end;display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .stage-hint{font:400 8.5px/1 Oswald,sans-serif;letter-spacing:.26em;text-transform:uppercase;color:var(--mute);display:flex;align-items:center;gap:8px}
 .stage-hint i{width:14px;height:14px;border:1px solid currentColor;border-radius:50%;position:relative}
 .stage-hint i::after{content:"";position:absolute;inset:4px;border-inline:1px solid currentColor}
@@ -251,7 +261,7 @@ table{border-collapse:collapse;width:100%}
 .stage-loading .bar{width:110px;height:1px;background:rgba(236,227,207,.16);overflow:hidden}
 .stage-loading .bar i{display:block;height:100%;width:40%;background:var(--red);animation:loadSlide 1.3s var(--ease) infinite}
 @keyframes loadSlide{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
-.stage-caption{position:absolute;left:50%;bottom:0;translate:-50% 0;z-index:2;text-align:center;pointer-events:none;width:min(100% - 32px,520px);padding-bottom:8px}
+.stage-caption{position:relative;pointer-events:none;min-width:0;flex:1 1 220px;padding:0}
 .stage-caption .k{font:400 8.5px/1 Oswald,sans-serif;letter-spacing:.4em;text-transform:uppercase;color:var(--red)}
 .stage-caption .n{font-family:Anton,Impact,sans-serif;text-transform:uppercase;font-size:clamp(18px,3vw,26px);margin-top:6px}
 .stage-caption .p{font:400 10px/1 Oswald,sans-serif;letter-spacing:.2em;border:none;color:var(--mute);margin-top:4px}
@@ -283,7 +293,7 @@ table{border-collapse:collapse;width:100%}
   .hero-copy{align-self:center;padding-bottom:8px}
   .hero .stage{height:min(74vh,700px)}
   .hero .stage-canvas{height:100%}
-  .hero .stage-caption{position:static;translate:none;text-align:left;width:auto;padding:0;flex:1 1 auto}
+  .hero .stage-caption{text-align:left}
   .hero .stage-overlay .stage-bottom{position:absolute;inset:auto 0 0 0;padding:0 clamp(10px,1.6vw,18px) clamp(8px,1.4vw,14px);align-items:center}
 }
 @media (min-width:1024px) and (max-height:820px){
@@ -291,11 +301,46 @@ table{border-collapse:collapse;width:100%}
   .hero .stage{height:min(70vh,560px)}
 }
 
+/* phones: the caption sits above the chips, the chips scroll in their own rail */
+@media(max-width:860px){
+  .hero .stage-canvas{height:clamp(330px,52vh,430px)}
+  .stage-overlay{padding:12px}
+  .stage-overlay .stage-bottom{flex-direction:column-reverse;align-items:stretch;gap:9px}
+  .hero .stage-caption{flex:none;text-align:left}
+  .hero .stage-caption .n{font-size:19px}
+  .hero .stage-caption .p{font-size:9px;letter-spacing:.16em}
+  .stage-picker{max-width:none;width:100%;padding-right:26px}
+  .stage-picker button,.stage-picker a{min-width:50px;padding:6px 7px}
+  .stage-picker button img,.stage-picker a img{width:26px;height:26px}
+  .stage-picker button span,.stage-picker a span{font-size:6.5px;letter-spacing:.1em}
+  .stage-top .stage-hint{display:none}
+  .hero .stage-top{padding-bottom:0}
+  /* the caption already carries the drop number, so the top label would repeat it */
+  .hero .stage-top{display:none}
+  /* the chat pill floats over the rail: leave a corridor so no chip hides under it */
+  .hero .stage-picker{padding-right:74px}
+}
+
 /* ---------- product grid & cards ---------- */
 .grid-products{display:grid;gap:clamp(14px,2.2vw,22px);grid-template-columns:repeat(2,minmax(0,1fr))}
 @media(min-width:760px){.grid-products{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(min-width:1180px){.grid-products{grid-template-columns:repeat(4,minmax(0,1fr))}}
-@media(max-width:420px){.grid-products{grid-template-columns:1fr}}
+@media(max-width:520px){
+  .grid-products{gap:10px}
+  .card-body{padding:9px 9px 0;gap:6px}
+  .card-body h3{font-size:13.5px}
+  .card-body .variant{font-size:7px;letter-spacing:.13em;margin-top:4px}
+  .card-body .price{font-size:11px}
+  .card-sizes{gap:4px;padding:8px 9px 0}
+  /* a size pill is a tap target first: 30px tall even in the two-up grid */
+  .card-sizes .pill{min-width:24px;min-height:30px;display:grid;place-items:center;padding:0;font-size:8.5px;letter-spacing:.1em}
+  .card-media .badge{left:7px;top:7px;transform:scale(.86);transform-origin:left top}
+  .card-media .views{right:7px;bottom:7px;padding:3px}
+  .card-media .views button{padding:5px 5px;font-size:7px}
+  .card-foot{padding:8px 9px 9px;gap:5px}
+  .card-foot .btn{min-height:38px;padding:8px 4px;font-size:8px;letter-spacing:.08em}
+  .card-foot .hint{font-size:6.8px;letter-spacing:.08em}
+}
 .card{display:flex;flex-direction:column;border:1px solid var(--line);background:var(--ink-2);transition:border-color .3s,transform .3s}
 .card:hover{border-color:rgba(212,20,27,.5)}
 .card-media{position:relative;aspect-ratio:1/1;overflow:hidden;background:var(--media-bg)}
@@ -491,6 +536,16 @@ table{border-collapse:collapse;width:100%}
 }
 .foot-cac-n b{font-weight:400;color:var(--red)}
 @media(max-width:400px){.foot-cac{gap:9px;padding:8px 11px}.foot-cac-l{font-size:7px;letter-spacing:.16em}}
+@media(max-width:760px){
+  .foot{padding:36px 0 24px;margin-top:44px}
+  .foot-grid{gap:24px}
+  .foot-brand p{font-size:12.5px}
+  .foot-cols{gap:14px 16px}
+  .foot-cols h4{margin-bottom:8px}
+  .foot-cols a{padding:3px 0;font-size:12.5px}
+  .foot-base{margin-top:26px;padding-top:16px}
+  .foot-news{margin-top:14px}
+}
 .foot-contact{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin-top:16px}
 .foot-wa{
   display:inline-flex;align-items:center;gap:8px;padding:9px 13px;border:1px solid var(--edge-soft);
@@ -567,6 +622,8 @@ table{border-collapse:collapse;width:100%}
 @media(min-width:880px){.split{grid-template-columns:1fr 1fr}}
 .split-media{border:1px solid var(--line);overflow:hidden;aspect-ratio:4/5;background:#0e0d0d}
 .split-media img{width:100%;height:100%;object-fit:cover}
+/* a product or print photo is never cropped: it is framed on a matte instead */
+.split-media.contain img,.split-media img.contain{object-fit:contain;background:radial-gradient(70% 60% at 50% 40%,#141212,#080808 78%)}
 .quote-block{border-left:1px solid var(--red);padding-left:18px;display:grid;gap:10px}
 .quote-block p{font-size:clamp(16px,2vw,21px);line-height:1.5;color:var(--bone);font-weight:300;max-width:46ch}
 .quote-block cite{font:400 8.5px/1 Oswald,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:var(--mute);font-style:normal}
@@ -862,12 +919,15 @@ html.theme-anim .nav-sheet{transition:background-color .42s var(--ease),color .4
 
 /* on narrow screens the stage's bottom row wraps instead of overlapping */
 @media(max-width:560px){
+  /* faces and the link share one row so the plate keeps the height */
   .stage-live .stage-overlay .stage-bottom{
-    flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:10px;
+    flex-direction:row;align-items:center;justify-content:space-between;gap:10px;flex-wrap:nowrap;
   }
-  .stage-live .stage-picker{width:100%;overflow:visible;-webkit-mask-image:none;mask-image:none;padding-right:0;margin-bottom:6px}
-  .stage-open{align-self:flex-end}
+  .stage-live .stage-picker{width:auto;overflow:visible;-webkit-mask-image:none;mask-image:none;padding-right:0;flex:none}
+  .stage-live .stage-picker button{padding:7px 10px}
+  .stage-open{flex:none;font-size:8px;letter-spacing:.18em;white-space:nowrap}
   .stage-live .stage-canvas{height:clamp(300px,44vh,420px)}
+  .stage-live .stage-overlay .stage-bottom{gap:8px}
 }
 
 /* ==========================================================================

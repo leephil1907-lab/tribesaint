@@ -143,11 +143,12 @@
     const draw = () => {
       const all = TC.productList();
       const featured = all.filter((p) => p.featured !== false);
-      const list = (featured.length >= 8 ? featured : all).slice(0, 8);
+      /* the home page shows one row and sends the rest to the shop */
+      const list = (featured.length >= 4 ? featured : all).slice(0, 4);
       host.innerHTML = list.map(cardHTML).join('');
       wireCards(host);
       const count = $('#homeCount');
-      if (count) count.textContent = all.length + ' pieces in Drop 001';
+      if (count) count.textContent = 'Showing 4 of ' + all.length + ' pieces in Drop 001';
     };
     TC.on(draw);
     draw();
