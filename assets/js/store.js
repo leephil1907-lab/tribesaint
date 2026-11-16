@@ -190,8 +190,8 @@
     if (meter) {
       const pct = Math.min(100, Math.round((sub / CONFIG.freeDeliveryOver) * 100));
       meter.innerHTML = sub >= CONFIG.freeDeliveryOver
-        ? `Free delivery unlocked<span class="bar"><i style="width:100%"></i></span>`
-        : `Add <b>${money(CONFIG.freeDeliveryOver - sub)}</b> for free delivery<span class="bar"><i style="width:${pct}%"></i></span>`;
+        ? `Nigeria free delivery unlocked<span class="bar"><i style="width:100%"></i></span>`
+        : `Add <b>${money(CONFIG.freeDeliveryOver - sub)}</b> for Nigeria free delivery<span class="bar"><i style="width:${pct}%"></i></span>`;
     }
   }
 
