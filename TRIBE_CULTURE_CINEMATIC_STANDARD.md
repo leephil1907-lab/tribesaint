@@ -87,3 +87,16 @@ Navigation and interaction acceptance rules:
 8. Run route-by-route desktop and mobile checks, plus a complete product → bag → checkout → verified payment/confirmation test before release.
 
 The 3D homepage is one experience within this system. It must not dictate the information architecture or turn the store into a one-page campaign site.
+
+
+## Checkout and delivery acceptance standard
+
+- Checkout is a distinct multi-step commerce page, not a landing-page section.
+- The delivery-details stage must work without payment credentials and must never call the payment-initialisation endpoint until the payment stage is deliberately enabled.
+- Before payment is integrated, the customer can validate and save contact/delivery details locally, review the real bag lines, and see a destination-aware delivery estimate. Saving delivery details must clearly state that no order has been placed and no payment has been taken.
+- Nigeria delivery and international delivery are separate destinations. The current configured rates remain the source of truth: Nigeria nationwide delivery ₦3,000 (2–5 business days); international delivery ₦25,000 (5–10 business days).
+- The ₦150,000 free-delivery threshold applies to Nigeria only. International delivery remains chargeable at its configured rate.
+- The selected destination must update the delivery amount and ETA in checkout. The same domestic-only free-delivery wording must be used in the bag and product details.
+- Product colourway changes must update the selected product URL and support browser back/forward navigation. Buy now must add the selected in-stock size and quantity before navigating to checkout.
+- On mobile, both the order summary and delivery guidance remain visible; do not hide the shipping information card.
+- Payment-provider branding, payment methods, and payment CTAs stay out of the delivery-only stage until the payment integration is implemented and tested.
