@@ -1016,7 +1016,7 @@ async function handleApi(req, res, pathname, url) {
     const shippingRules = db.settings.shipping || cfg.shipping;
     const rule = shippingRules[zone] || shippingRules.NG;
     const freeOver = Number(db.settings.free_delivery_over ?? cfg.free_delivery_over);
-    const shipping = subtotal >= freeOver ? 0 : Number(rule.amount);
+    const shipping = zone === 'NG' && subtotal >= freeOver ? 0 : Number(rule.amount);
     const total = subtotal + shipping;
     const mode = paystackMode(cfg);
 
