@@ -131,7 +131,7 @@
     <div class="tot-row"><span>Subtotal</span><span id="bagSubtotal">₦0</span></div>
     <div class="tot-row big"><span>Total</span><span id="bagTotal">₦0</span></div>
     <button class="btn block" type="button" id="bagCheckout" disabled><span>Checkout</span></button>
-    <p class="tiny center">Paystack secured · Delivery calculated at checkout</p>
+    <p class="tiny center">Delivery estimate shown at checkout</p>
   </div>
 </aside>
 
@@ -150,7 +150,7 @@
     <div class="pdp">
       <form class="form" id="checkoutForm" novalidate>
         <h2 class="disp" style="font-size:clamp(20px,2.6vw,26px)">Delivery details</h2>
-        <p class="tiny co-lead">Your order is checked on our server before payment opens.</p>
+        <p class="tiny co-lead">Add your contact and delivery information. Review the items and delivery estimate before continuing.</p>
         <div class="form-grid">
           <div class="field full">
             <label for="coName">Full name</label>
@@ -196,24 +196,10 @@
           </div>
         </div>
         <p class="alert" id="checkoutAlert" role="alert"></p>
-        <div class="checkout-note"><span class="eyebrow red">Delivery review</span><p class="small muted">Your details are saved securely on this device for this checkout session. No order is submitted and no payment is taken at this stage.</p></div>
-        <!-- payment integration intentionally deferred -->
-        <div class="checkout-actions">
-          <span class="lbl">Encrypted checkout</span>
-          <ul>
-            <li>
-              <img class="pm-paystack mk-on-dark" src="assets/brand/partners/paystack-reverse.svg" alt="Paystack" height="15" loading="lazy" decoding="async">
-              <img class="pm-paystack mk-on-light" src="assets/brand/partners/paystack.svg" alt="Paystack" height="15" loading="lazy" decoding="async">
-            </li>
-            <li><img class="pm-visa" src="assets/brand/partners/visa.svg" alt="Visa" height="14" loading="lazy" decoding="async"></li>
-            <li>
-              <img class="pm-mc mk-on-dark" src="assets/brand/partners/mastercard-reverse.svg" alt="Mastercard" height="21" loading="lazy" decoding="async">
-              <img class="pm-mc mk-on-light" src="assets/brand/partners/mastercard.svg" alt="Mastercard" height="21" loading="lazy" decoding="async">
-            </li>
-          </ul>
-        </div>
+        <div class="checkout-note"><span class="eyebrow red">Delivery review</span><p class="small muted">Your delivery information is saved on this device for this checkout. Saving does not submit an order or take payment.</p></div>
         <button class="btn block" type="submit" id="saveDeliveryBtn"><span>Save delivery details</span></button>
-        <p class="tiny center" id="checkoutSaveNote" aria-live="polite">Payment will be available in a later release. Saving these details does not place an order.</p>
+        <p class="alert ok" id="checkoutSaveNote" role="status" aria-live="polite"></p>
+        <p class="tiny center">Payment will be added in a later release. You can return to update your delivery details at any time.</p>
       </form>
 
       <aside class="co-summary" id="coSummary">
