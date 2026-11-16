@@ -53,11 +53,11 @@
       "active": true,
       "featured": true,
       "badge": "Signature",
-      "image": "assets/products/saint-tee-black-front.jpg",
+      "image": "assets/products/card/saint-tee-black.webp",
       "images": {
-        "front": "assets/products/saint-tee-black-front.jpg",
-        "back": "assets/products/saint-tee-black-back.jpg",
-        "detail": "assets/products/saint-tee-black-detail.jpg"
+        "front": "assets/products/cut/saint-tee-black-front.webp",
+        "back": "assets/products/cut/saint-tee-black-back.webp",
+        "detail": "assets/products/cut/saint-tee-black-detail.webp"
       },
       "blurb": "The signature piece. Arched red SAINT across the back, three doves breaking the baseline, the doctrine line beneath it and TRIBE · globes · SOCIETY at the hem. The interlocking TC monogram sits quietly at the left chest.",
       "details": {
@@ -92,11 +92,11 @@
       "active": true,
       "featured": true,
       "badge": "Signature",
-      "image": "assets/products/saint-tee-white-front.jpg",
+      "image": "assets/products/card/saint-tee-white.webp",
       "images": {
-        "front": "assets/products/saint-tee-white-front.jpg",
-        "back": "assets/products/saint-tee-white-back.jpg",
-        "detail": "assets/products/saint-tee-white-detail.jpg"
+        "front": "assets/products/cut/saint-tee-white-front.webp",
+        "back": "assets/products/cut/saint-tee-white-back.webp",
+        "detail": "assets/products/cut/saint-tee-white-detail.webp"
       },
       "blurb": "The same Saint print on a white heavyweight body. Red ink on cotton, the TC monogram at the left chest, the doctrine line across the back.",
       "details": {
@@ -131,11 +131,11 @@
       "active": true,
       "featured": true,
       "badge": "Members",
-      "image": "assets/products/members-tee-black-front.jpg",
+      "image": "assets/products/card/members-tee-black.webp",
       "images": {
-        "front": "assets/products/members-tee-black-front.jpg",
-        "back": "assets/products/members-tee-black-back.jpg",
-        "detail": "assets/products/members-tee-black-detail.jpg"
+        "front": "assets/products/cut/members-tee-black-front.webp",
+        "back": "assets/products/cut/members-tee-black-back.webp",
+        "detail": "assets/products/cut/members-tee-black-detail.webp"
       },
       "blurb": "TRI / BE stacked in heavy slab type with the skull between the letters, members only scripted across it in red. Property of the Tribe Society sits at the hem; the crest is printed at the centre back.",
       "details": {
@@ -170,10 +170,10 @@
       "active": true,
       "featured": true,
       "badge": "Members",
-      "image": "assets/products/members-tee-white-front.jpg",
+      "image": "assets/products/card/members-tee-white.webp",
       "images": {
-        "front": "assets/products/members-tee-white-front.jpg",
-        "back": "assets/products/members-tee-white-back.jpg",
+        "front": "assets/products/cut/members-tee-white-front.webp",
+        "back": "assets/products/cut/members-tee-white-back.webp",
         "detail": "assets/products/members-tee-white-detail.jpg"
       },
       "blurb": "The Members Only graphic in black on white cotton, the crest printed small at the centre back. Same heavyweight body, same boxy cut.",
@@ -209,11 +209,11 @@
       "active": true,
       "featured": true,
       "badge": "Worldwide",
-      "image": "assets/products/worldwide-tee-black-front.jpg",
+      "image": "assets/products/card/worldwide-tee-black.webp",
       "images": {
-        "front": "assets/products/worldwide-tee-black-front.jpg",
-        "back": "assets/products/worldwide-tee-black-back.jpg",
-        "detail": "assets/products/worldwide-tee-black-detail.jpg"
+        "front": "assets/products/cut/worldwide-tee-black-front.webp",
+        "back": "assets/products/cut/worldwide-tee-black-back.webp",
+        "detail": "assets/products/cut/worldwide-tee-black-detail.webp"
       },
       "blurb": "TRIBE SOCIETY in washed college lettering with Worldwide scripted in red beneath it. The back carries LOS ANGELES over the oversized TC crest and streetwear WORLDWIDE.",
       "details": {
@@ -248,11 +248,11 @@
       "active": true,
       "featured": true,
       "badge": "Worldwide",
-      "image": "assets/products/worldwide-tee-white-front.jpg",
+      "image": "assets/products/card/worldwide-tee-white.webp",
       "images": {
-        "front": "assets/products/worldwide-tee-white-front.jpg",
-        "back": "assets/products/worldwide-tee-white-back.jpg",
-        "detail": "assets/products/worldwide-tee-white-detail.jpg"
+        "front": "assets/products/cut/worldwide-tee-white-front.webp",
+        "back": "assets/products/cut/worldwide-tee-white-back.webp",
+        "detail": "assets/products/cut/worldwide-tee-white-detail.webp"
       },
       "blurb": "The Worldwide graphic on white — charcoal distressed lettering, red script, the full LOS ANGELES crest on the back.",
       "details": {
@@ -287,11 +287,11 @@
       "active": true,
       "featured": true,
       "badge": "Archive",
-      "image": "assets/products/sadness-tee-white-front.jpg",
+      "image": "assets/products/card/sadness-tee-white.webp",
       "images": {
-        "front": "assets/products/sadness-tee-white-front.jpg",
-        "back": "assets/products/sadness-tee-white-back.jpg",
-        "detail": "assets/products/sadness-tee-white-detail.jpg"
+        "front": "assets/products/cut/sadness-tee-white-front.webp",
+        "back": "assets/products/cut/sadness-tee-white-back.webp",
+        "detail": "assets/products/cut/sadness-tee-white-detail.webp"
       },
       "blurb": "SADNESS in halftone caps over TEARS AREN'T WEAKNESS. A newsprint collage of portraits carries the line: behind every sweet smile, there is a bitter sadness that no one can ever see and feel. Tribe Culture printed at the hem.",
       "details": {
@@ -326,11 +326,11 @@
       "active": true,
       "featured": true,
       "badge": "Summer",
-      "image": "assets/products/flame-tank-white-front.jpg",
+      "image": "assets/products/card/flame-tank-white.webp",
       "images": {
-        "front": "assets/products/flame-tank-white-front.jpg",
-        "back": "assets/products/flame-tank-white-back.jpg",
-        "detail": "assets/products/flame-tank-white-detail.jpg"
+        "front": "assets/products/cut/flame-tank-white-front.webp",
+        "back": "assets/products/cut/flame-tank-white-back.webp",
+        "detail": "assets/products/cut/flame-tank-white-detail.webp"
       },
       "blurb": "Cut-off muscle vest in white cotton with red flame columns running both sides. Red TC crest at the chest, Tribe Society printed at the back neck.",
       "details": {
@@ -365,10 +365,10 @@
       "active": true,
       "featured": false,
       "badge": "Summer",
-      "image": "assets/products/ringer-tank-black-front.jpg",
+      "image": "assets/products/card/ringer-tank-black.webp",
       "images": {
-        "front": "assets/products/ringer-tank-black-front.jpg",
-        "back": "assets/products/ringer-tank-black-back.jpg",
+        "front": "assets/products/cut/ringer-tank-black-front.webp",
+        "back": "assets/products/cut/ringer-tank-black-back.webp",
         "detail": "assets/products/ringer-tank-black-detail.jpg"
       },
       "blurb": "Black vest with contrast white ribbing at the neck and armholes. White TC crest at the chest, TRIBE across the back yoke.",
@@ -404,11 +404,11 @@
       "active": true,
       "featured": true,
       "badge": "Two-piece",
-      "image": "assets/products/tracksuit-black-front.jpg",
+      "image": "assets/products/card/tracksuit-black.webp",
       "images": {
-        "front": "assets/products/tracksuit-black-front.jpg",
-        "back": "assets/products/tracksuit-black-back.jpg",
-        "detail": "assets/products/tracksuit-black-detail.jpg"
+        "front": "assets/products/cut/tracksuit-black-front.webp",
+        "back": "assets/products/cut/tracksuit-black-back.webp",
+        "detail": "assets/products/cut/tracksuit-black-detail.webp"
       },
       "blurb": "Full zip jacket and wide-leg trousers in black tricot with white piping down the sleeves and legs. TC crest badge at the chest and thigh, Tribe script at the opposite side. Sold as a set.",
       "details": {
@@ -443,11 +443,11 @@
       "active": true,
       "featured": true,
       "badge": "Everyday",
-      "image": "assets/products/cadet-cap-black-front.jpg",
+      "image": "assets/products/card/cadet-cap-black.webp",
       "images": {
-        "front": "assets/products/cadet-cap-black-front.jpg",
-        "back": "assets/products/cadet-cap-black-back.jpg",
-        "detail": "assets/products/cadet-cap-black-detail.jpg"
+        "front": "assets/products/cut/cadet-cap-black-front.webp",
+        "back": "assets/products/cut/cadet-cap-black-back.webp",
+        "detail": "assets/products/cut/cadet-cap-black-detail.webp"
       },
       "blurb": "Soft-crown military cut with a curved brim. The TC monogram is stitched at the front crown and the Tribe Culture script runs along the side. Adjustable strap, one size.",
       "details": {
@@ -474,11 +474,11 @@
       "active": true,
       "featured": false,
       "badge": "Archive",
-      "image": "assets/products/crest-print-front.jpg",
+      "image": "assets/products/card/crest-print.webp",
       "images": {
-        "front": "assets/products/crest-print-front.jpg",
-        "back": "assets/products/crest-print-back.jpg",
-        "detail": "assets/products/crest-print-detail.jpg"
+        "front": "assets/products/cut/crest-print-front.webp",
+        "back": "assets/products/cut/crest-print-back.webp",
+        "detail": "assets/products/cut/crest-print-detail.webp"
       },
       "blurb": "The house crest as a printed artefact: engraved angels, the Tribe Culture script and ESTABLISHED MMXXVI around an arched panel dated 20 · 26. Printed on 250 gsm uncoated stock, shipped rolled in a tube.",
       "details": {
