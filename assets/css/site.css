@@ -300,44 +300,140 @@ html[data-motion="off"] .annbar-track{animation:none}
 .stage-caption .p{font:400 10px/1 Oswald,sans-serif;letter-spacing:.2em;border:none;color:var(--mute);margin-top:4px}
 
 /* ---------- hero ----------
-   Two jobs, in this order: say what the house is, and show the piece.
-   On phones the garment comes first — a shopper should never scroll past a
-   full paragraph of type before seeing what is for sale. */
-.hero{position:relative;padding:0}
-.hero-copy{
-  position:relative;z-index:3;display:grid;gap:14px;
-  width:min(100% - (var(--pad)*2),1320px);margin-inline:auto;
-  padding:clamp(22px,3.2vw,40px) 0 clamp(20px,3vw,28px);
+   A photograph of the garment on a person, and the words beside it. The 3D
+   rail is not the hero any more: it is the discovery section underneath. */
+.hero{
+  position:relative;isolation:isolate;background:var(--ink);
+  overflow:hidden;
 }
-.hero-h1{font-size:clamp(44px,10.6vw,124px);line-height:.94}
-.hero-h1 .script{display:block;font-size:.4em;color:var(--red);margin-top:.1em;line-height:.9}
-.hero-lede{font:300 clamp(14px,1.1vw,16.5px)/1.62 Oswald,sans-serif;color:var(--parch);max-width:44ch}
+.hero::before{
+  content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(58% 62% at 78% 46%,rgba(150,22,26,.30),transparent 68%),
+    radial-gradient(120% 90% at 8% 10%,rgba(236,227,207,.04),transparent 60%);
+}
+.hero-shot{position:relative;margin:0;overflow:hidden;background:#080707}
+/* only the campaign frame is absolutely filled — the inset keeps its own flow */
+.hero-shot > picture{position:absolute;inset:0;display:block}
+.hero-shot img{width:100%;height:100%;object-fit:cover;object-position:38% 18%;display:block}
+
+/* a real garment photograph pinned over the campaign frame: the back print,
+   full and uncropped, so the piece is provable and not just implied */
+.hero-inset{
+  position:absolute;z-index:3;right:clamp(12px,2.2vw,26px);top:clamp(12px,2.2vw,26px);
+  width:clamp(112px,15vw,186px);display:block;text-decoration:none;
+  border:1px solid rgba(236,227,207,.24);background:#0a0808;
+  box-shadow:0 22px 46px -18px rgba(0,0,0,.95);
+  transform:rotate(-1.6deg);
+  transition:transform .4s var(--ease),border-color .3s,box-shadow .4s;
+}
+.hero-inset picture,.hero-inset img{display:block}
+.hero-inset img{width:100%;height:auto;aspect-ratio:760/812;object-fit:cover}
+.hero-inset-k{
+  display:block;padding:7px 8px 8px;text-align:center;
+  font:400 7px/1 Oswald,sans-serif;letter-spacing:.26em;text-transform:uppercase;color:var(--mute);
+  border-top:1px solid rgba(236,227,207,.12);
+}
+.hero-inset:hover{transform:rotate(0) translateY(-3px);border-color:rgba(236,227,207,.45);box-shadow:0 28px 54px -18px rgba(0,0,0,.95)}
+.hero-inset:hover .hero-inset-k{color:var(--bone)}
+/* the grain and the edges: a photograph, not a sticker */
+.hero-shot-grain{
+  position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:
+    linear-gradient(180deg,rgba(5,5,5,.55),transparent 22%,transparent 62%,rgba(5,5,5,.92)),
+    linear-gradient(90deg,rgba(5,5,5,.82),transparent 42%);
+}
+.hero-shot-cap{
+  position:absolute;z-index:3;left:clamp(14px,2.4vw,26px);bottom:clamp(12px,2vw,22px);
+  display:grid;gap:5px;padding:10px 12px;
+  border-left:2px solid var(--red);background:rgba(5,5,5,.42);backdrop-filter:blur(3px);
+}
+.hero-shot-cap .k{font:400 8px/1 Oswald,sans-serif;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+.hero-shot-cap .k b{color:var(--bone);font-weight:400}
+.hero-shot-cap .p{font:400 10px/1 Oswald,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--parch);text-decoration:none;display:inline-flex;gap:8px;align-items:center}
+.hero-shot-cap .p:hover{color:var(--bone)}
+.hero-shot-cap .arw{color:var(--red);transition:transform .3s var(--ease)}
+.hero-shot-cap .p:hover .arw{transform:translateX(3px)}
+
+.hero-copy{
+  position:relative;z-index:1;display:grid;gap:16px;align-content:center;
+  padding:clamp(28px,5vw,48px) clamp(16px,4vw,40px) clamp(30px,5vw,52px);
+}
+.hero-h1{font-size:clamp(44px,9vw,104px);line-height:.92;letter-spacing:-.01em}
+.hero-h1 .script{display:block;font-size:.56em;color:var(--red);line-height:.86;margin-top:.06em;letter-spacing:0}
+.hero-lede{font:300 clamp(14px,1.05vw,16px)/1.62 Oswald,sans-serif;color:var(--parch);max-width:46ch}
 .hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:2px}
 .hero-actions .btn{flex:1 1 auto;min-width:0}
 
-/* the piece the rail is holding, named and priced where the eye already is */
-.hero-now{
-  display:grid;gap:5px;margin-top:6px;padding:14px 16px;text-decoration:none;
-  border:1px solid var(--line);border-left:2px solid var(--red);background:var(--wash-2);
-  transition:border-color .25s,background .25s,transform .25s var(--ease);
+/* the promise row: three facts, drawn as line marks — the SYNA lesson */
+.hero-promise{
+  display:grid;gap:12px;margin:6px 0 0;padding-top:16px;border-top:1px solid var(--line);
+  grid-template-columns:repeat(3,minmax(0,1fr));
 }
-.hero-now:hover{border-color:var(--line);border-left-color:var(--red);background:var(--wash);transform:translateX(2px)}
-.hero-now-k{font:400 8px/1 Oswald,sans-serif;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
-.hero-now-k b{color:var(--red);font-weight:400}
-.hero-now-n{font-family:Anton,Impact,sans-serif;font-size:clamp(16px,1.6vw,20px);letter-spacing:.01em;text-transform:uppercase;color:var(--bone);line-height:1.05}
-.hero-now-p{font:400 9.5px/1 Oswald,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
-.hero-now-p em{font-style:normal;color:var(--parch)}
-.hero-now:hover .hero-now-p em{color:var(--red)}
-.hero-trust{
-  font:400 8px/1.7 Oswald,sans-serif;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--mute);padding-top:12px;border-top:1px solid var(--line-2);margin-top:2px;
+.hero-promise li{display:grid;gap:5px;color:var(--mute)}
+.hero-promise svg{color:var(--red);width:17px;height:17px}
+.hero-promise b{font:400 8.5px/1.2 Oswald,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--bone)}
+.hero-promise i{font:300 9.5px/1.45 Oswald,sans-serif;letter-spacing:.06em;color:var(--mute);font-style:normal}
+
+/* desktop: words left, the model holding the right edge */
+@media(min-width:860px){
+  .hero{
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.02fr);
+    align-items:stretch;
+    height:calc(100svh - var(--nav) - var(--ann));
+    min-height:600px;
+  }
+  .hero-shot{order:2;min-height:0}
+  .hero-copy{
+    order:1;
+    padding:clamp(34px,5.4vh,64px) clamp(28px,4vw,64px) clamp(34px,5vh,56px) clamp(20px,5.2vw,96px);
+    max-width:min(100%,700px);
+  }
+  /* desktop: the frame sits against light or dark ink, so it keeps its own
+     dark edges and reads as an editorial plate rather than a cut-out */
+  .hero-shot{box-shadow:inset 0 0 0 1px rgba(0,0,0,.5)}
+  .hero-shot-grain{
+    background:
+      linear-gradient(180deg,rgba(5,5,5,.5),transparent 24%,transparent 66%,rgba(5,5,5,.86)),
+      linear-gradient(90deg,rgba(5,5,5,.72),rgba(5,5,5,.2) 10%,transparent 30%);
+  }
+  .hero-shot img{object-position:48% 14%}
+  .hero-inset{right:clamp(18px,2.6vw,34px);top:clamp(18px,2.6vw,34px);bottom:auto;width:clamp(140px,13.5vw,200px)}
 }
 
-/* ---------- rail controls ----------
-   The stage is a column: room on top, a control bar underneath. Nothing floats
-   over the garment, so the piece is never covered on any screen. */
-/* the rail is a dark room in both themes, so it re-pins its own palette:
-   in daylight mode the stage must not inherit ink-on-bone type */
+/* phones: the photograph carries the top, the headline printed on it */
+@media(max-width:859px){
+  .hero{display:flex;flex-direction:column}
+  .hero-shot{order:1;height:min(64svh,540px);flex:none}
+  .hero-shot img{object-position:62% 12%}
+  .hero-shot-cap{bottom:10px;left:12px;padding:7px 9px;max-width:calc(100% - 132px)}
+  .hero-shot-cap .p{font-size:9px;letter-spacing:.14em}
+  .hero-inset{width:94px;right:10px;top:10px}
+  .hero-inset-k{font-size:6px;letter-spacing:.2em;padding:5px 4px 6px}
+  .hero-copy{order:2;margin-top:0;padding-top:clamp(20px,4vw,26px)}
+  .hero-h1{font-size:clamp(42px,12.6vw,64px)}
+  .hero-lede{font-size:14px;max-width:34ch}
+  .hero-actions{gap:8px;margin-top:4px}
+  .hero-actions .btn{flex:1 1 100%}
+  .hero-promise{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding-top:14px}
+  .hero-promise i{font-size:9px}
+  .hero-promise b{font-size:8px;letter-spacing:.16em}
+}
+
+/* ---------- the rail, below the hero ---------- */
+.rail-sec{padding:clamp(38px,6vw,74px) 0 clamp(34px,5vw,60px);border-top:1px solid var(--line)}
+.rail-head{
+  display:grid;gap:14px;margin-bottom:clamp(18px,2.6vw,28px);
+}
+@media(min-width:860px){
+  .rail-head{grid-template-columns:minmax(0,1fr) minmax(0,.8fr);align-items:end;gap:32px}
+  .rail-head .rail-note{text-align:right;justify-self:end;max-width:38ch}
+}
+.rail-head h2{font-size:clamp(26px,3.8vw,46px);margin-top:8px}
+.rail-note{font:300 12.5px/1.6 Oswald,sans-serif;color:var(--mute);margin:0}
+.rail-stage{height:clamp(420px,68svh,720px)}
+@media(max-width:859px){.rail-stage{height:clamp(360px,58svh,520px)}}
+
 .stage[data-stage="rail"]{
   --bone:#ece3cf;--parch:#d9cdb2;--mute:#8f8778;
   --line:rgba(236,227,207,.14);--line-2:rgba(236,227,207,.08);--wash-2:rgba(236,227,207,.03);
@@ -349,6 +445,8 @@ html[data-motion="off"] .annbar-track{animation:none}
   gap:16px;flex-wrap:wrap;padding:14px clamp(14px,2vw,22px);
   border-top:1px solid var(--line);background:rgba(5,5,5,.55);
 }
+/* the bar now always carries the real caption, so the placeholder hint goes */
+.stage-bar-hint{display:none}
 .stage-nav{display:flex;align-items:center;gap:10px;margin-left:auto}
 .stage-arrow{
   display:grid;place-items:center;width:36px;height:36px;flex:none;padding:0;cursor:pointer;
@@ -368,62 +466,6 @@ html[data-motion="off"] .annbar-track{animation:none}
 .stage[data-stage="rail"] .stage-picker button:hover i{background:rgba(236,227,207,.62)}
 .stage[data-stage="rail"] .stage-picker button[aria-pressed="true"] i{width:18px;background:var(--red)}
 
-
-/* desktop: copy left, the rail runs off the right edge of the window */
-@media (min-width:1024px){
-  .hero{
-    display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);
-    gap:clamp(20px,3vw,52px);align-items:stretch;
-    width:100%;max-width:none;margin:0;
-    height:calc(100svh - var(--nav) - var(--ann));
-    min-height:600px;
-  }
-  .hero-copy{
-    width:auto;margin:0;align-self:center;
-    padding:clamp(18px,3.4vh,48px) 0 clamp(18px,3.4vh,40px) clamp(var(--pad),5.4vw,110px);
-    max-width:min(100%,720px);
-  }
-  .hero .stage{height:auto;min-height:0;border-left:1px solid var(--line);border-block:0}
-  .hero .stage[data-stage="rail"] .stage-canvas{height:auto;min-height:0}
-  .hero .stage-overlay{padding:clamp(16px,2.2vw,26px) clamp(16px,2.2vw,30px) 0 clamp(18px,2.6vw,34px)}
-  .hero .stage-bar{padding:14px clamp(70px,7.4vw,92px) 14px clamp(18px,2.6vw,34px);justify-content:space-between}
-}
-.stage-bar-hint{
-  display:none;font:400 8.5px/1 Oswald,sans-serif;letter-spacing:.26em;text-transform:uppercase;color:var(--mute);
-}
-@media (min-width:1024px){
-  .hero .stage-bar .stage-caption{display:none}
-  .hero .stage-bar-hint{display:block}
-  .hero .stage-top .stage-hint{display:none}
-}
-@media (min-width:1024px) and (max-height:820px){
-  .hero-h1{font-size:clamp(40px,6.6vw,86px)}
-}
-
-/* phones and tablets: the rail first, then the words, then the controls */
-@media(max-width:1023px){
-  .hero{display:flex;flex-direction:column;padding:0}
-  .hero .stage{order:-1;border-top:1px solid var(--line)}
-  .hero .stage[data-stage="rail"] .stage-canvas{height:clamp(250px,40svh,400px)}
-  .hero-copy{padding-top:clamp(20px,3.6vw,28px);gap:13px}
-  .hero-h1{font-size:clamp(46px,12.4vw,72px);line-height:.9}
-  .hero-lede{font-size:14.5px;max-width:34ch}
-  .hero-actions{gap:8px;margin-top:4px}
-  .hero-actions .btn{flex:1 1 100%}
-  .hero-now{display:none}
-  .hero-trust{padding-top:10px}
-}
-@media(max-width:860px){
-  .stage-overlay{padding:12px 14px 0}
-  .stage-top .stage-hint{display:none}
-  .stage-bar{padding:12px 14px;gap:12px}
-  .stage-bar .stage-caption{flex:1 1 100%}
-  .stage-nav{gap:12px;margin-left:0;width:100%}
-  .stage[data-stage="rail"] .stage-picker{flex:1 1 auto;justify-content:center}
-  .stage[data-stage="rail"] .stage-picker button{width:auto;flex:1 1 0;min-width:0;max-width:34px}
-  .stage[data-stage="rail"] .stage-picker button i{width:4px}
-  .stage[data-stage="rail"] .stage-picker button[aria-pressed="true"] i{width:14px}
-}
 
 /* ---------- product grid & cards ---------- */
 .grid-products{display:grid;gap:clamp(14px,2.2vw,22px);grid-template-columns:repeat(2,minmax(0,1fr))}

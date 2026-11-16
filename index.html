@@ -143,21 +143,62 @@
 <section class="hero" aria-labelledby="heroTitle">
   <div class="hero-copy">
     <p class="eyebrow red rise">Drop 001 · Established MMXXVI</p>
-    <h1 class="disp hero-h1 rise d1" id="heroTitle">Enter the Tribe<span class="script">Tribe Culture</span></h1>
-    <p class="hero-lede rise d2">Twelve heavyweight pieces, cut boxy and printed by hand in Lagos — made to be worn hard, priced to be kept, and never restocked.</p>
+    <h1 class="disp hero-h1 rise d1" id="heroTitle">Wear your own <span class="script">truth.</span></h1>
+    <p class="hero-lede rise d2">Twelve heavyweight pieces, cut boxy and printed by hand in Lagos — worn by people who would rather find new truth than keep old prejudices. Small runs. No restocks.</p>
     <div class="hero-actions rise d3">
       <a class="btn hero-btn" href="shop.html"><span>Shop Drop 001</span></a>
-      <a class="btn ghost hero-btn" href="product.html?sku=saint-tee-black"><span>See the Saint tee</span></a>
+      <a class="btn ghost hero-btn" href="product.html?sku=saint-tee-black"><span>The Saint tee · ₦45,000</span></a>
     </div>
-    <a class="hero-now rise d3" id="heroNow" href="product.html?sku=saint-tee-black">
-      <span class="hero-now-k">On the rail · <b>01 / 12</b></span>
-      <span class="hero-now-n">Saint Tee — Black / Red print</span>
-      <span class="hero-now-p">₦45,000 · <em>Open the piece</em></span>
-    </a>
-    <p class="hero-trust rise d3">260&nbsp;gsm combed cotton · hand-cured print · free delivery over ₦150,000 · RC&nbsp;7534126</p>
+    <ul class="hero-promise rise d3" aria-label="The house promises">
+      <li>
+        <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="12" cy="10" r="2.4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+        <b>Lagos design</b><i>Drawn and printed in Nigeria</i>
+      </li>
+      <li>
+        <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M3 12h18M12 3c2.6 3 2.6 15 0 18M12 3c-2.6 3-2.6 15 0 18" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>
+        <b>Worldwide</b><i>2–5 days in Nigeria</i>
+      </li>
+      <li>
+        <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.4c.6 6 4 9.4 10 10-6 .6-9.4 4-10 10-.6-6-4-9.4-10-10 6-.6 9.4-4 10-10Z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+        <b>Limited drop</b><i>Small run, never restocked</i>
+      </li>
+    </ul>
   </div>
 
-  <div class="stage hero-stage" data-stage="rail" id="heroStage">
+  <figure class="hero-shot">
+    <picture>
+      <source media="(max-width:859px)" srcset="assets/brand/hero-model-m.webp" type="image/webp">
+      <source srcset="assets/brand/hero-model.webp" type="image/webp">
+      <source media="(max-width:859px)" srcset="assets/brand/hero-model-m.jpg" type="image/jpeg">
+      <img src="assets/brand/hero-model.jpg" alt="A model wearing the Saint Tee — heavyweight black cotton, the red TC monogram at the left chest — lit by a red rim light in a concrete underpass." width="1400" height="1738" fetchpriority="high" decoding="async">
+    </picture>
+    <span class="hero-shot-grain" aria-hidden="true"></span>
+
+    <figcaption class="hero-shot-cap">
+      <span class="k">Worn here · <b>Saint Tee</b></span>
+      <a class="p" href="product.html?sku=saint-tee-black">Black / Red print · ₦45,000 <span class="arw">→</span></a>
+    </figcaption>
+
+    <a class="hero-inset" href="product.html?sku=saint-tee-black" aria-label="See the Saint Tee back print">
+      <picture>
+        <source srcset="assets/brand/hero-backprint.webp" type="image/webp">
+        <img src="assets/brand/hero-backprint.jpg" alt="Saint Tee back print: arched red SAINT lettering, three doves, the doctrine line and TRIBE SOCIETY in twin globes." width="760" height="812" loading="lazy" decoding="async">
+      </picture>
+      <span class="hero-inset-k">The back print</span>
+    </a>
+  </figure>
+</section>
+
+<section class="rail-sec" id="rail" aria-labelledby="railTitle">
+  <div class="wrap rail-head">
+    <div>
+      <p class="eyebrow red"><i class="live-dot" aria-hidden="true"></i> The rail · live 3D</p>
+      <h2 class="disp" id="railTitle">Twelve pieces, one hanger at a time</h2>
+    </div>
+    <p class="rail-note">Drag the rail, or use the arrows. Every piece is the real garment — front, chest and back.</p>
+  </div>
+  <div class="wrap">
+    <div class="stage rail-stage" data-stage="rail" id="heroStage">
     <canvas class="stage-canvas" role="listbox" tabindex="0" aria-label="The twelve Drop 001 pieces hanging on a rail. Drag or use the arrow keys to slide along the rail, press Enter to open the piece."></canvas>
     <div class="stage-loading"><span class="bar"><i></i></span></div>
     <div class="stage-fallback" hidden>
@@ -191,6 +232,7 @@
         </button>
       </div>
     </div>
+  </div>
   </div>
 </section>
 
