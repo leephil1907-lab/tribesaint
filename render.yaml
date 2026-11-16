@@ -10,6 +10,11 @@ services:
     healthCheckPath: /api/health
     maxShutdownDelaySeconds: 20
     autoDeploy: true
+    # the store is a single JSON file on one disk: never run two instances
+    numInstances: 1
+    # preview environments would boot without the disk and with an empty store
+    previews:
+      generation: "off"
     disk:
       name: tribe-data
       mountPath: /data
@@ -39,5 +44,9 @@ services:
         value: "false"
       - key: LOW_STOCK_AT
         value: "3"
+      # optional. Signs receipt links. Leave blank and the server generates one
+      # on the disk at first boot, so links survive password changes either way.
+      - key: INVOICE_SECRET
+        sync: false
       - key: NODE_ENV
         value: production

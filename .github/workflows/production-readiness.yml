@@ -20,11 +20,11 @@ jobs:
         with:
           node-version: 20
       - name: Check JavaScript syntax
-        run: |
-          node --check server.js
-          node --check invoice.js
-          node --check assets/js/store.js
-          node --check assets/js/pages.js
-          node --check scripts/security-smoke.js
+        run: npm run check && node --check scripts/security-smoke.js && node --check scripts/deploy-smoke.js
       - name: Run production security smoke checks
-        run: node scripts/security-smoke.js
+        run: npm run smoke
+      - name: Boot the server the way Render does
+        # NODE_ENV=production, an injected PORT, a temp data directory and no
+        # Paystack or mail keys: a deploy must survive all of that. This is the
+        # step that catches a crash-on-boot before it reaches production.
+        run: npm run deploy-check

@@ -2,14 +2,17 @@
   "name": "tribe-culture-store",
   "version": "5.0.0",
   "private": true,
-  "description": "Tribe Culture \u2014 multi-page streetwear store with a live 3D showcase, dual theme, server-authoritative Paystack checkout, branded invoices and the private /studio console. Zero runtime dependencies.",
+  "description": "Tribe Culture — multi-page streetwear store with a live 3D showcase, dual theme, server-authoritative Paystack checkout, branded invoices and the private /studio console. Zero runtime dependencies.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "smoke": "node scripts/security-smoke.js",
+    "deploy-check": "node scripts/deploy-smoke.js",
+    "check": "node --check server.js && node --check invoice.js && node --check assets/js/store.js && node --check assets/js/pages.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "dependencies": {},
   "license": "UNLICENSED"
