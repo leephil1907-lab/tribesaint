@@ -65,6 +65,38 @@
   color-scheme:dark;
   --ease:cubic-bezier(.16,.84,.24,1);
 }
+/* ---- daylight edition (mirrors the storefront theme) ---- */
+[data-theme="light"]{
+  --ink:#f4ecdd;
+  --ink-2:#ece3cf;
+  --bone:#141110;
+  --parch:#2b2521;
+  --red:#b3121a;
+  --ox:#7a0f14;
+  --mute:#6f6659;
+  --line:rgba(20,17,16,.17);
+  color-scheme:light;
+}
+[data-theme="light"] body{background:var(--ink);color:var(--bone)}
+[data-theme="light"] .topbar.solid{background:rgba(244,236,221,.88)}
+[data-theme="light"] .topnav .shop:hover,
+[data-theme="light"] .btn:hover,
+[data-theme="light"] .btn.ghost:hover{color:#fff}
+[data-theme="light"] .emblem-card{background:radial-gradient(80% 70% at 50% 0%,#efe4cf,#e2d5ba 70%)}
+[data-theme="light"] .value,
+[data-theme="light"] .next-card{box-shadow:0 40px 80px -44px rgba(90,70,45,.4)}
+[data-theme="light"] .stage{background:radial-gradient(75% 70% at 50% 30%,#150d0e,#040404 72%)}
+.theme-btn{
+  display:grid!important;place-items:center;width:34px;height:34px;margin-left:14px;padding:0;
+  border:1px solid var(--line);border-radius:50%;color:var(--bone);
+  transition:border-color .3s,color .3s,transform .3s var(--ease);
+}
+.theme-btn:hover{border-color:var(--red);color:var(--red);transform:rotate(35deg)}
+.theme-btn .i-sun{display:none}
+.theme-btn .i-moon{display:block}
+[data-theme="light"] .theme-btn .i-sun{display:block}
+[data-theme="light"] .theme-btn .i-moon{display:none}
+@media(max-width:899px){.theme-btn{margin-left:auto}}
 [hidden]{display:none!important}
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -430,12 +462,12 @@ section{position:relative;scroll-margin-top:calc(var(--nav) + 18px)}
     <a href="about.html">About</a>
     <a href="help.html">Help</a>
     <a class="shop" href="shop.html">Shop Drop 001</a>
+  </nav>
     <button class="icon-btn theme-btn" type="button" data-theme-toggle aria-pressed="false" aria-label="Switch to daylight theme">
       <svg class="i-moon" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
       <svg class="i-sun" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M12 2.4v2.4M12 19.2v2.4M2.4 12h2.4M19.2 12h2.4M5.2 5.2l1.7 1.7M17.1 17.1l1.7 1.7M18.8 5.2l-1.7 1.7M6.9 17.1l-1.7 1.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
       <span class="sr">Toggle theme</span>
     </button>
-  </nav>
 </header>
 
 <main>
@@ -1264,6 +1296,36 @@ section{position:relative;scroll-margin-top:calc(var(--nav) + 18px)}
   else window.addEventListener('load', runBoot);
   // hard safety net: never trap the visitor behind the loader
   setTimeout(() => { if (!bootDone) skipBoot(); }, 6500);
+})();
+</script>
+<script>
+/* standalone page — the theme switch is handled here rather than in store.js */
+(function () {
+  var KEY = 'tc-theme';
+  var META = { dark: '#050505', light: '#f4ecdd' };
+  function current() { return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'; }
+  function paint() {
+    var t = current();
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute('content', META[t]);
+    Array.prototype.forEach.call(document.querySelectorAll('[data-theme-toggle]'), function (b) {
+      b.setAttribute('aria-pressed', String(t === 'light'));
+      b.setAttribute('aria-label', t === 'light' ? 'Switch to ink theme' : 'Switch to daylight theme');
+    });
+  }
+  function set(t) {
+    if (t === 'light') document.documentElement.dataset.theme = 'light';
+    else document.documentElement.removeAttribute('data-theme');
+    try { localStorage.setItem(KEY, t); } catch (e) {}
+    paint();
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-theme-toggle]') : null;
+    if (!b) return;
+    e.preventDefault();
+    set(current() === 'light' ? 'dark' : 'light');
+  });
+  paint();
 })();
 </script>
 </body>
