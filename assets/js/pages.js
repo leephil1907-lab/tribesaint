@@ -624,6 +624,17 @@
       paintQty();
     });
 
+    $('#pdpBuyNow')?.addEventListener('click', () => {
+      const size = $('#pdpAdd')?.dataset.size;
+      if (!size) {
+        TC.toast('Choose an available size first', 'err');
+        $('#pdpSizes')?.focus();
+        return;
+      }
+      const added = TC.addToBag(sku, size, pdpQty);
+      if (added) location.href = 'checkout.html';
+    });
+
     // gallery faces (2D main + 3D stage)
     $('#pdpThumbs')?.addEventListener('click', (e) => {
       const b = e.target.closest('[data-face]');
