@@ -1766,3 +1766,106 @@ img.settle{animation:settle .8s var(--ease) both}
   .plate-hint i::after{animation:none}
   .plate-slide{transition:opacity .001s}
 }
+
+/* ============================================================ CONTRAST FIX
+   In the light theme most tokens flip to dark-on-bone. Three kinds of surface
+   ignore the theme — on-photo overlays, the obsidian metrics band and the red
+   call-to-action band — so they have to re-pin the dark-surface values or the
+   words disappear into their own background. */
+
+/* 1. every surface that stays dark keeps the dark-surface ink */
+[data-theme="light"] .cta-band,
+[data-theme="light"] .hero-shot,
+[data-theme="light"] .hero-inset,
+[data-theme="light"] .plate,
+[data-theme="light"] .stage,
+[data-theme="light"] .foot-cta{
+  --ink:#0a0909;
+  --ink-2:#111010;
+  --bone:#ece3cf;
+  --parch:#d9cdb2;
+  --mute:#a39a8a;
+  --line:rgba(236,227,207,.18);
+  --line-2:rgba(236,227,207,.09);
+  --edge:rgba(236,227,207,.4);
+  --edge-soft:rgba(236,227,207,.24);
+  --wash:rgba(236,227,207,.07);
+  --red:#e0343c;
+  --bronze:#c97951;
+  --on-accent:#141110;
+  color:var(--bone);
+}
+
+/* 2. text that sits directly on a photograph never inherits the page ink */
+.hero-shot-cap,.hero-inset,.hero-inset-k,.plate-idx,.plate-hint,.stage-hint,.stage-top .eyebrow{
+  color:#f1e9d8;
+}
+.hero-shot-cap .k,.hero-inset-k{color:rgba(241,233,216,.78)}
+.hero-shot-cap .p{color:#fff;border-bottom-color:rgba(241,233,216,.5)}
+.hero-shot-cap .p .arw{color:#ff6b6b}
+
+/* 3. red micro-type is legible on black only when it is lifted; on bone the
+      deeper brand red is the readable one */
+.eyebrow.red,
+.hero .eyebrow.red,.rail-sec .eyebrow.red,.metrics .eyebrow.red,
+.cta-band .eyebrow.red,.foot .eyebrow.red{color:#ea3b43}
+/* on any bone surface in the light theme, the deeper red is the readable one */
+[data-theme="light"] .eyebrow.red{color:#b3121a}
+[data-theme="light"] .hero .eyebrow.red,
+[data-theme="light"] .rail-sec .eyebrow.red,
+[data-theme="light"] .metrics .eyebrow.red,
+[data-theme="light"] .cta-band .eyebrow.red,
+[data-theme="light"] .foot .eyebrow.red,
+[data-theme="light"] .hero-shot .eyebrow.red{color:#ea3b43}
+.metrics .eyebrow-bronze{color:#d08a63}
+
+/* 4. the light theme's muted ink was one step too light on bone */
+[data-theme="light"]{
+  --mute:#655c4f;
+}
+[data-theme="light"] .foot-legal .copy{color:#6a6154}
+[data-theme="light"] .small{color:#5f5749}
+
+/* 5. the WhatsApp label needs another step of separation */
+.wa-fab{background:#0f7a3d}
+.wa-fab.on{background:#0f7a3d}
+
+/* 6. the plate's own furniture adapts to the photograph behind it */
+.plate[data-tone="light"] .plate-idx,
+.plate[data-tone="light"] .plate-hint{color:#141110}
+.plate[data-tone="light"] .plate-idx{opacity:.6}
+
+/* ---------- the lookbook: one hero frame at a time, cross-faded ---------- */
+.hero-frames{position:absolute;inset:0;overflow:hidden}
+.hero-frame{
+  position:absolute;inset:0;margin:0;
+  opacity:0;visibility:hidden;
+  transition:opacity 1.1s var(--ease),visibility 1.1s;
+}
+.hero-frame.is-on{opacity:1;visibility:visible}
+.hero-frame img{
+  width:100%;height:100%;object-fit:cover;object-position:50% 42%;
+  transform:scale(1.02);
+  transition:transform 9s linear;
+  will-change:transform;
+}
+.hero-frame.is-on img{transform:scale(1.085)}
+@media(prefers-reduced-motion:reduce){
+  .hero-frame img,.hero-frame.is-on img{transform:none;transition:none}
+  .hero-frame{transition:opacity .001s}
+}
+/* lookbook ticks, bottom-left of the frame */
+.hero-dots{
+  position:absolute;left:clamp(14px,2vw,22px);bottom:clamp(14px,2vw,20px);z-index:4;
+  display:flex;gap:7px;align-items:center;
+}
+.hero-dots button{
+  width:26px;height:2px;padding:0;border:0;cursor:pointer;
+  background:rgba(241,233,216,.34);transition:background .3s var(--ease),width .3s var(--ease);
+  position:relative;
+}
+.hero-dots button::after{content:"";position:absolute;inset:-9px 0}
+.hero-dots button:hover{background:rgba(241,233,216,.7)}
+.hero-dots button[aria-pressed="true"]{background:#e0343c;width:40px}
+.hero-dots button:focus-visible{outline:2px solid #fff;outline-offset:4px}
+@media(max-width:520px){.hero-dots button{width:18px}.hero-dots button[aria-pressed="true"]{width:28px}}

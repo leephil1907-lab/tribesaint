@@ -233,6 +233,80 @@
     }));
   }
 
+  /* ------------------------------------------------------------- lookbook
+     Six frames, six different people and garments, cross-fading on a slow
+     beat. The caption and the flat-print inset follow whichever frame is up,
+     and the whole thing stops for reduced-motion or the motion switch. */
+  function initLookbook() {
+    const host = $('#heroFrames');
+    if (!host) return;
+    const frames = Array.from(host.querySelectorAll('.hero-frame'));
+    if (frames.length < 2) return;
+
+    const dots = $('#heroDots');
+    const worn = $('#heroWorn');
+    const wornMeta = $('#heroWornMeta');
+    const wornLink = $('#heroWornLink');
+    const inset = $('#heroInset');
+    const insetImg = $('#heroInsetImg');
+    const insetK = $('#heroInsetK');
+    const reduce = () => document.documentElement.dataset.motion === 'off' ||
+      (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+    if (dots) {
+      dots.innerHTML = frames.map((f, n) =>
+        `<button type="button" data-hero="${n}" aria-pressed="${n === 0}" aria-label="Look ${n + 1}: ${TC.esc(f.dataset.k)}"></button>`).join('');
+    }
+
+    let i = 0, timer = 0;
+
+    const show = (n) => {
+      i = ((n % frames.length) + frames.length) % frames.length;
+      frames.forEach((f, k) => f.classList.toggle('is-on', k === i));
+      const f = frames[i];
+      const href = 'product.html?sku=' + encodeURIComponent(f.dataset.sku);
+      if (worn) worn.textContent = f.dataset.k;
+      if (wornMeta) wornMeta.textContent = f.dataset.p;
+      if (wornLink) wornLink.href = href;
+      if (inset) { inset.href = href; inset.setAttribute('aria-label', f.dataset.k + ' — ' + f.dataset.insetK); }
+      if (insetImg && f.dataset.inset) {
+        insetImg.src = f.dataset.inset;
+        insetImg.alt = f.dataset.k + ' — ' + f.dataset.insetK;
+      }
+      if (insetK) insetK.textContent = f.dataset.insetK;
+      if (dots) Array.from(dots.children).forEach((b, k) => b.setAttribute('aria-pressed', String(k === i)));
+    };
+
+    const start = () => {
+      stop();
+      if (reduce()) return;
+      timer = setInterval(() => show(i + 1), 5600);
+    };
+    const stop = () => { if (timer) { clearInterval(timer); timer = 0; } };
+
+    if (dots) {
+      dots.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-hero]');
+        if (!b) return;
+        show(Number(b.dataset.hero));
+        start();
+      });
+    }
+
+    /* pause while the pointer is over the picture or the tab is hidden */
+    const shot = $('#heroShot');
+    if (shot) {
+      shot.addEventListener('pointerenter', stop);
+      shot.addEventListener('pointerleave', start);
+      shot.addEventListener('focusin', stop);
+    }
+    document.addEventListener('visibilitychange', () => { document.hidden ? stop() : start(); });
+    document.addEventListener('tc:motion', start);
+
+    show(0);
+    start();
+  }
+
   /* ------------------------------------------------- metric counters + magnet */
   function initEditorialMotion() {
     const nums = $$('.metric b[data-count]');
@@ -1082,6 +1156,9 @@
             /* lift it a little toward bone so the mount reads as paper, not concrete */
             const lift = (v) => Math.round(v * 0.82 + 246 * 0.18);
             const col = 'rgb(' + lift(r / n) + ',' + lift(gr / n) + ',' + lift(bl / n) + ')';
+            /* tell the furniture which way to go: dark ink over a pale photo */
+            const L = (0.2126 * r + 0.7152 * gr + 0.0722 * bl) / n;
+            host.parentElement.parentElement.dataset.tone = L > 135 ? 'light' : 'dark';
             matteCache[key] = col;
             frame.style.background = col;
           } catch (e) { /* keep the default matte */ }
@@ -1243,6 +1320,7 @@
     initHome();
     initZine();
     initPlate();
+    initLookbook();
     /* glass header: gains weight only once it leaves the hero */
     const bar = document.querySelector('.topbar');
     if (bar) {
