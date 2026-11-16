@@ -517,7 +517,8 @@ function isWeakPassword(pw) {
   const value = String(pw || '');
   if (value.length < 16) return true;
   const h = crypto.createHash('sha256').update(value).digest('hex');
-  return WEAK_PASSWORDS.has(h);
+  // Hash of the known weak credential used by an earlier repository revision.
+  return h === '7c939657c4e1c6acca9db34dcb087e3662b265314546b4b3fec1de66073ed80b';
 }
 
 /* ------------------------------------------------------------ studio session */
