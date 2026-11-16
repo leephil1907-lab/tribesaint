@@ -16,6 +16,7 @@
     bagKey: 'tc_bag_v2',
     customerKey: 'tc_customer_v1',
     signupKey: 'tc_signups_v1',
+    motionKey: 'tc_motion_v1',
     lowStock: 3
   };
 
@@ -350,7 +351,7 @@
 
   /* ------------------------------------------------------------------ entrance */
   function entrance() {
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches || motionOff();
     if (reduce) { document.body.classList.add('no-motion', 'ready'); return; }
     requestAnimationFrame(() => document.body.classList.add('ready'));
   }
@@ -534,8 +535,45 @@
     }
   }
 
+  /* ------------------------------------------------------- motion & top */
+  /* The house ships motion on, but motion is a preference, not a style rule:
+     the footer switch turns it off for the visitor and remembers the choice. */
+  function motionOff() {
+    try { return localStorage.getItem(CONFIG.motionKey) === 'off'; } catch { return false; }
+  }
+  function applyMotion(off) {
+    if (off) document.documentElement.dataset.motion = 'off';
+    else delete document.documentElement.dataset.motion;
+    $$('[data-motion-toggle]').forEach((btn) => {
+      btn.setAttribute('aria-pressed', off ? 'true' : 'false');
+      const t = btn.querySelector('.txt');
+      if (t) t.textContent = off ? 'Motion off' : 'Motion on';
+    });
+    document.dispatchEvent(new CustomEvent('tc:motion', { detail: { off } }));
+  }
+  function initMotionSwitch() {
+    applyMotion(motionOff());
+    $$('[data-motion-toggle]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const next = !motionOff();
+        try { localStorage.setItem(CONFIG.motionKey, next ? 'off' : 'on'); } catch {}
+        applyMotion(next);
+        toast(next ? 'Motion off' : 'Motion on');
+      });
+    });
+    $$('[data-to-top]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const reduce = motionOff() || matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+        const skip = $('.skip') || $('#navOpen');
+        if (skip) skip.focus({ preventScroll: true });
+      });
+    });
+  }
+
   async function boot() {
     initTheme();
+    initMotionSwitch();
     initMotion();
     loadBag();
     initNav();
@@ -554,7 +592,8 @@
     CONFIG, state, money, esc, product, productList, stockOf,
     bagCount, bagSubtotal, addToBag, openBag, closeBag, renderBag,
     openModal, closeModal, toast, on, loadCatalogue, submitSignup, setQty,
-    SIZE_TABLE, renderSizeTable, initWhatsApp, setTheme, currentTheme, initMotion
+    SIZE_TABLE, renderSizeTable, initWhatsApp, setTheme, currentTheme, initMotion,
+    initMotionSwitch, motionOff
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

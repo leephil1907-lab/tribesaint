@@ -578,6 +578,47 @@ table{border-collapse:collapse;width:100%}
 .foot-cols h4{margin:0 0 12px;font:400 8.5px/1 Oswald,sans-serif;letter-spacing:.28em;text-transform:uppercase;color:var(--mute)}
 .foot-cols a{display:block;padding:5px 0;font-size:13px;color:var(--parch);transition:color .2s,transform .2s var(--ease)}
 .foot-cols a:hover{color:var(--red);transform:translateX(2px)}
+/* ---------- footer utilities: motion switch + back to top ---------- */
+.foot-tools{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  margin-top:clamp(24px,3.4vw,34px);padding-top:14px;border-top:1px solid var(--line);
+}
+.foot-toggle,.foot-top{
+  display:inline-flex;align-items:center;gap:10px;min-height:36px;padding:0;
+  background:none;border:0;cursor:pointer;color:var(--mute);
+  font:400 8.5px/1 Oswald,sans-serif;letter-spacing:.24em;text-transform:uppercase;
+  transition:color .22s;
+}
+.foot-toggle:hover,.foot-top:hover{color:var(--bone)}
+.foot-toggle .dot{
+  position:relative;width:30px;height:16px;border:1px solid var(--line);border-radius:20px;
+  transition:border-color .22s;
+}
+.foot-toggle .dot::after{
+  content:"";position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;
+  background:var(--bone);transition:transform .3s var(--ease),background .22s;
+}
+.foot-toggle[aria-pressed="true"] .dot{border-color:var(--red)}
+.foot-toggle[aria-pressed="true"] .dot::after{transform:translateX(14px);background:var(--red)}
+.foot-top span{transition:transform .25s var(--ease)}
+.foot-top:hover span{transform:translateY(-2px)}
+.foot-tools + .foot-base{margin-top:14px;padding-top:14px}
+@media(max-width:760px){
+  /* phones: one tight utility line, not a new band */
+  .foot-tools{margin-top:16px;padding-top:10px;gap:10px}
+  .foot-toggle,.foot-top{min-height:32px;gap:8px;letter-spacing:.2em}
+  .foot-toggle .dot{width:26px;height:14px}
+  .foot-toggle .dot::after{width:8px;height:8px}
+  .foot-toggle[aria-pressed="true"] .dot::after{transform:translateX(12px)}
+  .foot-tools + .foot-base{margin-top:10px;padding-top:10px}
+}
+
+/* the visitor's call: the house standing still, not the house in flight */
+html[data-motion="off"] *,html[data-motion="off"] *::before,html[data-motion="off"] *::after{
+  animation-duration:.001ms!important;animation-iteration-count:1!important;
+  transition-duration:.001ms!important;scroll-behavior:auto!important;
+}
+
 .foot-base{
   display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center;
   margin-top:clamp(30px,4.4vw,50px);padding-top:20px;border-top:1px solid var(--line);

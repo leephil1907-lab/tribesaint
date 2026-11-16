@@ -13,7 +13,11 @@
 import * as THREE from '../vendor/three.module.min.js';
 
 const TAU = Math.PI * 2;
-const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const systemReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* the footer switch can also stop the stages; read it once and follow changes */
+let userStill = document.documentElement.dataset.motion === 'off';
+document.addEventListener('tc:motion', (e) => { userStill = !!(e.detail && e.detail.off); });
+const reduceMotion = systemReduce;
 const isMobile = window.matchMedia('(max-width: 860px)').matches;
 
 /* offline fallback media — the live catalogue drives the stages when it answers */
@@ -551,7 +555,7 @@ function mountHero(host) {
     step._last = now;
 
     /* auto-advance: one piece every 5.2s, unless the visitor is handling it */
-    if (!reduceMotion && !dragging && now - lastInteract > 2600) {
+    if (!reduceMotion && !userStill && !dragging && now - lastInteract > 2600) {
       if (now > nextAuto) {
         target -= STEP;
         nextAuto = now + 5200;
@@ -984,7 +988,7 @@ function mountRail(host) {
     step._last = now;
 
     /* the rail walks itself along when nobody is handling it */
-    if (!reduceMotion && !dragging && now - lastInteract > 4200 && now > nextAuto) {
+    if (!reduceMotion && !userStill && !dragging && now - lastInteract > 4200 && now > nextAuto) {
       goTo(index >= N - 1 ? 0 : index + 1);
     }
     if (!dragging) {
