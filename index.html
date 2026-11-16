@@ -54,6 +54,12 @@
 <body data-page="home">
 <a class="sr" href="#main">Skip to content</a>
 
+<div class="annbar" data-annbar>
+  <div class="annbar-track" aria-hidden="true"><span>Drop 001 is live — twelve pieces</span><i aria-hidden="true"></i><span>Small runs · no restocks</span><i aria-hidden="true"></i><span>Free delivery over ₦150,000</span><i aria-hidden="true"></i><span>Lagos → worldwide, 2–5 days</span><i aria-hidden="true"></i><span>Paystack secured checkout</span><i aria-hidden="true"></i><span>Drop 001 is live — twelve pieces</span><i aria-hidden="true"></i><span>Small runs · no restocks</span><i aria-hidden="true"></i><span>Free delivery over ₦150,000</span><i aria-hidden="true"></i><span>Lagos → worldwide, 2–5 days</span><i aria-hidden="true"></i><span>Paystack secured checkout</span><i aria-hidden="true"></i></div>
+  <p class="sr">Drop 001 is live. Small runs, no restocks. Free delivery over ₦150,000. Lagos to worldwide in 2 to 5 days. Paystack secured checkout.</p>
+</div>
+
+
 <header class="topbar">
   <div class="topbar-in">
     <a class="brand" href="index.html" aria-label="Tribe Culture home">
@@ -134,30 +140,24 @@
 
 <main id="main">
 
-<section class="hero">
+<section class="hero" aria-labelledby="heroTitle">
   <div class="hero-copy">
-    <p class="eyebrow red rise">Drop 001 · Twelve pieces</p>
-    <h1 class="disp hero-h1 rise d1">Enter the Tribe<span class="script">Tribe Culture</span></h1>
-    <p class="lede rise d2">Heavyweight garments for people who would rather discover new truth than keep old prejudices. Twelve pieces in Drop 001 — tees, tanks, a track suit, headwear and a print. Small runs, no restocks.</p>
+    <p class="eyebrow red rise">Drop 001 · Established MMXXVI</p>
+    <h1 class="disp hero-h1 rise d1" id="heroTitle">Enter the Tribe<span class="script">Tribe Culture</span></h1>
+    <p class="hero-lede rise d2">Twelve heavyweight pieces, cut boxy and printed by hand in Lagos — made to be worn hard, priced to be kept, and never restocked.</p>
     <div class="hero-actions rise d3">
-      <a class="btn" href="shop.html"><span>Shop Drop 001</span></a>
-      <a class="btn ghost" href="product.html?sku=saint-tee-black"><span>See the Saint tee</span></a>
+      <a class="btn hero-btn" href="shop.html"><span>Shop Drop 001</span></a>
+      <a class="btn ghost hero-btn" href="product.html?sku=saint-tee-black"><span>See the Saint tee</span></a>
     </div>
-    <div class="hero-marks rise d3">
-      <span>Established <b>MMXXVI</b></span>
-      <span>Lagos · <b>Worldwide delivery</b></span>
-      <span>Twelve pieces · <b>Limited run</b></span>
-    </div>
-
-    <ul class="hero-spec rise d3" aria-label="Fabric and make">
-      <li><b>260<span>gsm</span></b><i>Heavyweight combed cotton</i></li>
-      <li><b>Boxy</b><i>Relaxed, dropped shoulder</i></li>
-      <li><b>Plastisol</b><i>Screen print, cured by hand</i></li>
-      <li><b>RC 7534126</b><i>Registered house, Lagos</i></li>
-    </ul>
+    <a class="hero-now rise d3" id="heroNow" href="product.html?sku=saint-tee-black">
+      <span class="hero-now-k">On the rail · <b>01 / 12</b></span>
+      <span class="hero-now-n">Saint Tee — Black / Red print</span>
+      <span class="hero-now-p">₦45,000 · <em>Open the piece</em></span>
+    </a>
+    <p class="hero-trust rise d3">260&nbsp;gsm combed cotton · hand-cured print · free delivery over ₦150,000 · RC&nbsp;7534126</p>
   </div>
 
-  <div class="stage" data-stage="rail" id="heroStage">
+  <div class="stage hero-stage" data-stage="rail" id="heroStage">
     <canvas class="stage-canvas" role="listbox" tabindex="0" aria-label="The twelve Drop 001 pieces hanging on a rail. Drag or use the arrow keys to slide along the rail, press Enter to open the piece."></canvas>
     <div class="stage-loading"><span class="bar"><i></i></span></div>
     <div class="stage-fallback" hidden>
@@ -173,16 +173,22 @@
         <span class="eyebrow">The rail · Drop 001</span>
         <span class="stage-hint"><i></i> Drag the rail · tap to open</span>
       </div>
-      <div class="stage-bottom">
-        <div class="stage-picker" role="group" aria-label="Choose a piece">
-          <a href="product.html?sku=saint-tee-black"><img src="assets/products/saint-tee-black-front.jpg" alt="" width="34" height="34"><span>Saint</span></a>
-          <a href="product.html?sku=cadet-cap-black"><img src="assets/products/cadet-cap-black-front.jpg" alt="" width="34" height="34"><span>Cadet</span></a>
-        </div>
-        <div class="stage-caption">
-          <div class="k"></div>
-          <div class="n"></div>
-          <div class="p"></div>
-        </div>
+    </div>
+    <div class="stage-bar">
+      <span class="stage-bar-hint">Drag the rail · tap to open</span>
+      <div class="stage-caption">
+        <div class="k"></div>
+        <div class="n"></div>
+        <div class="p"></div>
+      </div>
+      <div class="stage-nav">
+        <button class="stage-arrow" type="button" data-rail-prev aria-label="Previous piece">
+          <svg width="14" height="10" viewBox="0 0 14 10" aria-hidden="true"><path d="M13 5H1m0 0 4-4M1 5l4 4" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+        </button>
+        <div class="stage-picker" role="group" aria-label="Choose a piece"></div>
+        <button class="stage-arrow" type="button" data-rail-next aria-label="Next piece">
+          <svg width="14" height="10" viewBox="0 0 14 10" aria-hidden="true"><path d="M1 5h12m0 0-4-4m4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+        </button>
       </div>
     </div>
   </div>

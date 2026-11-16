@@ -352,8 +352,7 @@ function mountHero(host) {
     if (!picker) return;
     picker.innerHTML = list.map((p, i) => `
       <button type="button" data-index="${i}" aria-pressed="${i === 0}" aria-label="${p.name} — ${p.variant}">
-        <img src="${p.image}" alt="" loading="lazy" width="34" height="34">
-        <span>${p.name.replace(' Tee', '').replace(' Tank', '')}</span>
+        <i aria-hidden="true"></i>
       </button>`).join('');
   }
   buildPicker();
@@ -367,12 +366,13 @@ function mountHero(host) {
     const pr = caption.querySelector('.p');
     if (k) k.textContent = `Drop 001 · ${String(i + 1).padStart(2, '0')} / ${String(list.length).padStart(2, '0')}`;
     if (n) n.textContent = `${p.name} — ${p.variant}`;
-    if (pr) pr.textContent = (window.TC ? window.TC.money(p.price) : '₦' + p.price.toLocaleString('en-NG')) + '  ·  drag to spin · tap to open';
+    if (pr) pr.textContent = (window.TC ? window.TC.money(p.price) : '₦' + p.price.toLocaleString('en-NG')) + '  ·  tap to open';
   }
 
   function markActive(i) {
     active = ((i % N) + N) % N;
     captionFor(active);
+    if (typeof paintNow === 'function') paintNow(active);
     host.dataset.activeSku = list[active] ? list[active].sku : '';
     if (picker) {
       const btns = picker.querySelectorAll('button');
@@ -417,6 +417,27 @@ function mountHero(host) {
     goTo(Number(b.dataset.index));
     lastInteract = performance.now();
   });
+
+  /* the hero names the piece the rail is holding, so the words and the object
+     never disagree — and the arrows step one piece at a time */
+  function paintNow(i) {
+    const now = document.getElementById('heroNow');
+    const p = list[i];
+    if (!now || !p) return;
+    now.href = 'product.html?sku=' + encodeURIComponent(p.sku);
+    const k = now.querySelector('.hero-now-k b');
+    const n = now.querySelector('.hero-now-n');
+    const pr = now.querySelector('.hero-now-p');
+    if (k) k.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(list.length).padStart(2, '0');
+    if (n) n.textContent = p.name + ' — ' + p.variant;
+    if (pr) pr.innerHTML = (window.TC ? window.TC.money(p.price) : '\u20a6' + p.price.toLocaleString('en-NG')) + ' \u00b7 <em>Open the piece</em>';
+  }
+  host.querySelectorAll('[data-rail-prev]').forEach((b) => b.addEventListener('click', (e) => {
+    e.preventDefault(); goTo(active - 1);
+  }));
+  host.querySelectorAll('[data-rail-next]').forEach((b) => b.addEventListener('click', (e) => {
+    e.preventDefault(); goTo(active + 1);
+  }));
 
   /* ---------- drag: spin with momentum, snap, tap to open ---------- */
   function openActive() {
@@ -674,10 +695,16 @@ function mountRail(host) {
     ctx.fillStyle = '#fff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = '700 132px Anton, Impact, Haettenschweiler, sans-serif';
-    ctx.letterSpacing = '14px';
+    ctx.letterSpacing = '10px';
+    let px = 132;
+    ctx.font = '700 ' + px + 'px Anton, Impact, Haettenschweiler, sans-serif';
+    /* shrink to fit: the name is set on the wall, never cropped by it */
+    while (px > 16 && ctx.measureText('TRIBE CULTURE').width > w * 0.88) {
+      px -= 2;
+      ctx.font = '700 ' + px + 'px Anton, Impact, Haettenschweiler, sans-serif';
+    }
     ctx.fillText('TRIBE CULTURE', w / 2, h / 2);
-    ctx.fillRect(w * 0.18, h * 0.78, w * 0.64, 2);
+    ctx.fillRect(w * 0.34, h * 0.74, w * 0.32, 2);
   });
   wallTex.colorSpace = THREE.SRGBColorSpace;
   const wall = new THREE.Mesh(
@@ -777,8 +804,7 @@ function mountRail(host) {
     if (!picker) return;
     picker.innerHTML = list.map((p, i) => `
       <button type="button" data-index="${i}" aria-pressed="${i === 0}" aria-label="${p.name} — ${p.variant}">
-        <img src="${p.image}" alt="" loading="lazy" width="34" height="34">
-        <span>${p.name.replace(' Tee', '').replace(' Tank', '')}</span>
+        <i aria-hidden="true"></i>
       </button>`).join('');
   }
   buildPicker();
@@ -798,6 +824,7 @@ function mountRail(host) {
   function markActive(i) {
     active = ((i % N) + N) % N;
     captionFor(active);
+    if (typeof paintNow === 'function') paintNow(active);
     host.dataset.activeSku = list[active] ? list[active].sku : '';
     if (picker) {
       const btns = picker.querySelectorAll('button');
@@ -828,6 +855,27 @@ function mountRail(host) {
     if (!b) return;
     goTo(Number(b.dataset.index));
   });
+
+  /* the hero names the piece the rail is holding, so the words and the object
+     never disagree — and the arrows step one piece at a time */
+  function paintNow(i) {
+    const now = document.getElementById('heroNow');
+    const p = list[i];
+    if (!now || !p) return;
+    now.href = 'product.html?sku=' + encodeURIComponent(p.sku);
+    const k = now.querySelector('.hero-now-k b');
+    const n = now.querySelector('.hero-now-n');
+    const pr = now.querySelector('.hero-now-p');
+    if (k) k.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(list.length).padStart(2, '0');
+    if (n) n.textContent = p.name + ' — ' + p.variant;
+    if (pr) pr.innerHTML = (window.TC ? window.TC.money(p.price) : '\u20a6' + p.price.toLocaleString('en-NG')) + ' \u00b7 <em>Open the piece</em>';
+  }
+  host.querySelectorAll('[data-rail-prev]').forEach((b) => b.addEventListener('click', (e) => {
+    e.preventDefault(); goTo(active - 1);
+  }));
+  host.querySelectorAll('[data-rail-next]').forEach((b) => b.addEventListener('click', (e) => {
+    e.preventDefault(); goTo(active + 1);
+  }));
 
   /* ---------- interaction ---------- */
   function openActive() {
@@ -906,19 +954,26 @@ function mountRail(host) {
     const visibleH = 2 * CAM_Z * Math.tan((camera.fov * Math.PI) / 360);
     const visibleW = visibleH * camera.aspect;
     const worldPerPx = visibleH / h;
-    const topReserve = isMobile ? 34 : 40;
-    const botReserve = isMobile ? 100 : 58;
+    const topReserve = isMobile ? 30 : 46;
+    const botReserve = isMobile ? 18 : 26;
     const usablePx = Math.max(120, h - topReserve - botReserve);
     /* the garment hangs from the bar: bar to floor is what must fit */
     const hangRoom = (usablePx * worldPerPx) - 0.4;
+    /* the hanging piece should command the room, not float in it */
     cardH = isMobile
-      ? Math.min(hangRoom * 0.84, visibleW * 0.66)
-      : Math.min(hangRoom * 0.98, visibleW * 0.33);
+      ? Math.min(hangRoom * 0.96, visibleW * 0.85)
+      : Math.min(hangRoom * 0.98, visibleW * 0.58);
     cardH = Math.max(0.7, cardH);
-    gap = cardH * 1.2;
+    /* neighbours should peek at both edges: it reads as a rail, not a carousel */
+    gap = cardH * (isMobile ? 1.05 : 0.96);
 
-    wall.scale.set(visibleW * 0.66, visibleW * 0.165, 1);
-    wall.position.y = RAIL_Y + cardH * 0.52;
+    const wallW = Math.min(visibleW * 0.62, 5.4);
+    const wallH = wallW * 0.25;
+    wall.scale.set(wallW, wallH, 1);
+    /* the name sits on the wall above the garment, and never off the frame */
+    const frameTop = visibleH / 2 - topReserve * worldPerPx;
+    const wanted = RAIL_Y + cardH * 0.5;
+    wall.position.y = Math.min(wanted, frameTop - wallH * 0.55);
 
     /* centre the whole hanging block — bar plus garment — in the space between
        the label and the controls, not the bar by itself */

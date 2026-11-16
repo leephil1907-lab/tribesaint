@@ -36,12 +36,11 @@
 
   /** product card used by home / shop / related */
   function cardHTML(p) {
-    const backs = p.images && p.images.back ? p.images.back : p.image;
     return `
     <article class="card${totalStock(p) === 0 ? ' is-sold' : ''}" data-card="${esc(p.sku)}">
       <a class="card-media" href="product.html?sku=${encodeURIComponent(p.sku)}" aria-label="${esc(p.name)} — ${esc(p.variant)}${totalStock(p) === 0 ? ', sold out' : ''}">
-        <img class="on" data-shot="front" src="${esc(thumb(p.image))}" alt="${esc(p.name)}, ${esc(p.variant)}" loading="lazy" decoding="async" width="480" height="480">
-        <img data-shot="back" src="${esc(thumb(backs))}" alt="" loading="lazy" decoding="async" width="480" height="480">
+        <img class="on shot" data-shot="front" src="assets/products/card/${esc(p.sku)}.webp" alt="${esc(p.name)}, ${esc(p.variant)}" loading="lazy" decoding="async" width="520" height="520">
+        <img class="shot" data-shot="back" src="assets/products/card/${esc(p.sku)}-back.webp" alt="" loading="lazy" decoding="async" width="520" height="520">
         <span class="badge">${esc(p.badge || 'Drop 001')}</span>
         ${totalStock(p) === 0 ? '<span class="sold-badge">Sold out</span>' : ''}
         <span class="views" role="group" aria-label="Product view">
@@ -249,15 +248,21 @@
       $('#pdpPrice').textContent = money(p.price);
       $('#pdpCurrency').textContent = (TC.state.catalogue && TC.state.catalogue.currency) || 'NGN';
       $('#pdpBlurb').textContent = p.blurb || '';
+      /* the gallery shows the garment itself, cut from its studio wall — the
+         same object the rail and the cards present */
+      /* detail shots stay photographic: they are close-ups, not objects to cut out */
+      const cut = (face) => (face === 'detail'
+        ? p.images.detail
+        : 'assets/products/card/' + p.sku + (face === 'front' ? '' : '-' + face) + '.webp');
       const imgA = $('#pdpImgA'), imgB = $('#pdpImgB');
-      imgA.src = p.images.front; imgA.alt = p.name + ' — ' + p.variant;
-      imgB.src = p.images.back; imgB.alt = p.name + ' — alternate view';
+      imgA.src = cut('front'); imgA.alt = p.name + ' — ' + p.variant;
+      imgB.src = cut('back'); imgB.alt = p.name + ' — alternate view';
 
       const thumbs = $('#pdpThumbs');
       const faces = [
-        { key: 'front', label: '1', img: p.images.front, alt: p.name + ' front' },
-        { key: 'back', label: '2', img: p.images.back, alt: p.name + ' alternate' },
-        { key: 'detail', label: '3', img: p.images.detail, alt: p.name + ' print detail' }
+        { key: 'front', label: '1', img: cut('front'), alt: p.name + ' front' },
+        { key: 'back', label: '2', img: cut('back'), alt: p.name + ' alternate' },
+        { key: 'detail', label: '3', img: cut('detail'), alt: p.name + ' print detail' }
       ];
       thumbs.innerHTML = faces.map((f, i) => `<button type="button" data-face="${f.key}" aria-pressed="${i === 0}" aria-label="Show ${esc(f.alt)}"><img src="${esc(f.img)}" alt="" width="64" height="64" loading="lazy" decoding="async"></button>`).join('');
 
@@ -412,8 +417,12 @@
       $$('#pdpThumbs [data-face]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
       const main = $('#pdpMain');
       const a = $('#pdpImgA'), bb = $('#pdpImgB');
-      if (face === 'back') { a.classList.remove('on'); bb.classList.add('on'); bb.src = TC.product(sku).images.back; }
-      else { bb.classList.remove('on'); a.classList.add('on'); a.src = face === 'detail' ? TC.product(sku).images.detail : TC.product(sku).images.front; }
+      const p2 = TC.product(sku);
+      const cutFace = (f) => (f === 'detail'
+        ? p2.images.detail
+        : 'assets/products/card/' + p2.sku + (f === 'front' ? '' : '-' + f) + '.webp');
+      if (face === 'back') { a.classList.remove('on'); bb.classList.add('on'); bb.src = cutFace('back'); }
+      else { bb.classList.remove('on'); a.classList.add('on'); a.src = cutFace(face); }
       document.dispatchEvent(new CustomEvent('stage:face', { detail: { face } }));
     });
 
@@ -453,7 +462,7 @@
           const p = TC.product(l.sku);
           if (!p) return '';
           return `<div class="order-item" style="border:0;border-bottom:1px solid var(--line);padding:10px 0;grid-template-columns:44px 1fr auto">
-            <img src="${esc(p.image)}" alt="" width="44" height="44" loading="lazy">
+            <img src="assets/products/card/${esc(p.sku)}.webp" alt="${esc(p.name)}, ${esc(p.variant)}" width="44" height="44" loading="lazy" decoding="async">
             <div><div class="n">${esc(p.name)}</div><div class="m">${esc(p.variant)} · ${l.size === 'ONE SIZE' ? 'One size' : 'Size ' + esc(l.size)} · ×${l.qty}</div></div>
             <span class="price" style="font-size:12.5px">${money(p.price * l.qty)}</span>
           </div>`;
