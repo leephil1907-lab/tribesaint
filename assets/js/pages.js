@@ -451,9 +451,7 @@
       $('#pdpBlurb').textContent = p.blurb || '';
       /* the gallery shows the original studio photograph, whole — never a cut
          silhouette. The card crops stay for the grids and thumbnails. */
-      const cut = (face) => (face === 'detail'
-        ? p.images.detail
-        : 'assets/products/' + p.sku + '-' + face + '.jpg');
+      const cut = (face) => p.images[face] || p.images.front;
       const imgA = $('#pdpImgA'), imgB = $('#pdpImgB');
       imgA.src = cut('front'); imgA.alt = p.name + ' — ' + p.variant;
       imgB.src = cut('back'); imgB.alt = p.name + ' — alternate view';
@@ -645,9 +643,7 @@
       const main = $('#pdpMain');
       const a = $('#pdpImgA'), bb = $('#pdpImgB');
       const p2 = TC.product(sku);
-      const cutFace = (f) => (f === 'detail'
-        ? p2.images.detail
-        : 'assets/products/' + p2.sku + '-' + f + '.jpg');
+      const cutFace = (f) => p2.images[f] || p2.images.front;
       const pbg2 = $('#pdpBg');
       if (face === 'back') {
         a.classList.remove('on'); bb.classList.add('on'); bb.src = cutFace('back');
