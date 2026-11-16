@@ -538,7 +538,7 @@
       $('#pdpDelivery').innerHTML = `
         <ul>
           ${Object.values(ship).map((z) => `<li>${esc(z.label)} — ${money(z.amount)} · ${esc(z.eta || '')}</li>`).join('')}
-          <li>Free delivery on orders over ${money(free)}.</li>
+          <li>Free delivery in Nigeria on orders over ${money(free)}; international delivery is charged at the listed rate.</li>
           <li>Ships in 1–2 business days. Unworn returns within 14 days, tags attached.</li>
         </ul>`;
 
