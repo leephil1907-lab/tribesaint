@@ -1,0 +1,63 @@
+# Tribe Culture — cinematic product presentation standard
+
+This is the implementation contract for the storefront's next visual pass.
+
+## Brand direction
+
+- Keep the existing Tribe Culture identity: ink, bone, blood-red, Anton, Oswald and the house script.
+- Make the storefront feel like a cinematic streetwear editorial, not a generic animated shop template.
+- Use the existing Three.js stage, Saint film, campaign photography, light sweeps and restrained camera movement as the foundation.
+- Motion must remain subordinate to product truth, readable content, checkout usability and mobile performance.
+- Respect `prefers-reduced-motion`, pause off-screen animation, and provide a non-WebGL fallback.
+
+## Product integrity — non-negotiable
+
+- The original product files in `assets/products/*.jpg` and their source artwork are authoritative.
+- Never crop, stretch, recolour, redraw, regenerate, retouch, distort, or replace garment artwork, logos, typography, prints, patterns, silhouettes or proportions.
+- Product images must use `object-fit: contain`, preserve their intrinsic aspect ratio, and have enough frame space to show the entire garment.
+- Backgrounds, lighting, 3D staging and transitions may change around a product; they must not alter the product pixels.
+- Preserve product names, variants, blurbs, specs, prices, sizes and all uploaded copy from `config.json` exactly. Do not paraphrase catalogue content.
+- If a model composite cannot preserve the supplied design exactly, show the original source product photography instead.
+
+## Required model lookbook assets
+
+Every apparel SKU should eventually have two verified model photographs: front and back. Use this path convention:
+
+```
+assets/products/models/<sku>-front.webp
+assets/products/models/<sku>-back.webp
+```
+
+For example:
+
+```
+assets/products/models/saint-tee-black-front.webp
+assets/products/models/saint-tee-black-back.webp
+```
+
+Requirements for each pair:
+
+1. The same product, colourway and garment construction appear in both images.
+2. The model wears the exact uploaded product design; artwork placement, spelling, colours, scale and proportions must match the original source.
+3. Show the complete garment, including collar, sleeves, side seams and hem. Keep enough of the model visible to communicate fit.
+4. Front and back views use a consistent model, styling, lighting, camera distance and crop.
+5. Do not invent a back print where the supplied product has none.
+6. No extra logos, watermarks, text, accessories covering the print, or visual effects over the artwork.
+7. Use a neutral or brand-appropriate studio environment and a web-optimised WebP export. Keep the original source image untouched alongside it.
+8. A human review must compare the model image with the original front/back source before it is published.
+
+Non-apparel items such as the Cadet Cap and Crest Art Print should receive suitable on-person / in-context views only where the product type supports them; do not force a garment model treatment onto an art print.
+
+## Current asset coverage
+
+The repository contains twelve catalogue SKUs, original front/back/detail product photographs, cut-out and 3D stage assets, plus a limited set of campaign model photographs. It does not yet contain a verified front-and-back model pair for every SKU. Do not reuse a campaign photograph as if it were a verified view of a different colourway or product.
+
+## Acceptance checks
+
+- Product detail pages show original front and back images together, uncropped.
+- The existing gallery and 3D stage continue to work.
+- Catalogue copy and commerce behaviour remain unchanged.
+- Check at 360 px, 390 px, 768 px, 1024 px and desktop widths.
+- Verify no horizontal overflow, cut-off garment edges, distorted aspect ratios or text overlap.
+- Verify keyboard access, reduced-motion behaviour, image fallbacks and checkout flow.
+- Add model photos to the catalogue only after the front/back pair passes the visual comparison above.
