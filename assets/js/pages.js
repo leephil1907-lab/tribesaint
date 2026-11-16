@@ -554,6 +554,7 @@
       const out = $('#trackResult');
       alertBox.classList.remove('show');
       if (!ref) { alertBox.textContent = 'Enter your order reference.'; alertBox.classList.add('show'); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) { alertBox.textContent = 'Enter the email address used at checkout.'; alertBox.classList.add('show'); return; }
 
       const btn = $('#trackBtn');
       btn.disabled = true;
