@@ -40,7 +40,8 @@ function loadConfig() {
     site_url: (process.env.SITE_URL || raw.site_url || '').replace(/\/+$/, ''),
     paystack_secret_key: (process.env.PAYSTACK_SECRET_KEY || raw.paystack_secret_key || '').trim(),
     paystack_public_key: (process.env.PAYSTACK_PUBLIC_KEY || raw.paystack_public_key || '').trim(),
-    admin_password: process.env.ADMIN_PASSWORD || raw.admin_password || 'change-me-tribe-2026',
+    /* no shipped default: the studio fails closed until ADMIN_PASSWORD is set */
+    admin_password: String(process.env.ADMIN_PASSWORD || raw.admin_password || '').trim(),
     resend_api_key: (process.env.RESEND_API_KEY || '').trim(),
     allow_preview_checkout:
       process.env.ALLOW_PREVIEW_CHECKOUT !== undefined
@@ -504,6 +505,16 @@ function safeEqual(a, b) {
   return x.length === y.length && crypto.timingSafeEqual(x, y);
 }
 
+/* recognised weak values, compared as hashes so no plaintext ships in the repo */
+const WEAK_PASSWORDS = new Set([
+  '7c939657c4e1c6acca9db34dcb087e3662b265314546b4b3fec1de66073ed80b'
+]);
+function isWeakPassword(pw) {
+  if (!pw) return false;
+  const h = crypto.createHash('sha256').update(String(pw)).digest('hex');
+  return WEAK_PASSWORDS.has(h);
+}
+
 /* ------------------------------------------------------------ studio session */
 const STUDIO_COOKIE = 'tc_studio';
 
@@ -915,6 +926,12 @@ async function handleApi(req, res, pathname, url) {
     const action = url.searchParams.get('action') || '';
 
     if (req.method === 'POST' && action === 'login') {
+      if (!cfg.admin_password) {
+        return sendJson(res, 503, {
+          ok: false,
+          error: 'The studio is not configured yet. Set the ADMIN_PASSWORD environment variable, then sign in with it.'
+        });
+      }
       const loginKey = 'admin-login:' + ip;
       const WINDOW = 15 * 60 * 1000;
       if (!ratePeek(loginKey, 8, WINDOW)) return sendJson(res, 429, { ok: false, error: 'Too many failed sign-in attempts. Wait 15 minutes.' });
@@ -927,7 +944,7 @@ async function handleApi(req, res, pathname, url) {
       }
       buckets.delete(loginKey);
       const token = adminToken(cfg);
-      return sendJson(res, 200, { ok: true, token, default_password: cfg.admin_password === 'change-me-tribe-2026' }, {
+      return sendJson(res, 200, { ok: true, token, default_password: isWeakPassword(cfg.admin_password) }, {
         'Set-Cookie': sessionCookie(req, token, 12 * 3600)
       });
     }
@@ -948,7 +965,7 @@ async function handleApi(req, res, pathname, url) {
       return sendJson(res, 200, {
         ok: true,
         mode: paystackMode(cfg),
-        default_password: cfg.admin_password === 'change-me-tribe-2026',
+        default_password: isWeakPassword(cfg.admin_password),
         currency: cfg.currency,
         currency_symbol: cfg.currency_symbol,
         store_email: db.settings.store_email,
@@ -1320,8 +1337,10 @@ if (require.main === module) {
   const server = http.createServer(handler);
   server.listen(PORT, HOST, () => {
     console.log(`Tribe Culture · http://${HOST}:${PORT} · paystack:${paystackMode(CONFIG)} · data:${DATA_DIR} · studio:/studio`);
-    if (CONFIG.admin_password === 'change-me-tribe-2026') {
-      console.warn('⚠  ADMIN_PASSWORD is still the default — set it in the environment before going live.');
+    if (!CONFIG.admin_password) {
+      console.warn('⚠  ADMIN_PASSWORD is not set — the /studio console is locked until it is.');
+    } else if (isWeakPassword(CONFIG.admin_password)) {
+      console.warn('⚠  ADMIN_PASSWORD is a well-known default — change it before going live.');
     }
   });
   const shutdown = () => server.close(() => process.exit(0));
