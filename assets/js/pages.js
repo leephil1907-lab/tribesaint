@@ -460,6 +460,19 @@
       const pbg = $('#pdpBg');
       if (pbg) pbg.src = imgA.src;
 
+      // Always show both original garment faces together. These are the source
+      // photographs, not generated or cropped campaign assets.
+      const frontView = $('#pdpFrontView');
+      const backView = $('#pdpBackView');
+      if (frontView) {
+        frontView.src = cut('front');
+        frontView.alt = p.name + ' — ' + p.variant + ' — original front view';
+      }
+      if (backView) {
+        backView.src = cut('back');
+        backView.alt = p.name + ' — ' + p.variant + ' — original back view';
+      }
+
       const thumbs = $('#pdpThumbs');
       const faces = [
         { key: 'front', label: '1', img: 'assets/products/card/' + p.sku + '.webp', alt: p.name + ' front' },
