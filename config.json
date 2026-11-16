@@ -14,7 +14,7 @@
   "paystack_public_key": "",
   "paystack_secret_key": "",
   "admin_password": "",
-  "allow_preview_checkout": true,
+  "allow_preview_checkout": false,
   "free_delivery_over": 150000,
   "invoice": {
     "prefix": "TC/INV",
