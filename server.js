@@ -30,8 +30,28 @@ const { invoiceToken, tokenValid, buildInvoice, invoicePdf } = require('./invoic
 const ROOT = __dirname;
 
 /* ------------------------------------------------------------------ config */
+const DEFAULT_ADMIN_PASSWORD = 'change-me-tribe-2026';
+
+function isWeakPassword(value) {
+  const password = String(value || '');
+  if (password.length < 16) return true;
+  return [
+    DEFAULT_ADMIN_PASSWORD,
+    'passwordpassword',
+    '1234567890123456',
+    'adminadminadminadmin'
+  ].includes(password.toLowerCase());
+}
+
 function loadConfig() {
   const raw = JSON.parse(fs.readFileSync(path.join(ROOT, 'config.json'), 'utf8'));
+  const production = process.env.NODE_ENV === 'production';
+  const adminPassword = String(process.env.ADMIN_PASSWORD || raw.admin_password || '').trim();
+
+  if (production && (!process.env.ADMIN_PASSWORD || isWeakPassword(adminPassword))) {
+    throw new Error('Production requires a strong ADMIN_PASSWORD environment variable (at least 16 characters).');
+  }
+
   return {
     ...raw,
     currency: (process.env.STORE_CURRENCY || raw.currency || 'NGN').toUpperCase(),
@@ -40,12 +60,14 @@ function loadConfig() {
     site_url: (process.env.SITE_URL || raw.site_url || '').replace(/\/+$/, ''),
     paystack_secret_key: (process.env.PAYSTACK_SECRET_KEY || raw.paystack_secret_key || '').trim(),
     paystack_public_key: (process.env.PAYSTACK_PUBLIC_KEY || raw.paystack_public_key || '').trim(),
-    admin_password: process.env.ADMIN_PASSWORD || raw.admin_password || 'change-me-tribe-2026',
+    admin_password: adminPassword,
     resend_api_key: (process.env.RESEND_API_KEY || '').trim(),
-    allow_preview_checkout:
+    // Preview checkout is a local development facility, never a production payment mode.
+    allow_preview_checkout: !production && (
       process.env.ALLOW_PREVIEW_CHECKOUT !== undefined
         ? process.env.ALLOW_PREVIEW_CHECKOUT === 'true'
         : Boolean(raw.allow_preview_checkout)
+    )
   };
 }
 
@@ -119,10 +141,10 @@ function readDb() {
     if (db.settings.free_delivery_over == null) db.settings.free_delivery_over = CONFIG.free_delivery_over;
     if (!db.settings.store_email) db.settings.store_email = CONFIG.store_email;
     return db;
-  } catch {
-    const db = freshDb();
-    writeDb(db);
-    return db;
+  } catch (err) {
+    // Preserve a damaged store file; silently replacing it would erase orders and stock.
+    console.error('Store database could not be read; original file has been preserved:', err);
+    throw new Error('Store database is unreadable. Restore the data file from backup before continuing.');
   }
 }
 
@@ -137,7 +159,7 @@ function writeDb(db) {
 const text = (v, max = 300) => String(v == null ? '' : v).replace(/[\r\n\t]+/g, ' ').trim().slice(0, max);
 const validEmail = (v) => typeof v === 'string' && v.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
 const money = (n, cfg = CONFIG) => (cfg.currency_symbol || '₦') + Number(n || 0).toLocaleString('en-NG');
-const reference = () => 'TC-2026-' + Date.now().toString(36).toUpperCase().slice(-4) + crypto.randomBytes(3).toString('hex').toUpperCase();
+const reference = () => 'TC-' + new Date().getFullYear() + '-' + crypto.randomBytes(16).toString('hex').toUpperCase();
 
 function clientIp(req) {
   const xff = req.headers['x-forwarded-for'];
@@ -422,15 +444,8 @@ function publicOrder(order, cfg) {
     shipping_zone: order.shipping_zone,
     total: order.total,
     items: order.items,
-    customer: {
-      name: order.customer.name,
-      email: order.customer.email,
-      phone: order.customer.phone,
-      address: order.customer.address,
-      city: order.customer.city,
-      country: order.customer.country,
-      note: order.customer.note || ''
-    },
+    // Payment-return data is public; expose only the display name, never delivery PII.
+    customer: { name: order.customer.name },
     created_at: order.created_at,
     paid_at: order.paid_at || null,
     updated_at: order.updated_at || null,
@@ -477,6 +492,9 @@ async function confirmPaid(ref, tx, cfg, base) {
       order.stock_deducted = true;
     }
     invoiceFor(db, order, cfg, 'receipt');
+    // Commit paid_at and stock changes before the email await so concurrent,
+    // duplicate webhooks cannot decrement inventory twice.
+    writeDb(db);
     await sendOrderEmails(order, cfg, base, db);
     writeDb(db);
   }
@@ -600,7 +618,16 @@ async function handleApi(req, res, pathname, url) {
   const cfg = CONFIG;
 
   if (route === '/api/health') {
-    return sendJson(res, 200, { ok: true, uptime: Math.round(process.uptime()), mode: paystackMode(cfg) });
+    return sendJson(res, 200, {
+      ok: true,
+      uptime: Math.round(process.uptime()),
+      mode: paystackMode(cfg),
+      checks: {
+        admin_configured: !!cfg.admin_password && !isWeakPassword(cfg.admin_password),
+        payments_configured: !!cfg.paystack_secret_key && !!cfg.paystack_public_key,
+        email_configured: !!cfg.resend_api_key && !!cfg.from_email
+      }
+    });
   }
 
   /* catalogue */
@@ -648,7 +675,9 @@ async function handleApi(req, res, pathname, url) {
       if (!base.sizes.includes(size)) return sendJson(res, 400, { ok: false, error: `Choose a valid size for ${base.name}.` });
       if (!Number.isFinite(qty) || qty < 1 || qty > 10) return sendJson(res, 400, { ok: false, error: `Invalid quantity for ${base.name}.` });
       const key = sku + '::' + size;
-      merged.set(key, { sku, size, qty: (merged.get(key)?.qty || 0) + qty });
+      const combinedQty = (merged.get(key)?.qty || 0) + qty;
+      if (combinedQty > 10) return sendJson(res, 400, { ok: false, error: 'Maximum quantity is 10 per product size.' });
+      merged.set(key, { sku, size, qty: combinedQty });
     }
 
     const orderItems = [];
@@ -856,10 +885,11 @@ async function handleApi(req, res, pathname, url) {
     const ref = text(url.searchParams.get('reference'), 64).toUpperCase();
     const email = text(url.searchParams.get('email'), 254).toLowerCase();
     if (!ref) return sendJson(res, 400, { ok: false, error: 'Enter your order reference.' });
+    if (!validEmail(email)) return sendJson(res, 400, { ok: false, error: 'Enter the email address used at checkout.' });
     const db = readDb();
     const order = db.orders.find((o) => o.reference.toUpperCase() === ref);
     if (!order) return sendJson(res, 404, { ok: false, error: 'No order found with that reference.' });
-    if (email && email !== order.customer.email.toLowerCase()) return sendJson(res, 403, { ok: false, error: 'That email does not match this order.' });
+    if (!safeEqual(email, order.customer.email.toLowerCase())) return sendJson(res, 403, { ok: false, error: 'That email does not match this order.' });
     const view = publicOrder(order, cfg);
     return sendJson(res, 200, {
       ok: true,
@@ -921,6 +951,7 @@ async function handleApi(req, res, pathname, url) {
       let body;
       try { body = JSON.parse((await readBody(req, 8 * 1024)).toString('utf8')); }
       catch { return sendJson(res, 400, { ok: false, error: 'Invalid request.' }); }
+      if (!cfg.admin_password) return sendJson(res, 503, { ok: false, error: 'Administrator access is not configured.' });
       if (!safeEqual(body.password, cfg.admin_password)) {
         rateHit(loginKey, WINDOW);
         return sendJson(res, 401, { ok: false, error: 'Incorrect password.' });
@@ -999,6 +1030,9 @@ async function handleApi(req, res, pathname, url) {
       const db = readDb();
       const order = db.orders.find((o) => o.reference === body.reference);
       if (!order) return sendJson(res, 404, { ok: false, error: 'Order not found.' });
+      if (['paid', 'packed', 'shipped', 'delivered'].includes(body.status) && !order.paid_at) {
+        return sendJson(res, 409, { ok: false, error: 'An order cannot enter fulfilment until Paystack confirms payment.' });
+      }
       order.status = body.status;
       order.updated_at = new Date().toISOString();
       order.timeline = order.timeline || [];
