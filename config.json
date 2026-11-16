@@ -13,8 +13,8 @@
   "site_url": "https://tribeculture.store/",
   "paystack_public_key": "",
   "paystack_secret_key": "",
-  "admin_password": "change-me-tribe-2026",
-  "allow_preview_checkout": true,
+  "admin_password": "",
+  "allow_preview_checkout": false,
   "free_delivery_over": 150000,
   "invoice": {
     "prefix": "TC/INV",
