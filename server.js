@@ -32,6 +32,11 @@ const ROOT = __dirname;
 /* ------------------------------------------------------------------ config */
 function loadConfig() {
   const raw = JSON.parse(fs.readFileSync(path.join(ROOT, 'config.json'), 'utf8'));
+  const production = process.env.NODE_ENV === 'production';
+  const adminPassword = String(process.env.ADMIN_PASSWORD || raw.admin_password || '').trim();
+  if (production && (adminPassword.length < 16 || isWeakPassword(adminPassword))) {
+    throw new Error('Production requires a unique ADMIN_PASSWORD of at least 16 characters.');
+  }
   return {
     ...raw,
     currency: (process.env.STORE_CURRENCY || raw.currency || 'NGN').toUpperCase(),
@@ -40,16 +45,17 @@ function loadConfig() {
     site_url: (process.env.SITE_URL || raw.site_url || '').replace(/\/+$/, ''),
     paystack_secret_key: (process.env.PAYSTACK_SECRET_KEY || raw.paystack_secret_key || '').trim(),
     paystack_public_key: (process.env.PAYSTACK_PUBLIC_KEY || raw.paystack_public_key || '').trim(),
-    /* no shipped default: the studio fails closed until ADMIN_PASSWORD is set */
-    admin_password: String(process.env.ADMIN_PASSWORD || raw.admin_password || '').trim(),
+    /* no shipped default: production refuses a missing or weak studio password */
+    admin_password: adminPassword,
     resend_api_key: (process.env.RESEND_API_KEY || '').trim(),
     low_stock_at: Number(process.env.LOW_STOCK_AT || raw.low_stock_at || 3) || 3,
     /* signs receipt links; see ensureInvoiceSecret() */
     invoice_secret: (process.env.INVOICE_SECRET || '').trim(),
-    allow_preview_checkout:
+    allow_preview_checkout: !production && (
       process.env.ALLOW_PREVIEW_CHECKOUT !== undefined
         ? process.env.ALLOW_PREVIEW_CHECKOUT === 'true'
         : Boolean(raw.allow_preview_checkout)
+    )
   };
 }
 
@@ -249,7 +255,7 @@ const text = (v, max = 300) => String(v == null ? '' : v)
 const validEmail = (v) => typeof v === 'string' && v.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
 
 const money = (n, cfg = CONFIG) => (cfg.currency_symbol || '₦') + Number(n || 0).toLocaleString('en-NG');
-const reference = () => 'TC-2026-' + Date.now().toString(36).toUpperCase().slice(-4) + crypto.randomBytes(3).toString('hex').toUpperCase();
+const reference = () => 'TC-' + new Date().getFullYear() + '-' + crypto.randomBytes(16).toString('hex').toUpperCase();
 
 function clientIp(req) {
   const xff = String(req.headers['x-forwarded-for'] || '');
@@ -972,7 +978,9 @@ async function handleApi(req, res, pathname, url) {
       if (!base.sizes.includes(size)) return sendJson(res, 400, { ok: false, error: `Choose a valid size for ${base.name}.` });
       if (!Number.isFinite(qty) || qty < 1 || qty > 10) return sendJson(res, 400, { ok: false, error: `Invalid quantity for ${base.name}.` });
       const key = sku + '::' + size;
-      merged.set(key, { sku, size, qty: (merged.get(key)?.qty || 0) + qty });
+      const combinedQty = (merged.get(key)?.qty || 0) + qty;
+      if (combinedQty > 10) return sendJson(res, 400, { ok: false, error: `Maximum quantity is 10 for each product and size.` });
+      merged.set(key, { sku, size, qty: combinedQty });
     }
 
     const orderItems = [];
@@ -1232,10 +1240,11 @@ async function handleApi(req, res, pathname, url) {
     const ref = text(url.searchParams.get('reference'), 64).toUpperCase();
     const email = text(url.searchParams.get('email'), 254).toLowerCase();
     if (!ref) return sendJson(res, 400, { ok: false, error: 'Enter your order reference.' });
+    if (!validEmail(email)) return sendJson(res, 400, { ok: false, error: 'Enter the email address used at checkout.' });
     const db = readDb();
     const order = db.orders.find((o) => o.reference.toUpperCase() === ref);
     if (!order) return sendJson(res, 404, { ok: false, error: 'No order found with that reference.' });
-    if (email && !safeEqual(email, String(order.customer.email || '').toLowerCase())) {
+    if (!safeEqual(email, String(order.customer.email || '').toLowerCase())) {
       return sendJson(res, 403, { ok: false, error: 'That email does not match this order.' });
     }
     if (!orderAccessible(req, url, order, cfg)) {
@@ -1408,6 +1417,9 @@ async function handleApi(req, res, pathname, url) {
       const out = await withDb((db) => {
         const order = db.orders.find((o) => o.reference === reference);
         if (!order) return null;
+        if (['paid', 'packed', 'shipped', 'delivered'].includes(body.status) && !order.paid_at) {
+          return { error: 'Only a Paystack-confirmed paid order can enter fulfilment.' };
+        }
         /* moving a paid order to cancelled/refunded puts the stock back, once */
         if (restockable.includes(body.status) && order.stock_deducted) {
           for (const item of order.items) {
@@ -1423,6 +1435,7 @@ async function handleApi(req, res, pathname, url) {
         return order;
       });
       if (!out) return sendJson(res, 404, { ok: false, error: 'Order not found.' });
+      if (out.error) return sendJson(res, 409, { ok: false, error: out.error });
       return sendJson(res, 200, { ok: true, order: out });
     }
 
