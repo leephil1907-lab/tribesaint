@@ -62,3 +62,29 @@ This blueprint extends the cinematic product presentation standard with the five
 4. Add short scroll-led editorial chapters.
 5. Consider the worldwide globe as a separate campaign feature only if it supports a real brand story.
 6. Keep novelty interactions out of the main purchase path.
+
+
+## Mandatory multi-page commerce architecture
+
+Tribe Culture is a multi-page fashion commerce website. The homepage is an entry point, not the whole experience and not a long-form substitute for dedicated pages. Do not flatten, replace or redesign the site as a single landing page.
+
+Preserve and improve the dedicated routes:
+- Home: campaign introduction and clear routes into shopping and brand content
+- Shop: complete collection browsing, category/family filtering and product discovery
+- Product detail: SKU/colour-specific gallery, original product copy, size and variant selection, availability, quantity and add-to-bag
+- Bag: persistent contents, editable quantities, remove item, accurate subtotal and checkout progression
+- Checkout: buyer and delivery details, server-authoritative price/stock/shipping, Paystack initialization and verified payment outcome
+- Order confirmation / invoice / tracking: real order-specific status and documents
+- World, About, Help, Contact and account/studio pages: each has its own useful content and working actions
+
+Navigation and interaction acceptance rules:
+1. Every visible navigation item resolves to its intended page or a clearly identified in-page panel/action.
+2. Every product card opens the correct SKU and selected colour/variant.
+3. Bag contents persist across page navigation and refresh; quantity, remove and totals stay consistent.
+4. Checkout is reachable only when bag contents are valid; payment success is shown only after server-side Paystack verification.
+5. Browser back/forward, direct deep links, refresh and mobile menu open/close must work without trapping the visitor.
+6. No placeholder href="#", dead buttons, fake confirmations, disabled actions without an explanation, or navigation that merely scrolls to a section when a dedicated page is intended.
+7. Motion and 3D transitions must support the page journey, never obscure navigation, delay access to content, hijack scrolling or replace functional controls.
+8. Run route-by-route desktop and mobile checks, plus a complete product → bag → checkout → verified payment/confirmation test before release.
+
+The 3D homepage is one experience within this system. It must not dictate the information architecture or turn the store into a one-page campaign site.
