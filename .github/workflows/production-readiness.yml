@@ -2,7 +2,7 @@ name: Production readiness checks
 
 on:
   push:
-    branches: ["main", "production-readiness/**"]
+    branches: ["main", "production-readiness/**", "tribe-cinematic-product-presentation"]
   pull_request:
     branches: ["main"]
 
