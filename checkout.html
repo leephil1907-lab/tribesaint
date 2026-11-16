@@ -7,7 +7,7 @@
 <link rel="canonical" href="https://tribeculture.store/checkout.html">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <title>Checkout — Tribe Culture</title>
-<meta name="description" content="Secure Tribe Culture checkout with Paystack. Server-verified totals, nationwide and international delivery.">
+<meta name="description" content="Review your Tribe Culture order and confirm delivery details. Payment will be added in a later release.">
 <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="icon" href="assets/icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="icon" href="assets/favicon.ico" sizes="any">
@@ -141,7 +141,7 @@
   <div class="wrap">
     <div class="crumb"><a href="shop.html">Shop</a><span>/</span><span>Checkout</span></div>
     <h1 class="disp">Checkout</h1>
-    <p>Totals are calculated on our server, then payment opens through Paystack.</p>
+    <p>Confirm your delivery details and review the delivery estimate before the payment step is introduced.</p>
   </div>
 </section>
 
@@ -173,15 +173,15 @@
             <span class="err" data-err="address"></span>
           </div>
           <div class="field">
-            <label for="coCity">City &amp; state</label>
+            <label for="coCity">City &amp; state / region</label>
             <input id="coCity" name="city" autocomplete="address-level2" required>
             <span class="err" data-err="city"></span>
           </div>
           <div class="field">
-            <label for="coZone">Delivery zone</label>
+            <label for="coZone">Delivery destination</label>
             <select id="coZone" name="zone">
-              <option value="NG">Nigeria</option>
-              <option value="INTL">International</option>
+              <option value="NG">Nigeria — nationwide</option>
+              <option value="INTL">International delivery</option>
             </select>
             <span class="err" data-err="zone"></span>
           </div>
@@ -196,7 +196,9 @@
           </div>
         </div>
         <p class="alert" id="checkoutAlert" role="alert"></p>
-        <div class="pay-marks pay-marks-inline">
+        <div class="checkout-note"><span class="eyebrow red">Delivery review</span><p class="small muted">Your details are saved securely on this device for this checkout session. No order is submitted and no payment is taken at this stage.</p></div>
+        <!-- payment integration intentionally deferred -->
+        <div class="checkout-actions">
           <span class="lbl">Encrypted checkout</span>
           <ul>
             <li>
@@ -210,8 +212,8 @@
             </li>
           </ul>
         </div>
-        <button class="btn block" type="submit" id="payBtn"><span>Pay with Paystack</span></button>
-        <p class="tiny center">Card · Bank transfer · USSD. Your order is only confirmed once we verify the payment.</p>
+        <button class="btn block" type="submit" id="saveDeliveryBtn"><span>Save delivery details</span></button>
+        <p class="tiny center" id="checkoutSaveNote" aria-live="polite">Payment will be available in a later release. Saving these details does not place an order.</p>
       </form>
 
       <aside class="co-summary" id="coSummary">
