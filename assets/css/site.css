@@ -297,7 +297,7 @@ html[data-motion="off"] .annbar-track{animation:none}
   background:rgba(5,5,5,.66);color:var(--parch);backdrop-filter:blur(6px);transition:.24s;min-width:56px;
   text-decoration:none;cursor:pointer
 }
-.stage-picker button img,.stage-picker a img{width:30px;height:30px;object-fit:cover;border:1px solid var(--line-2)}
+.stage-picker button img,.stage-picker a img{width:30px;height:30px;object-fit:contain;background:#f7f5ef;border:1px solid var(--line-2)}
 .stage-picker button span,.stage-picker a span{font:400 7.5px/1 Oswald,sans-serif;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}
 .stage-picker button[aria-pressed="true"],.stage-picker a[aria-pressed="true"]{border-color:var(--red);color:var(--bone);box-shadow:0 0 0 1px var(--red)}
 .stage-picker button:hover,.stage-picker a:hover{border-color:var(--parch);color:var(--bone)}
@@ -520,13 +520,15 @@ html[data-motion="off"] .annbar-track{animation:none}
   pointer-events:none;z-index:1;transition:opacity .5s;
 }
 [data-theme="light"] .card-media::after{background:radial-gradient(50% 50% at 50% 50%,rgba(20,17,16,.28),transparent 70%)}
+/* the frame is square and every source photograph is square, so filling the
+   frame shows the ENTIRE photograph with no cropping and no letterbox edge —
+   the photo becomes the card instead of a sticker on it */
 .card-media img{
   position:absolute;inset:0;width:100%;height:100%;
-  object-fit:contain;padding:7% 8% 8%;
-  filter:drop-shadow(0 22px 26px rgba(0,0,0,.55));
+  object-fit:cover;padding:0;
   transition:transform .8s var(--ease),opacity .4s;
 }
-.card:hover .card-media img.on{transform:scale(1.045) translateY(-1%)}
+.card:hover .card-media img.on{transform:scale(1.02)}
 .card-media img{opacity:0}
 .card-media img.on{opacity:1}
 .card-media .badge{position:absolute;z-index:3;left:10px;top:10px}
@@ -562,14 +564,16 @@ html[data-motion="off"] .annbar-track{animation:none}
 }
 [data-theme="light"] .pdp-main{background:#efece4}
 .pdp-main img:not(.pdp-bg){
-  position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:2%;
+  position:absolute;inset:0;width:100%;height:100%;
+  /* square frame, square source: filling it shows the entire photo, uncropped */
+  object-fit:cover;padding:0;
   opacity:0;transition:opacity .4s;z-index:1;
 }
 .pdp-main .badge{z-index:3}
 .pdp-main img.on{opacity:1}
 .pdp-main .badge{position:absolute;left:12px;top:12px;z-index:2}
 .pdp-thumbs{display:flex;gap:8px;flex-wrap:wrap}
-.pdp-thumbs button{width:64px;height:64px;border:1px solid var(--line);padding:0;overflow:hidden;opacity:.6;transition:.2s}
+.pdp-thumbs button{width:64px;height:64px;aspect-ratio:1/1;border:1px solid var(--line);padding:0;overflow:hidden;opacity:.6;transition:.2s;background:#f7f5ef}
 /* the WhatsApp pill sits bottom-right on every page: keep the last control
    clear of it instead of hiding under it */
 .stage-bar{padding-right:clamp(66px,7vw,84px)}
@@ -578,7 +582,7 @@ html[data-motion="off"] .annbar-track{animation:none}
   .stage-nav{padding-right:52px}
 }
 .pdp-thumbs button{background:radial-gradient(58% 54% at 50% 42%,#4a3134 0%,#2b1a1c 40%,#150d0e 70%,#0a0808 88%)}
-.pdp-thumbs button img{width:100%;height:100%;object-fit:contain;padding:6%}
+.pdp-thumbs button img{width:100%;height:100%;object-fit:cover;padding:0}
 .pdp-thumbs button[aria-pressed="true"]{opacity:1;border-color:var(--red)}
 .pdp-thumbs button:hover{opacity:1}
 .pdp-info{display:grid;gap:18px;align-content:start;position:sticky;top:calc(var(--nav) + 16px)}
@@ -669,7 +673,7 @@ html[data-motion="off"] .annbar-track{animation:none}
 .drawer-body{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:0 16px}
 .drawer-foot{border-top:1px solid var(--line);padding:14px 16px;display:grid;gap:10px;background:var(--ink-4)}
 .bag-line{display:grid;grid-template-columns:64px 1fr auto;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);align-items:start}
-.bag-line img{width:64px;height:64px;object-fit:cover;border:1px solid var(--line);background:#111}
+.bag-line img{width:64px;height:64px;object-fit:contain;border:1px solid var(--line);background:#f7f5ef}
 /* a piece is shown whole in the bag: the photo's centre is a chest print, not the garment */
 .bag-line img{object-fit:contain;padding:4px;background:radial-gradient(70% 60% at 50% 45%,#f7f5f0,#e8e2d6 78%)}
 
@@ -956,7 +960,7 @@ body.ready .rise.d3{transition-delay:.24s}
 .order-detail h3{font:400 8.5px/1 Oswald,sans-serif;letter-spacing:.22em;text-transform:uppercase;color:var(--mute);margin-bottom:2px}
 .order-items{display:grid;gap:8px}
 .order-item{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);padding:8px}
-.order-item img{width:44px;height:44px;object-fit:cover;border:1px solid var(--line)}
+.order-item img{width:44px;height:44px;object-fit:contain;background:#f7f5ef;border:1px solid var(--line)}
 .order-item .n{font-size:12.5px}
 .order-item .m{font:400 8px/1.5 Oswald,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
 .timeline{display:grid;gap:6px;font-size:12px}
@@ -1072,7 +1076,7 @@ body.ready .rise.d3{transition-delay:.24s}
 /* --------------------------------------------------- hero stage fallbacks */
 .stage-fallback-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;width:min(100%,460px);padding:10px}
 .stage-fallback-grid a{display:block;position:relative;overflow:hidden;border:1px solid var(--line)}
-.stage-fallback-grid img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;transition:transform .5s var(--ease)}
+.stage-fallback-grid img{width:100%;aspect-ratio:1/1;object-fit:contain;background:#f7f5ef;display:block;transition:transform .5s var(--ease)}
 .stage-fallback-grid a:hover img{transform:scale(1.04)}
 @media (min-width:760px){.stage-fallback-grid{grid-template-columns:repeat(2,1fr)}}
 
@@ -1231,7 +1235,7 @@ html.theme-anim .nav-sheet{transition:background-color .42s var(--ease),color .4
   flex:0 0 auto;width:62px;display:grid;gap:5px;justify-items:center;padding:5px 0;border:1px solid var(--line);
   transition:border-color .24s,transform .24s var(--ease),background .24s;
 }
-.live-chip img{width:40px;height:40px;object-fit:cover;filter:grayscale(.35) contrast(1.1);transition:filter .3s}
+.live-chip img{width:40px;height:40px;object-fit:contain;background:#f7f5ef;filter:grayscale(.35) contrast(1.1);transition:filter .3s}
 .live-chip span{font:400 6.5px/1 Oswald,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56px}
 .live-chip:hover{border-color:var(--edge-hover);transform:translateY(-2px)}
 .live-chip:hover img{filter:none}
@@ -1384,7 +1388,7 @@ img.settle{animation:settle .8s var(--ease) both}
   background:var(--media-bg);border:1px solid var(--line);
   box-shadow:0 26px 44px -30px rgba(0,0,0,.85);
 }
-.rail-frame img{width:100%;height:100%;object-fit:cover;transition:transform .7s var(--ease),filter .5s}
+.rail-frame img{width:100%;height:100%;object-fit:contain;background:#f7f5ef;transition:transform .7s var(--ease),filter .5s}
 .rail-piece:hover .rail-frame img{transform:scale(1.05)}
 .rail-tag{
   font:400 clamp(7px,1vw,8.5px)/1.3 Oswald,sans-serif;letter-spacing:.18em;text-transform:uppercase;
@@ -1869,3 +1873,36 @@ img.settle{animation:settle .8s var(--ease) both}
 .hero-dots button[aria-pressed="true"]{background:#e0343c;width:40px}
 .hero-dots button:focus-visible{outline:2px solid #fff;outline-offset:4px}
 @media(max-width:520px){.hero-dots button{width:18px}.hero-dots button[aria-pressed="true"]{width:28px}}
+
+/* ---------- the original garment, complete: front and back, uncropped ---------- */
+.pdp-reference{
+  display:grid;gap:16px;padding-top:clamp(18px,2.5vw,28px);
+  border-top:1px solid var(--line);min-width:0;
+}
+.pdp-reference-head{display:grid;gap:8px}
+.pdp-reference-head h2{font-size:clamp(23px,3vw,34px);letter-spacing:.01em}
+.pdp-reference-head>p:last-child{max-width:54ch;color:var(--mute);font-size:12.5px;line-height:1.65}
+.pdp-reference-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pdp-reference-card{display:grid;gap:8px;min-width:0}
+/* a light matte, so a black garment still reads as a garment */
+.pdp-reference-media{
+  display:grid;place-items:center;min-width:0;aspect-ratio:1/1;overflow:hidden;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,#f7f5ef,#e9e3d6);
+}
+.pdp-reference-media img{
+  display:block;width:100%;height:100%;max-width:100%;max-height:100%;
+  object-fit:cover;object-position:center;padding:0;
+  user-select:none;-webkit-user-drag:none;
+}
+.pdp-reference-card figcaption{
+  display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;
+  font:400 9px/1.4 Oswald,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--bone)
+}
+.pdp-reference-card figcaption span{color:var(--red);font-variant-numeric:tabular-nums}
+.pdp-reference-card figcaption i{font:400 8px/1.4 Oswald,sans-serif;letter-spacing:.08em;color:var(--mute);font-style:normal}
+@media(max-width:420px){
+  .pdp-reference-grid{gap:6px}
+  .pdp-reference-card figcaption{font-size:8px;letter-spacing:.1em}
+  .pdp-reference-card figcaption i{width:100%}
+}

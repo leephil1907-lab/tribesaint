@@ -161,7 +161,7 @@
         const lvl = stockOf(line.sku, line.size);
         return `
         <div class="bag-line">
-          <img src="${p.image}" alt="" width="64" height="64" loading="lazy">
+          <img src="${(p.image || '').replace('assets/products/', 'assets/products/full/').replace(/\.jpg$/, '.webp')}" alt="" width="64" height="64" loading="lazy">
           <div>
             <div class="nm">${esc(p.name)}</div>
             <div class="mt">${esc(p.variant)} · ${line.size === 'ONE SIZE' ? 'One size' : 'Size ' + esc(line.size)}</div>

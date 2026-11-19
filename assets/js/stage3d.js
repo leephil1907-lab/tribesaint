@@ -33,10 +33,11 @@ function mediaFor(sku, forStage) {
     return {
       name: p.name, variant: p.variant,
       front: p.images.front, back: p.images.back, detail: p.images.detail,
-      tile: forStage ? 'assets/products/3d/' + sku + '.webp' : p.images.front,
-      /* the garment cut out of its studio wall: this is what the 3D stages hang */
-      cut: 'assets/products/cut/' + sku + '.webp',
-      cutFace: (face) => 'assets/products/cut/' + sku + '-' + (face || 'front') + '.webp'
+      /* the stages only ever use the original, complete photographs — the
+         cropped card/cut/3d derivatives clip sleeves, hems and whole garments */
+      tile: p.images.front,
+      cut: null,
+      cutFace: (face) => p.images[face] || p.images.front
     };
   }
   return PRODUCT_MEDIA[sku] || null;
@@ -1137,7 +1138,7 @@ function mountProduct(host) {
   function urlFor(f) {
     const m = mediaFor(sku, true);
     if (!m) return media.front;
-    return m.cut ? m.cutFace(f) : 'assets/products/3d/' + sku + '-' + f + '.webp';
+    return m.cutFace ? m.cutFace(f) : m.front;
   }
 
   /* a second photo plane so a face change can cross-fade */

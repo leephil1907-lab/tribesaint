@@ -39,8 +39,8 @@
     return `
     <article class="card${totalStock(p) === 0 ? ' is-sold' : ''}" data-card="${esc(p.sku)}">
       <a class="card-media" href="product.html?sku=${encodeURIComponent(p.sku)}" aria-label="${esc(p.name)} — ${esc(p.variant)}${totalStock(p) === 0 ? ', sold out' : ''}">
-        <img class="on shot" data-shot="front" src="assets/products/card/${esc(p.sku)}.webp" alt="${esc(p.name)}, ${esc(p.variant)}" loading="lazy" decoding="async" width="520" height="520">
-        <img class="shot" data-shot="back" src="assets/products/card/${esc(p.sku)}-back.webp" alt="" loading="lazy" decoding="async" width="520" height="520">
+        <picture><source srcset="assets/products/full/${esc(p.sku)}-front.webp" type="image/webp"><img class="on shot" data-shot="front" src="assets/products/${esc(p.sku)}-front.jpg" alt="${esc(p.name)}, ${esc(p.variant)}" loading="lazy" decoding="async" width="900" height="900"></picture>
+        <picture><source srcset="assets/products/full/${esc(p.sku)}-back.webp" type="image/webp"><img class="shot" data-shot="back" src="assets/products/${esc(p.sku)}-back.jpg" alt="" loading="lazy" decoding="async" width="900" height="900"></picture>
         <span class="badge">${esc(p.badge || 'Drop 001')}</span>
         ${totalStock(p) === 0 ? '<span class="sold-badge">Sold out</span>' : ''}
         <span class="views" role="group" aria-label="Product view">
@@ -453,17 +453,22 @@
          silhouette. The card crops stay for the grids and thumbnails. */
       const cut = (face) => (face === 'detail'
         ? p.images.detail
-        : 'assets/products/' + p.sku + '-' + face + '.jpg');
+        : 'assets/products/full/' + p.sku + '-' + face + '.webp');
       const imgA = $('#pdpImgA'), imgB = $('#pdpImgB');
       imgA.src = cut('front'); imgA.alt = p.name + ' — ' + p.variant;
       imgB.src = cut('back'); imgB.alt = p.name + ' — alternate view';
       const pbg = $('#pdpBg');
       if (pbg) pbg.src = imgA.src;
 
+      /* the reference pair always shows both complete photographs */
+      const fv = $('#pdpFrontView'), bv = $('#pdpBackView');
+      if (fv) { fv.src = 'assets/products/full/' + p.sku + '-front.webp'; fv.alt = p.name + ' — ' + p.variant + ', complete front view'; }
+      if (bv) { bv.src = 'assets/products/full/' + p.sku + '-back.webp'; bv.alt = p.name + ' — ' + p.variant + ', complete back view'; }
+
       const thumbs = $('#pdpThumbs');
       const faces = [
-        { key: 'front', label: '1', img: 'assets/products/card/' + p.sku + '.webp', alt: p.name + ' front' },
-        { key: 'back', label: '2', img: 'assets/products/card/' + p.sku + '-back.webp', alt: p.name + ' alternate' },
+        { key: 'front', label: '1', img: 'assets/products/full/' + p.sku + '-front.webp', alt: p.name + ' front' },
+        { key: 'back', label: '2', img: 'assets/products/full/' + p.sku + '-back.webp', alt: p.name + ' alternate' },
         { key: 'detail', label: '3', img: cut('detail'), alt: p.name + ' print detail' }
       ];
       thumbs.innerHTML = faces.map((f, i) => `<button type="button" data-face="${f.key}" aria-pressed="${i === 0}" aria-label="Show ${esc(f.alt)}"><img src="${esc(f.img)}" alt="" width="64" height="64" loading="lazy" decoding="async"></button>`).join('');
@@ -622,7 +627,7 @@
       const p2 = TC.product(sku);
       const cutFace = (f) => (f === 'detail'
         ? p2.images.detail
-        : 'assets/products/' + p2.sku + '-' + f + '.jpg');
+        : 'assets/products/full/' + p2.sku + '-' + f + '.webp');
       const pbg2 = $('#pdpBg');
       if (face === 'back') {
         a.classList.remove('on'); bb.classList.add('on'); bb.src = cutFace('back');
@@ -670,7 +675,7 @@
           const p = TC.product(l.sku);
           if (!p) return '';
           return `<div class="order-item" style="border:0;border-bottom:1px solid var(--line);padding:10px 0;grid-template-columns:44px 1fr auto">
-            <img src="assets/products/card/${esc(p.sku)}.webp" alt="${esc(p.name)}, ${esc(p.variant)}" width="44" height="44" loading="lazy" decoding="async">
+            <img src="assets/products/full/${esc(p.sku)}-front.webp" alt="${esc(p.name)}, ${esc(p.variant)}" width="44" height="44" loading="lazy" decoding="async">
             <div><div class="n">${esc(p.name)}</div><div class="m">${esc(p.variant)} · ${l.size === 'ONE SIZE' ? 'One size' : 'Size ' + esc(l.size)} · ×${l.qty}</div></div>
             <span class="price" style="font-size:12.5px">${money(p.price * l.qty)}</span>
           </div>`;
@@ -1061,7 +1066,7 @@
       if (strip) {
         strip.innerHTML = list.map((p) => `
           <button type="button" data-live-sku="${esc(p.sku)}" class="live-chip" aria-pressed="false" title="${esc(p.name + ' — ' + p.variant)}">
-            <img src="assets/products/${esc(p.sku)}-front.jpg" alt="" width="64" height="64" loading="lazy" decoding="async">
+            <img src="assets/products/full/${esc(p.sku)}-front.webp" alt="" width="64" height="64" loading="lazy" decoding="async">
             <span>${esc(p.name)}</span>
           </button>`).join('');
       }
