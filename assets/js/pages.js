@@ -943,7 +943,7 @@
       host.innerHTML = filled.map((p) => `
         <a class="rail-piece" href="product.html?sku=${encodeURIComponent(p.sku)}" aria-label="${esc(p.name + ' — ' + p.variant)}">
           <span class="rail-hook" aria-hidden="true"></span>
-          <span class="rail-frame"><img src="assets/products/3d/${esc(p.sku)}.webp" alt="${esc(p.name + ' — ' + p.variant)}" width="360" height="360" loading="lazy" decoding="async"></span>
+          <span class="rail-frame"><img src="assets/products/${esc(p.sku)}-front.jpg" alt="${esc(p.name + ' — ' + p.variant)}" width="360" height="360" loading="lazy" decoding="async"></span>
           <span class="rail-tag">${esc(p.name)}<br>${esc(p.variant)}</span>
           <span class="rail-price">${money(p.price)}</span>
         </a>`).join('');
@@ -998,7 +998,7 @@
         b.setAttribute('aria-pressed', String(on));
       });
       const fb = stage.querySelector('.stage-fallback img');
-      if (fb) fb.src = 'assets/products/3d/' + sku + '-front.webp';
+      if (fb) fb.src = 'assets/products/' + sku + '-front.jpg';
       document.dispatchEvent(new CustomEvent('stage:sku', { detail: { sku } }));
     };
 
@@ -1061,7 +1061,7 @@
       if (strip) {
         strip.innerHTML = list.map((p) => `
           <button type="button" data-live-sku="${esc(p.sku)}" class="live-chip" aria-pressed="false" title="${esc(p.name + ' — ' + p.variant)}">
-            <img src="assets/products/3d/${esc(p.sku)}.webp" alt="" width="64" height="64" loading="lazy" decoding="async">
+            <img src="assets/products/${esc(p.sku)}-front.jpg" alt="" width="64" height="64" loading="lazy" decoding="async">
             <span>${esc(p.name)}</span>
           </button>`).join('');
       }
