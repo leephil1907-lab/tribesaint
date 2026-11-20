@@ -1906,3 +1906,15 @@ img.settle{animation:settle .8s var(--ease) both}
   .pdp-reference-card figcaption{font-size:8px;letter-spacing:.1em}
   .pdp-reference-card figcaption i{width:100%}
 }
+
+
+/* Product-accurate homepage lookbook: original flat images, shown whole and uncropped. */
+.hero-frames .hero-frame.product-flat img,
+.hero-frames .hero-frame.product-flat.is-on img{
+  object-fit:contain;
+  object-position:center;
+  padding:clamp(18px,4vw,54px);
+  transform:none;
+  background:#171513;
+}
+.hero-shot .hero-shot-grain{opacity:.14}
