@@ -233,11 +233,11 @@
     }));
   }
 
-  /* ------------------------------------------------------------- lookbook
-     Six frames, six different people and garments, cross-fading on a slow
-     beat. The caption and the flat-print inset follow whichever frame is up,
-     and the whole thing stops for reduced-motion or the motion switch. */
-  function initLookbook() {
+  /* ---------------------------------------------------- original product carousel
+     Frames use only the repository's original front/back product photographs.
+     Never substitute model campaign imagery here: the product artwork is the
+     source of truth. The caption and detail inset follow the selected product. */
+  function initProductCarousel() {
     const host = $('#heroFrames');
     if (!host) return;
     const frames = Array.from(host.querySelectorAll('.hero-frame'));
@@ -1325,7 +1325,7 @@
     initHome();
     initZine();
     initPlate();
-    initLookbook();
+    initProductCarousel();
     /* glass header: gains weight only once it leaves the hero */
     const bar = document.querySelector('.topbar');
     if (bar) {
