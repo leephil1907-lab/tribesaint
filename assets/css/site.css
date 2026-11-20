@@ -342,7 +342,7 @@ html[data-motion="off"] .annbar-track{animation:none}
   transition:transform .4s var(--ease),border-color .3s,box-shadow .4s;
 }
 .hero-inset picture,.hero-inset img{display:block}
-.hero-inset img{width:100%;height:auto;aspect-ratio:760/812;object-fit:cover}
+.hero-inset img{width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;padding:6px;background:#171513}
 .hero-inset-k{
   display:block;padding:7px 8px 8px;text-align:center;
   font:400 7px/1 Oswald,sans-serif;letter-spacing:.26em;text-transform:uppercase;color:var(--mute);
