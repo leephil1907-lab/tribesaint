@@ -195,7 +195,6 @@ function mountFallback(host, products, tc, panelUI) {
     card.type = 'button';
     card.className = 'rack-card';
     card.dataset.sku = product.sku;
-    card.setAttribute('role', 'listitem');
     card.setAttribute('aria-label', 'View ' + product.name + ', ' + (product.variant || 'Drop 001'));
 
     const image = document.createElement('img');
