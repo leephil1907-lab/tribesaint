@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>try{var t=localStorage.getItem('tc-theme');if(t==='light'){document.documentElement.dataset.theme='light';}}catch(e){}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Rack — Tribe Culture | Drop 001</title>
+<meta name="description" content="Enter The Rack. Explore all twelve original Drop 001 garments from Tribe Culture, view front and back, choose your size and add directly to your bag.">
+<link rel="canonical" href="https://tribeculture.store/experience.html">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#050505">
+<link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/css/site.css">
+<link rel="stylesheet" href="assets/css/rack.css">
+<link rel="modulepreload" href="assets/vendor/three.module.min.js">
+</head>
+<body class="rack-page" data-page="experience">
+<a class="sr" href="#main">Skip to content</a>
+
+<div class="annbar" data-annbar>
+  <div class="annbar-track" aria-hidden="true"><span>Drop 001 is live — twelve pieces</span><i></i><span>Small runs · no restocks</span><i></i><span>Free delivery over ₦150,000</span><i></i><span>Lagos → worldwide</span><i></i><span>Paystack secured checkout</span><i></i><span>Drop 001 is live — twelve pieces</span><i></i><span>Small runs · no restocks</span><i></i><span>Free delivery over ₦150,000</span><i></i><span>Lagos → worldwide</span><i></i><span>Paystack secured checkout</span><i></i></div>
+</div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="index.html" aria-label="Tribe Culture home"><img src="assets/logo-red-sm.png" alt="" width="26" height="26"><span class="script">Tribe Culture</span></a>
+    <nav class="nav-main" aria-label="Primary">
+      <a href="shop.html">Shop</a><a href="experience.html" aria-current="page">The Rack</a><a href="world.html">World</a><a href="about.html">About</a><a href="help.html">Help</a>
+    </nav>
+    <div class="nav-tools">
+      <button class="icon-btn theme-btn" type="button" data-theme-toggle aria-label="Switch theme" aria-pressed="false"><span class="sr">Toggle theme</span><span aria-hidden="true">◐</span></button>
+      <button class="bag-btn" type="button" data-open-bag aria-haspopup="dialog" aria-controls="bagDrawer"><span class="lbl">Bag</span><span class="count" data-bag-count>0</span><span class="sr">items in bag</span></button>
+      <button class="icon-btn" type="button" id="navOpen" aria-label="Open menu" aria-expanded="false" aria-controls="navSheet"><svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true"><path d="M0 1h16M0 6h16M0 11h16" stroke="currentColor" stroke-width="1.3"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<div class="nav-sheet" id="navSheet" aria-hidden="true" aria-label="Menu">
+  <div class="nav-sheet-head">
+    <a class="brand" href="index.html"><img src="assets/logo-red-sm.png" alt="" width="26" height="26"><span class="script">Tribe Culture</span></a>
+    <button class="icon-btn" type="button" id="navClose" aria-label="Close menu">×</button>
+  </div>
+  <nav class="nav-sheet-links" aria-label="Mobile">
+    <a href="shop.html">Shop <small>Drop 001</small></a>
+    <a href="experience.html" aria-current="page">The Rack <small>Immersive experience</small></a>
+    <a href="world.html">World <small>The film</small></a>
+    <a href="about.html">About <small>The house</small></a>
+    <a href="help.html">Help <small>Size · Shipping</small></a>
+    <a href="contact.html">Contact <small>Get in touch</small></a>
+    <a href="track.html">Track order <small>Status</small></a>
+  </nav>
+  <div class="nav-sheet-foot">
+    <button class="sheet-theme" type="button" data-theme-toggle><span class="sheet-theme-label">Daylight mode</span><span class="sheet-theme-track" aria-hidden="true"><i></i></span></button>
+    <a class="btn block" href="shop.html"><span>Shop the drop</span></a>
+    <button class="btn ghost block" type="button" data-open-bag><span>Open bag</span></button>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="bagDrawer" role="dialog" aria-modal="true" aria-label="Shopping bag" aria-hidden="true">
+  <div class="drawer-head"><div><h2 class="disp">Your Bag</h2><div class="sub" id="bagSub">0 pieces</div></div><button class="drawer-close" type="button" id="bagClose" aria-label="Close bag">×</button></div>
+  <div class="ship-meter" id="shipMeter"></div>
+  <div class="drawer-body" id="bagList"></div>
+  <div class="drawer-foot">
+    <div class="tot-row"><span>Subtotal</span><span id="bagSubtotal">₦0</span></div>
+    <div class="tot-row big"><span>Total</span><span id="bagTotal">₦0</span></div>
+    <button class="btn block" type="button" id="bagCheckout" disabled><span>Checkout</span></button>
+    <p class="tiny center">Paystack secured · Delivery calculated at checkout</p>
+  </div>
+</aside>
+
+<main id="main">
+  <section class="rack-masthead">
+    <div class="wrap">
+      <div><p class="eyebrow red">Drop 001 · Established MMXXVI</p><h1>THE <span>RACK</span></h1></div>
+      <p>Twelve original pieces. Move through the rail, inspect both sides, choose your size and add directly to your bag. Every garment photograph stays whole and true to the original.</p>
+    </div>
+  </section>
+
+  <section class="rack-experience" data-rack aria-label="Drop 001 interactive clothing rail">
+    <div class="rack-stage">
+      <canvas tabindex="0" aria-label="Interactive 3D clothing rail. Drag or swipe horizontally. Use arrow keys to browse and Enter to select." role="application"></canvas>
+      <div class="rack-stage-hud">
+        <div class="rack-stage-top"><span class="rack-kicker">01 / The Rack</span><span class="rack-stage-note">Drag · Swipe · Select a piece</span></div>
+        <div class="rack-stage-bottom"><span class="rack-stage-foot">DROP 001 <strong>·</strong> 12 ORIGINAL PIECES</span><div class="rack-stage-controls">
+          <button class="rack-control" type="button" data-rack-prev aria-label="Previous garment">←</button>
+          <button class="rack-control" type="button" data-rack-next aria-label="Next garment">→</button>
+        </div></div>
+      </div>
+      <div class="rack-stage-status" data-rack-status role="status" aria-live="polite"></div>
+      <div class="rack-fallback" role="group" aria-label="Drop 001 products" hidden></div>
+      <div class="rack-bag-hud" aria-live="polite"><span>In your stash <b data-rack-count>0</b></span><span>Total <b data-rack-total>₦0</b></span></div>
+    </div>
+
+    <aside class="rack-panel" data-rack-panel aria-label="Selected product">
+      <button class="rack-close" type="button" data-rack-close aria-label="Close product details">×</button>
+      <p class="eyebrow">Drop 001 · Selected piece</p>
+      <h2 data-rack-name>Choose a piece</h2>
+      <p class="rack-variant" data-rack-variant>Explore the collection</p>
+      <p class="rack-price" data-rack-price>—</p>
+      <span class="rack-size-label">Choose your size</span>
+      <div class="rack-sizes" data-rack-sizes role="group" aria-label="Available sizes"></div>
+      <p class="rack-stock" data-rack-stock>Live stock loads with the catalogue</p>
+      <div class="rack-panel-actions">
+        <button class="btn ghost" type="button" data-rack-flip disabled><span>Flip view</span></button>
+        <button class="btn" type="button" data-rack-add disabled><span>Choose a size</span></button>
+      </div>
+      <a class="rack-details" data-rack-pdp href="shop.html">Full product details →</a>
+      <p class="rack-offline-note">Live stock is offline. Product browsing remains available; bag actions return when the catalogue reconnects.</p>
+    </aside>
+  </section>
+</main>
+
+<footer class="rack-footer"><div class="wrap"><span>Tribe Culture · MMXXVI · Drop 001</span><span><a href="shop.html">Shop all pieces</a> · <a href="index.html">Return home</a></span></div></footer>
+
+<script src="assets/js/store.js" defer></script>
+<script src="assets/js/pages.js" defer></script>
+<script type="module">
+  import { bootRack } from './assets/js/experience/rack.js';
+  bootRack();
+</script>
+</body>
+</html>
