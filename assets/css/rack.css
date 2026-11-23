@@ -4,6 +4,7 @@
    Garment source images always use contain, never cover/crop.
    ========================================================================== */
 .rack-page{background:#050505;color:#f3ecdf;min-height:100vh}
+.rack-experience{position:relative}
 .rack-masthead{padding:clamp(28px,5vw,58px) 0 22px;border-bottom:1px solid rgba(243,236,223,.12)}
 .rack-masthead .wrap{display:flex;align-items:end;justify-content:space-between;gap:24px;flex-wrap:wrap}
 .rack-masthead h1{font:400 clamp(38px,7vw,82px)/.92 Anton,Impact,sans-serif;text-transform:uppercase;letter-spacing:-.025em;margin:12px 0 0}
