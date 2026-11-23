@@ -302,6 +302,7 @@ function mountFallback(host, products, tc, panelUI) {
       panelUI.destroy();
       panelUI.clear();
       track.replaceChildren();
+      if (host.__rackCleanup) host.__rackCleanup();
       if (host.__rackInstance === this) delete host.__rackInstance;
     }
   };
@@ -717,10 +718,18 @@ export function mountRack(host, products, tc) {
     return null;
   }
 
+  let hudActive = true;
+  const cleanupHud = () => {
+    if (!hudActive) return;
+    hudActive = false;
+    hudCleanup();
+    if (host.__rackCleanup === cleanupHud) delete host.__rackCleanup;
+  };
+  host.__rackCleanup = cleanupHud;
   const originalDestroy = api.destroy.bind(api);
   api.destroy = function () {
     originalDestroy();
-    hudCleanup();
+    cleanupHud();
     if (host.__rackInstance === api) delete host.__rackInstance;
   };
   host.__rackInstance = api;
