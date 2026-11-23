@@ -434,7 +434,7 @@ function mountWebGL(host, products, tc, panelUI) {
     geometries.push(front.geometry, back.geometry);
     front.position.z = 0.025;
     back.position.z = -0.025;
-    back.rotation.y = Math.PI;
+    // The back photograph is already supplied in its correct viewing orientation.
     back.visible = false;
     group.add(front, back);
     loadFace(frontUrl, front, product);
